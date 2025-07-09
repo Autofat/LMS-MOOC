@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Question extends Model
 {
     protected $fillable = [
+        'material_id',
         'question',
         'options',
         'answer',
@@ -35,5 +36,13 @@ class Question extends Model
         
         // Capitalize first letter for display
         return ucfirst($value);
+    }
+
+    /**
+     * Get the material that owns this question.
+     */
+    public function material()
+    {
+        return $this->belongsTo(Material::class);
     }
 }

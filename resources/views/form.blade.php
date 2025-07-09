@@ -9,6 +9,13 @@
 </head>
 
 <body class="bg-gray-50 min-h-screen py-8">
+    <div class="max-w-4xl mx-auto px-4 py-4">
+        <div class="flex justify-between items-center">
+            <a href="{{ route('questions.manage') }}"
+                class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Kelola Soal
+            </a>
+        </div>
+    </div>
     <div class="max-w-4xl mx-auto px-4">
         <div class="bg-white rounded-lg shadow-lg p-8">
             <!-- Header -->
@@ -46,6 +53,28 @@
             <!-- Form -->
             <form action="{{ route('questions.store') }}" method="POST" class="space-y-6">
                 @csrf
+
+                <!-- Material Selection -->
+                <div>
+                    <label for="material_id" class="block text-sm font-medium text-gray-700 mb-2">
+                        Pilih Materi (Opsional)
+                    </label>
+                    <select id="material_id" name="material_id"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">Tanpa materi spesifik</option>
+                        @foreach (\App\Models\Material::where('is_active', true)->orderBy('title')->get() as $material)
+                            <option value="{{ $material->id }}"
+                                {{ old('material_id', $autoFillData['material_id'] ?? '') == $material->id ? 'selected' : '' }}>
+                                {{ $material->title }}
+                                @if ($material->category)
+                                    ({{ $material->category }})
+                                @endif
+                            </option>
+                        @endforeach
+                    </select>
+                    <p class="text-sm text-gray-500 mt-1">Pilih materi untuk mengelompokkan soal berdasarkan materi yang
+                        sudah diupload.</p>
+                </div>
 
                 <!-- Question -->
                 <div>

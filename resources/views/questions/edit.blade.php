@@ -151,6 +151,30 @@
                         @if ($question->updated_at != $question->created_at)
                             <p>Terakhir diupdate: {{ $question->updated_at->format('d M Y H:i') }}</p>
                         @endif
+                        @if ($question->difficulty)
+                            @php
+                                $difficulty = strtolower($question->difficulty);
+                                $bgClass = '';
+                                $textClass = '';
+
+                                if ($difficulty === 'mudah') {
+                                    $bgClass = 'bg-green-200';
+                                    $textClass = 'text-green-800';
+                                } elseif ($difficulty === 'menengah') {
+                                    $bgClass = 'bg-yellow-200';
+                                    $textClass = 'text-yellow-800';
+                                } elseif ($difficulty === 'sulit') {
+                                    $bgClass = 'bg-red-200';
+                                    $textClass = 'text-red-800';
+                                } else {
+                                    $bgClass = 'bg-gray-200';
+                                    $textClass = 'text-gray-800';
+                                }
+                            @endphp
+                            <p>Current: <span
+                                    class="inline-block {{ $bgClass }} {{ $textClass }} text-xs px-2 py-1 rounded-full">{{ $question->difficulty }}</span>
+                            </p>
+                        @endif
                     </div>
 
                     <div class="space-x-4">

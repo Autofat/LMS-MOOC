@@ -7,7 +7,7 @@ use App\Models\Question;
 
 class QuestionController extends Controller
 {
-    public function create()
+    public function create(Request $request)
     {
         // Ambil data auto-fill dari session jika ada
         $autoFillData = session('auto_fill_data');
@@ -17,12 +17,19 @@ class QuestionController extends Controller
             session()->forget('auto_fill_data');
         }
         
+        // Check if material_id is provided in URL
+        if ($request->has('material_id')) {
+            $autoFillData = $autoFillData ?: [];
+            $autoFillData['material_id'] = $request->material_id;
+        }
+        
         return view('form', compact('autoFillData'));
     }
 
 public function store(Request $request)
 {
     $request->validate([
+        'material_id' => 'nullable|exists:materials,id',
         'question' => 'required|string',
         'option_a' => 'required|string',
         'option_b' => 'required|string',
@@ -35,6 +42,7 @@ public function store(Request $request)
 
     // Simpan data soal ke dalam database
     $question = Question::create([
+        'material_id' => $request->material_id,
         'question' => $request->question,
         'options' => [
             'A' => $request->option_a,
@@ -1052,7 +1060,7 @@ public function store(Request $request)
      */
     public function manage()
     {
-        $questions = Question::latest()->paginate(10);
+        $questions = Question::with('material')->latest()->paginate(10);
         return view('questions.manage', compact('questions'));
     }
     

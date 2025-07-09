@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Test Questions API</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .container {
+        background: #f5f5f5;
+        padding: 20px;
+        border-radius: 8px;
+        margin: 20px 0;
+      }
+      button {
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+        margin: 5px;
+      }
+      button:hover {
+        background: #0056b3;
+      }
+      .result {
+        background: #e9ecef;
+        padding: 15px;
+        border-radius: 4px;
+        margin: 10px 0;
+        white-space: pre-wrap;
+        max-height: 400px;
+        overflow-y: auto;
+      }
+      .error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+      .success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+      textarea {
+        width: 100%;
+        height: 300px;
+        font-family: monospace;
+        font-size: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Test Questions API</h1>
+
+    <div class="container">
+      <h2>Test JSON Data</h2>
+      <textarea id="jsonData">
+{
+  "questions": [
+    {
+      "material_id": 24,
+      "question": "Berikut ini yang termasuk dalam bidang hukum lingkungan hidup di Indonesia adalah...",
+      "options": {
+        "A": "UU No. 32 Tahun 2009 tentang Perlindungan dan Pengelolaan Lingkungan Hidup",
+        "B": "Perda No. 67 tentang Pengelolaan Sampah",
+        "C": "PP No. 46 Tahun 2016 tentang Tata Cara Penyelenggaraan KLHS",
+        "D": "Permen LHK Nomor 09 Tahun 2009 tentang Pelaksanaan KLHS"
+      },
+      "answer": "A",
+      "explanation": "UU No. 32 Tahun 2009 merupakan undang-undang yang mengatur perlindungan dan pengelolaan lingkungan hidup.",
+      "difficulty": "mudah"
+    },
+    {
+      "material_id": 24,
+      "question": "Apa yang dimaksud dengan KLHS menurut UU No. 32 Tahun 2009 Pasal 1 angka 10?",
+      "options": {
+        "A": "Proses untuk menganalisis dampak lingkungan dari suatu kegiatan",
+        "B": "Rangkaian analisis untuk memastikan integrasi pembangunan berkelanjutan",
+        "C": "Sistem pengelolaan limbah industri",
+        "D": "Metode untuk mendapatkan izin lingkungan"
+      },
+      "answer": "B",
+      "explanation": "KLHS diartikan sebagai rangkaian analisis sistematis, menyeluruh, dan partisipatif.",
+      "difficulty": "mudah"
+    }
+  ]
+}</textarea
+      >
+
+      <button onclick="testSingleQuestion()">Test Single Question</button>
+      <button onclick="testArrayQuestions()">Test Array Questions</button>
+      <button onclick="testBulkQuestions()">Test Bulk Questions</button>
+      <button onclick="testWebhook()">Test Webhook</button>
+      <button onclick="getMaterials()">Get Materials</button>
+      <button onclick="clearResults()">Clear Results</button>
+
+      <div id="results"></div>
+    </div>
+
+    <script>
+      function addResult(message, isError = false) {
+        const results = document.getElementById("results");
+        const div = document.createElement("div");
+        div.className = "result " + (isError ? "error" : "success");
+        div.textContent = message;
+        results.appendChild(div);
+      }
+
+      function clearResults() {
+        document.getElementById("results").innerHTML = "";
+      }
+
+      async function testSingleQuestion() {
+        try {
+          const jsonData = JSON.parse(
+            document.getElementById("jsonData").value
+          );
+          const singleQuestion = jsonData.questions[0];
+
+          addResult("Testing single question...");
+
+          const response = await fetch("/api/questions", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(singleQuestion),
+          });
+
+          const result = await response.json();
+
+          if (response.ok) {
+            addResult(
+              `✅ Single question created!\nStatus: ${
+                response.status
+              }\nResponse: ${JSON.stringify(result, null, 2)}`
+            );
+          } else {
+            addResult(
+              `❌ Single question failed!\nStatus: ${
+                response.status
+              }\nResponse: ${JSON.stringify(result, null, 2)}`,
+              true
+            );
+          }
+        } catch (error) {
+          addResult(`❌ Error: ${error.message}`, true);
+        }
+      }
+
+      async function testArrayQuestions() {
+        try {
+          const jsonData = JSON.parse(
+            document.getElementById("jsonData").value
+          );
+
+          addResult("Testing array questions...");
+
+          const response = await fetch("/api/questions/array", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(jsonData),
+          });
+
+          const result = await response.json();
+
+          if (response.ok) {
+            addResult(
+              `✅ Array questions created!\nStatus: ${
+                response.status
+              }\nTotal created: ${
+                result.data.total_created
+              }\nResponse: ${JSON.stringify(result, null, 2)}`
+            );
+          } else {
+            addResult(
+              `❌ Array questions failed!\nStatus: ${
+                response.status
+              }\nResponse: ${JSON.stringify(result, null, 2)}`,
+              true
+            );
+          }
+        } catch (error) {
+          addResult(`❌ Error: ${error.message}`, true);
+        }
+      }
+
+      async function testBulkQuestions() {
+        try {
+          const jsonData = JSON.parse(
+            document.getElementById("jsonData").value
+          );
+          const bulkData = {
+            material_id: 24,
+            questions: jsonData.questions.map((q) => ({
+              question: q.question,
+              options: q.options,
+              answer: q.answer,
+              explanation: q.explanation,
+              difficulty: q.difficulty,
+            })),
+          };
+
+          addResult("Testing bulk questions...");
+
+          const response = await fetch("/api/questions/bulk", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(bulkData),
+          });
+
+          const result = await response.json();
+
+          if (response.ok) {
+            addResult(
+              `✅ Bulk questions created!\nStatus: ${
+                response.status
+              }\nTotal created: ${
+                result.data.total_created
+              }\nResponse: ${JSON.stringify(result, null, 2)}`
+            );
+          } else {
+            addResult(
+              `❌ Bulk questions failed!\nStatus: ${
+                response.status
+              }\nResponse: ${JSON.stringify(result, null, 2)}`,
+              true
+            );
+          }
+        } catch (error) {
+          addResult(`❌ Error: ${error.message}`, true);
+        }
+      }
+
+      async function testWebhook() {
+        try {
+          const jsonData = JSON.parse(
+            document.getElementById("jsonData").value
+          );
+          const singleQuestion = jsonData.questions[0];
+
+          addResult("Testing webhook...");
+
+          const response = await fetch("/api/questions/webhook", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(singleQuestion),
+          });
+
+          const result = await response.json();
+
+          if (response.ok) {
+            addResult(
+              `✅ Webhook test successful!\nStatus: ${
+                response.status
+              }\nResponse: ${JSON.stringify(result, null, 2)}`
+            );
+          } else {
+            addResult(
+              `❌ Webhook test failed!\nStatus: ${
+                response.status
+              }\nResponse: ${JSON.stringify(result, null, 2)}`,
+              true
+            );
+          }
+        } catch (error) {
+          addResult(`❌ Error: ${error.message}`, true);
+        }
+      }
+
+      async function getMaterials() {
+        try {
+          addResult("Getting materials...");
+
+          const response = await fetch("/api/materials");
+          const result = await response.json();
+
+          if (response.ok) {
+            addResult(
+              `✅ Materials retrieved!\nStatus: ${response.status}\nTotal: ${
+                result.data.length
+              }\nMaterials: ${JSON.stringify(
+                result.data.map((m) => ({ id: m.id, title: m.title })),
+                null,
+                2
+              )}`
+            );
+          } else {
+            addResult(
+              `❌ Failed to get materials!\nStatus: ${
+                response.status
+              }\nResponse: ${JSON.stringify(result, null, 2)}`,
+              true
+            );
+          }
+        } catch (error) {
+          addResult(`❌ Error: ${error.message}`, true);
+        }
+      }
+    </script>
+  </body>
+</html>
