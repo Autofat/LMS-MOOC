@@ -31,6 +31,9 @@ Route::prefix('materials')->middleware(['throttle:60,1'])->group(function () {
     Route::delete('/{id}', [MaterialApiController::class, 'destroy']);
     Route::get('/with-questions/all', [MaterialApiController::class, 'materialsWithQuestions']);
     
+    // Questions count for a specific material
+    Route::get('/{id}/questions-count', [MaterialApiController::class, 'getQuestionsCount']);
+    
     // File access for n8n
     Route::get('/{id}/file-content', [MaterialController::class, 'getFileForN8n']);
     Route::get('/{id}/stream', [MaterialController::class, 'streamFileForN8n']);

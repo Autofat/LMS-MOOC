@@ -69,7 +69,7 @@
                     </div>
 
                     <!-- Action Buttons -->
-                    <div class="mt-6 space-y-2">
+                    <div class="mt-6 flex flex-row gap-2">
                         <a href="{{ route('materials.download', $material->id) }}"
                             class="w-full bg-green-500 hover:bg-green-600 text-white text-center py-2 px-4 rounded flex items-center justify-center">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -79,15 +79,9 @@
                             </svg>
                             Download PDF
                         </a>
-
                         <a href="{{ route('materials.edit', $material->id) }}"
                             class="w-full bg-yellow-500 hover:bg-yellow-600 text-white text-center py-2 px-4 rounded">
                             Edit Materi
-                        </a>
-
-                        <a href="{{ route('questions.create') }}?material_id={{ $material->id }}"
-                            class="w-full bg-blue-500 hover:bg-blue-600 text-white text-center py-2 px-4 rounded">
-                            Tambah Soal untuk Materi Ini
                         </a>
                     </div>
                 </div>
@@ -100,10 +94,20 @@
                         <h2 class="text-xl font-semibold text-gray-800">
                             Daftar Soal ({{ $material->questions->count() }})
                         </h2>
-                        <a href="{{ route('questions.create') }}?material_id={{ $material->id }}"
-                            class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded text-sm">
-                            + Tambah Soal
-                        </a>
+                        <div class="flex flex-row gap-2">
+                            <a href="{{ route('questions.create') }}?material_id={{ $material->id }}"
+                                class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded text-sm">
+                                + Tambah Soal
+                            </a>
+                            <button onclick="generateQuestions({{ $material->id }})" id="generateBtn"
+                                class="bg-fuchsia-500 hover:bg-fuchsia-600 text-white px-4 py-2 rounded text-sm flex items-center">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                </svg>
+                                <span id="generateBtnText">Generate Soal AI</span>
+                            </button>
+                        </div>
                     </div>
 
                     @if ($material->questions->count() > 0)
@@ -205,6 +209,253 @@
             </div>
         </div>
     </div>
+
+    <!-- Progress Modal -->
+    <div id="progressModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div class="mt-3 text-center">
+                <h3 class="text-lg font-medium text-gray-900">Sedang Membuat Soal...</h3>
+                <div class="mt-4">
+                    <div class="bg-gray-200 rounded-full h-2.5">
+                        <div id="progressBar" class="bg-fuchsia-600 h-2.5 rounded-full transition-all duration-300"
+                            style="width: 0%"></div>
+                    </div>
+                    <p id="progressText" class="text-sm text-gray-500 mt-2">Menganalisis materi PDF...</p>
+                </div>
+                <div class="mt-4">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-fuchsia-500 mx-auto"></div>
+                </div>
+                <div class="mt-4">
+                    <button onclick="cancelGeneration()" id="cancelBtn"
+                        class="px-4 py-2 bg-red-500 text-white text-base font-medium rounded-md shadow-sm hover:bg-red-600">
+                        Batalkan
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentMaterialId = null;
+        let progressInterval = null;
+        let isGenerating = false;
+        let pollInterval = null;
+
+        function generateQuestions(materialId) {
+            if (isGenerating) return;
+
+            currentMaterialId = materialId;
+            isGenerating = true;
+
+            // Show progress modal immediately
+            document.getElementById('progressModal').classList.remove('hidden');
+
+            // Start progress animation
+            startProgressAnimation();
+
+            // Trigger n8n workflow with default values
+            triggerN8nGeneration(materialId, 10, 'menengah'); // Default: 10 soal, tingkat menengah
+        }
+
+        function closeModal() {
+            document.getElementById('progressModal').classList.add('hidden');
+            isGenerating = false;
+            if (progressInterval) {
+                clearInterval(progressInterval);
+                progressInterval = null;
+            }
+            if (pollInterval) {
+                clearInterval(pollInterval);
+                pollInterval = null;
+            }
+        }
+
+        function cancelGeneration() {
+            if (progressInterval) {
+                clearInterval(progressInterval);
+                progressInterval = null;
+            }
+            if (pollInterval) {
+                clearInterval(pollInterval);
+                pollInterval = null;
+            }
+            isGenerating = false;
+            closeModal();
+        }
+
+        function startProgressAnimation() {
+            let progress = 0;
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+
+            const steps = [
+                'Menganalisis materi PDF...',
+                'Mengekstrak konten teks...',
+                'Memproses dengan AI...',
+                'Membuat soal pilihan ganda...',
+                'Menunggu respon dari AI...',
+                'Menyimpan soal ke database...'
+            ];
+
+            let stepIndex = 0;
+
+            progressText.textContent = steps[stepIndex];
+
+            progressInterval = setInterval(() => {
+                // Slow progress until we get actual response
+                progress += Math.random() * 5 + 2; // Slower progress 2-7%
+
+                if (progress > 85) progress = 85; // Don't complete until we get response
+
+                progressBar.style.width = progress + '%';
+
+                if (stepIndex < steps.length - 1 && progress > (stepIndex + 1) * 14) {
+                    stepIndex++;
+                    progressText.textContent = steps[stepIndex];
+                }
+            }, 2000); // Slower interval
+        }
+
+        function completeProgress(successMessage) {
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+
+            if (progressInterval) {
+                clearInterval(progressInterval);
+                progressInterval = null;
+            }
+
+            // Complete progress
+            progressBar.style.width = '100%';
+            progressText.textContent = successMessage || 'Selesai! Soal berhasil dibuat!';
+
+            setTimeout(() => {
+                progressText.textContent = 'Memuat ulang halaman...';
+                setTimeout(() => {
+                    isGenerating = false;
+                    window.location.reload();
+                }, 1000);
+            }, 2000);
+        }
+
+        function showError(errorMessage) {
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+
+            if (progressInterval) {
+                clearInterval(progressInterval);
+                progressInterval = null;
+            }
+
+            progressBar.style.width = '100%';
+            progressBar.classList.remove('bg-fuchsia-600');
+            progressBar.classList.add('bg-red-500');
+            progressText.textContent = 'Error: ' + errorMessage;
+
+            setTimeout(() => {
+                isGenerating = false;
+                closeModal();
+            }, 5000);
+        }
+
+        async function triggerN8nGeneration(materialId, questionCount, difficulty) {
+            try {
+                // First, trigger the n8n workflow
+                const response = await fetch(`/materials/${materialId}/generate-questions`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        question_count: questionCount,
+                        difficulty: difficulty,
+                        auto_generate: true
+                    })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.message || 'Gagal trigger n8n');
+                }
+
+                console.log('n8n triggered successfully:', result);
+
+                // Start polling the auto-save endpoint
+                startPollingAutoSave();
+
+            } catch (error) {
+                console.error('Error triggering n8n:', error);
+                showError(error.message);
+            }
+        }
+
+        function startPollingAutoSave() {
+            const progressText = document.getElementById('progressText');
+            progressText.textContent = 'Menunggu AI menyelesaikan pembuatan soal...';
+
+            let initialQuestionCount = {{ $material->questions->count() }};
+            let pollAttempts = 0;
+            const maxPollAttempts = 60; // 3 minutes with 3-second intervals (60 * 3 = 180 seconds = 3 minutes)
+
+            pollInterval = setInterval(async () => {
+                pollAttempts++;
+
+                try {
+                    // Check if new questions were added to this material
+                    const checkResponse = await fetch(`/api/materials/${currentMaterialId}/questions-count`, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        }
+                    });
+
+                    if (checkResponse.ok) {
+                        const data = await checkResponse.json();
+
+                        // If questions count increased, assume AI generation completed
+                        if (data.count > initialQuestionCount) {
+                            clearInterval(pollInterval);
+                            pollInterval = null;
+                            const newQuestionsCount = data.count - initialQuestionCount;
+                            completeProgress(`Berhasil! ${newQuestionsCount} soal baru telah dibuat.`);
+                            return;
+                        }
+                    }
+
+                    // Update progress text with attempt count
+                    if (pollAttempts % 10 === 0) {
+                        progressText.textContent =
+                            `Menunggu AI menyelesaikan pembuatan soal... (${Math.floor(pollAttempts * 3 / 60)} menit)`;
+                    }
+
+                } catch (error) {
+                    console.log('Polling check:', error.message);
+                    // Continue polling, don't stop on network errors
+                }
+
+                // Stop polling after max attempts
+                if (pollAttempts >= maxPollAttempts) {
+                    clearInterval(pollInterval);
+                    pollInterval = null;
+                    showError(
+                        'Timeout: Proses memakan waktu lebih dari 3 menit. Silakan coba lagi atau periksa koneksi n8n.'
+                    );
+                }
+            }, 3000); // Poll every 3 seconds
+        }
+
+        // Close modal when clicking outside (only if not generating)
+        window.onclick = function(event) {
+            const progressModal = document.getElementById('progressModal');
+
+            if (event.target === progressModal && !isGenerating) {
+                closeModal();
+            }
+        }
+    </script>
 </body>
 
 </html>

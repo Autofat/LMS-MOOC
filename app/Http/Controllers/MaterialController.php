@@ -331,6 +331,140 @@ class MaterialController extends Controller
     }
 
     /**
+     * Generate questions using n8n workflow
+     */
+    public function generateQuestions(Request $request, $id)
+    {
+        try {
+            $material = Material::findOrFail($id);
+            
+            // Validate request
+            $request->validate([
+                'question_count' => 'required|integer|min:1|max:50',
+                'difficulty' => 'required|in:mudah,menengah,sulit,campuran',
+                'auto_generate' => 'boolean'
+            ]);
+            
+            // URL n8n webhook untuk generate questions
+            $n8nGenerateUrl = env('N8N_GENERATE_QUESTIONS_URL', 'http://localhost:5678/webhook-test/generate-questions');
+            
+            // Get file path
+            $filePath = storage_path('app/public/' . $material->file_path);
+            
+            // Prepare data for n8n
+            $data = [
+                'action' => 'generate_questions',
+                'material_id' => $material->id,
+                'material_title' => $material->title,
+                'material_description' => $material->description,
+                'material_category' => $material->category,
+                'file_name' => $material->file_name,
+                'file_size' => $material->file_size,
+                'file_url' => asset('storage/' . $material->file_path),
+                'download_url' => route('materials.download', $material->id),
+                'api_file_content_url' => url('/api/materials/' . $material->id . '/file-content'),
+                'api_file_stream_url' => url('/api/materials/' . $material->id . '/stream'),
+                'questions_api_url' => url('/api/questions/array'),
+                'questions_webhook_url' => url('/api/questions/webhook'),
+                'generation_settings' => [
+                    'question_count' => (int) $request->question_count,
+                    'difficulty' => $request->difficulty,
+                    'auto_generate' => $request->boolean('auto_generate', true),
+                    'language' => 'id', // Indonesian
+                    'format' => 'multiple_choice',
+                    'include_explanation' => true
+                ],
+                'trigger_source' => 'laravel_generate_button',
+                'timestamp' => now()->toISOString(),
+                'callback_url' => url('/materials/' . $material->id)
+            ];
+            
+            // Add file content if file exists and not too large
+            if (file_exists($filePath)) {
+                $fileSize = filesize($filePath);
+                if ($fileSize <= 5 * 1024 * 1024) { // 5MB limit
+                    try {
+                        $fileContent = file_get_contents($filePath);
+                        $base64Content = base64_encode($fileContent);
+                        $data['file_content_base64'] = $base64Content;
+                        $data['file_included'] = true;
+                    } catch (\Exception $e) {
+                        \Log::warning('Could not include file content in generation request', [
+                            'material_id' => $material->id,
+                            'error' => $e->getMessage()
+                        ]);
+                        $data['file_included'] = false;
+                        $data['file_too_large_or_error'] = true;
+                    }
+                } else {
+                    $data['file_included'] = false;
+                    $data['file_too_large'] = true;
+                    $data['file_size_mb'] = round($fileSize / 1024 / 1024, 2);
+                }
+            } else {
+                $data['file_included'] = false;
+                $data['file_not_found'] = true;
+            }
+            
+            \Log::info('Triggering n8n question generation', [
+                'material_id' => $material->id,
+                'question_count' => $request->question_count,
+                'difficulty' => $request->difficulty,
+                'webhook_url' => $n8nGenerateUrl,
+                'file_included' => $data['file_included'] ?? false
+            ]);
+            
+            // Send to n8n
+            $response = \Http::timeout(30)->post($n8nGenerateUrl, $data);
+            
+            if ($response->successful()) {
+                \Log::info('n8n question generation triggered successfully', [
+                    'material_id' => $material->id,
+                    'response_status' => $response->status(),
+                    'response_body' => $response->body()
+                ]);
+                
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Question generation started successfully',
+                    'data' => [
+                        'material_id' => $material->id,
+                        'question_count' => $request->question_count,
+                        'difficulty' => $request->difficulty,
+                        'estimated_completion' => '1-3 minutes',
+                        'n8n_response' => $response->json()
+                    ]
+                ]);
+            } else {
+                \Log::error('n8n question generation failed', [
+                    'material_id' => $material->id,
+                    'response_status' => $response->status(),
+                    'response_body' => $response->body(),
+                    'webhook_url' => $n8nGenerateUrl
+                ]);
+                
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to trigger question generation',
+                    'error' => 'n8n webhook returned status: ' . $response->status()
+                ], 500);
+            }
+            
+        } catch (\Exception $e) {
+            \Log::error('Error triggering question generation', [
+                'material_id' => $id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Error triggering question generation: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Send all existing materials to n8n
      */
     public function sendAllToN8n()

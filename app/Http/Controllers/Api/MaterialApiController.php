@@ -308,4 +308,27 @@ class MaterialApiController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Get questions count for a specific material
+     */
+    public function getQuestionsCount($id)
+    {
+        try {
+            $material = Material::findOrFail($id);
+            $questionsCount = $material->questions()->count();
+            
+            return response()->json([
+                'success' => true,
+                'material_id' => $material->id,
+                'count' => $questionsCount,
+                'message' => 'Questions count retrieved successfully'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to get questions count: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

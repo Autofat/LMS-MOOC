@@ -19,6 +19,9 @@ Route::delete('/materials/{id}', [MaterialController::class, 'destroy'])->name('
 Route::get('/materials/{id}/download', [MaterialController::class, 'download'])->name('materials.download');
 Route::get('/materials/{id}/questions', [MaterialController::class, 'questions'])->name('materials.questions');
 
+// Generate Questions with n8n
+Route::post('/materials/{id}/generate-questions', [MaterialController::class, 'generateQuestions'])->name('materials.generate-questions');
+
 
 // Form Manual Input
 Route::get('/questions/create', [QuestionController::class, 'create'])->name('questions.create');

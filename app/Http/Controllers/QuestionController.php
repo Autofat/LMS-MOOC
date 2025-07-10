@@ -120,6 +120,7 @@ public function store(Request $request)
         
         // Single question validation
         $request->validate([
+            'material_id' => 'nullable|exists:materials,id',
             'question' => 'required|string',
             'options' => 'required|array',
             'options.A' => 'required|string',
@@ -128,9 +129,11 @@ public function store(Request $request)
             'options.D' => 'required|string',
             'answer' => 'required|in:A,B,C,D',
             'explanation' => 'nullable|string',
+            'difficulty' => 'nullable|string',
         ]);
 
         $question = Question::create([
+            'material_id' => $request->material_id,
             'question' => $request->question,
             'options' => $request->options,
             'answer' => $request->answer,
@@ -161,6 +164,7 @@ public function store(Request $request)
         foreach ($questions as $index => $questionData) {
             try {
                 $validator = \Validator::make($questionData, [
+                    'material_id' => 'nullable|exists:materials,id',
                     'question' => 'required|string',
                     'options' => 'required|array',
                     'options.A' => 'required|string',
@@ -169,6 +173,7 @@ public function store(Request $request)
                     'options.D' => 'required|string',
                     'answer' => 'required|in:A,B,C,D',
                     'explanation' => 'nullable|string',
+                    'difficulty' => 'nullable|string',
                 ]);
                 
                 if ($validator->fails()) {
@@ -177,6 +182,7 @@ public function store(Request $request)
                 }
                 
                 $question = Question::create([
+                    'material_id' => $questionData['material_id'] ?? null,
                     'question' => $questionData['question'],
                     'options' => $questionData['options'],
                     'answer' => $questionData['answer'],
@@ -1023,6 +1029,9 @@ public function store(Request $request)
             $responseData = json_decode($result->getContent(), true);
             
             if ($responseData['success']) {
+                // Broadcast event untuk real-time update (optional)
+                // event(new QuestionsCreated($responseData['data']));
+                
                 return response()->json([
                     'success' => true,
                     'message' => 'All questions automatically saved from n8n',
@@ -1035,7 +1044,8 @@ public function store(Request $request)
                         'source' => 'n8n_auto_save',
                         'processed' => $responseData['total_processed'],
                         'saved' => $responseData['total_saved'],
-                        'errors_count' => $responseData['total_errors']
+                        'errors_count' => $responseData['total_errors'],
+                        'timestamp' => now()->toISOString()
                     ]
                 ], 201);
             } else {
@@ -1115,7 +1125,7 @@ public function store(Request $request)
         $question = Question::findOrFail($id);
         $question->delete();
         
-        return redirect()->route('questions.manage')->with('success', 'Soal berhasil dihapus!');
+        return redirect()->back()->with('success', 'Soal berhasil dihapus!');
     }
     
     /**
@@ -1266,6 +1276,7 @@ public function store(Request $request)
             foreach ($questions as $index => $questionData) {
                 try {
                     Question::create([
+                        'material_id' => $questionData['material_id'] ?? null,
                         'question' => $questionData['question'],
                         'options' => $questionData['options'],
                         'answer' => $questionData['answer'],
