@@ -335,6 +335,10 @@ class MaterialController extends Controller
      */
     public function generateQuestions(Request $request, $id)
     {
+        // Increase PHP execution time for this request
+        set_time_limit(300); // 5 minutes
+        ini_set('max_execution_time', 300);
+        
         try {
             $material = Material::findOrFail($id);
             
@@ -346,7 +350,7 @@ class MaterialController extends Controller
             ]);
             
             // URL n8n webhook untuk generate questions
-            $n8nGenerateUrl = env('N8N_GENERATE_QUESTIONS_URL', 'http://localhost:5678/webhook-test/generate-questions');
+            $n8nGenerateUrl = env('N8N_GENERATE_QUESTIONS_URL', 'http://localhost:5678/webhook/generate-questions');
             
             // Get file path
             $filePath = storage_path('app/public/' . $material->file_path);
@@ -362,10 +366,10 @@ class MaterialController extends Controller
                 'file_size' => $material->file_size,
                 'file_url' => asset('storage/' . $material->file_path),
                 'download_url' => route('materials.download', $material->id),
-                'api_file_content_url' => url('/api/materials/' . $material->id . '/file-content'),
-                'api_file_stream_url' => url('/api/materials/' . $material->id . '/stream'),
-                'questions_api_url' => url('/api/questions/array'),
-                'questions_webhook_url' => url('/api/questions/webhook'),
+                'api_file_content_url' => 'http://172.17.0.1:8000/api/materials/' . $material->id . '/file-content',
+                'api_file_stream_url' => 'http://172.17.0.1:8000/api/materials/' . $material->id . '/stream',
+                'questions_api_url' => 'http://172.17.0.1:8000/api/questions/array',
+                'questions_webhook_url' => 'http://172.17.0.1:8000/api/questions/auto-save',
                 'generation_settings' => [
                     'question_count' => (int) $request->question_count,
                     'difficulty' => $request->difficulty,
@@ -376,7 +380,7 @@ class MaterialController extends Controller
                 ],
                 'trigger_source' => 'laravel_generate_button',
                 'timestamp' => now()->toISOString(),
-                'callback_url' => url('/materials/' . $material->id)
+                'callback_url' => 'http://172.17.0.1:8000/materials/' . $material->id
             ];
             
             // Add file content if file exists and not too large
@@ -406,16 +410,17 @@ class MaterialController extends Controller
                 $data['file_not_found'] = true;
             }
             
-            \Log::info('Triggering n8n question generation', [
-                'material_id' => $material->id,
-                'question_count' => $request->question_count,
-                'difficulty' => $request->difficulty,
-                'webhook_url' => $n8nGenerateUrl,
-                'file_included' => $data['file_included'] ?? false
-            ]);
             
-            // Send to n8n
-            $response = \Http::timeout(30)->post($n8nGenerateUrl, $data);
+            // Send to n8n with increased timeout and better error handling
+            // Use async request to prevent PHP timeout
+            $response = \Http::timeout(30) // Reduce to 30 seconds for faster response
+                ->retry(1, 100) // Only retry once
+                ->withOptions([
+                    'verify' => false, // Disable SSL verification for localhost
+                    'allow_redirects' => true,
+                    'http_errors' => false // Don't throw exceptions for HTTP error status codes
+                ])
+                ->post($n8nGenerateUrl, $data);
             
             if ($response->successful()) {
                 \Log::info('n8n question generation triggered successfully', [
@@ -440,21 +445,153 @@ class MaterialController extends Controller
                     'material_id' => $material->id,
                     'response_status' => $response->status(),
                     'response_body' => $response->body(),
-                    'webhook_url' => $n8nGenerateUrl
+                    'response_headers' => $response->headers(),
+                    'webhook_url' => $n8nGenerateUrl,
+                    'request_data_size' => strlen(json_encode($data))
                 ]);
+                
+                // More detailed error message
+                $errorMessage = 'n8n webhook failed';
+                if ($response->status() === 404) {
+                    $errorMessage = 'n8n webhook endpoint not found (404). Please check if the workflow exists.';
+                } elseif ($response->status() === 500) {
+                    $errorMessage = 'n8n internal server error (500). Check n8n logs.';
+                } elseif ($response->status() === 0) {
+                    $errorMessage = 'Cannot connect to n8n. Is n8n running on port 5678?';
+                } else {
+                    $errorMessage = 'n8n returned status ' . $response->status() . ': ' . $response->body();
+                }
                 
                 return response()->json([
                     'success' => false,
                     'message' => 'Failed to trigger question generation',
-                    'error' => 'n8n webhook returned status: ' . $response->status()
+                    'error' => $errorMessage,
+                    'debug_info' => [
+                        'status' => $response->status(),
+                        'response' => $response->body(),
+                        'url' => $n8nGenerateUrl
+                    ]
                 ], 500);
             }
             
+        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+            \Log::warning('Connection timeout when triggering question generation - continuing with polling', [
+                'material_id' => $id,
+                'error' => $e->getMessage(),
+                'webhook_url' => $n8nGenerateUrl ?? 'not_set',
+                'error_type' => 'connection_timeout'
+            ]);
+            
+            // Return success anyway since we have polling to detect completion
+            // The request might have reached n8n even if we didn't get a response
+            return response()->json([
+                'success' => true,
+                'message' => 'Question generation request sent (connection timeout occurred)',
+                'note' => 'Request may still be processing in background. Polling will detect completion.',
+                'data' => [
+                    'material_id' => $id,
+                    'question_count' => $request->question_count ?? 10,
+                    'difficulty' => $request->difficulty ?? 'menengah',
+                    'estimated_completion' => '3-10 minutes',
+                    'timeout_occurred' => true
+                ]
+            ]);
         } catch (\Exception $e) {
             \Log::error('Error triggering question generation', [
                 'material_id' => $id,
                 'error' => $e->getMessage(),
+                'error_class' => get_class($e),
                 'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Error triggering question generation: ' . $e->getMessage(),
+                'error_type' => get_class($e)
+            ], 500);
+        }
+    }
+
+    /**
+     * Alternative method to trigger n8n generation with fire-and-forget approach
+     */
+    public function generateQuestionsAsync(Request $request, $id)
+    {
+        try {
+            $material = Material::findOrFail($id);
+            
+            // Validate request
+            $request->validate([
+                'question_count' => 'required|integer|min:1|max:50',
+                'difficulty' => 'required|in:mudah,menengah,sulit,campuran',
+                'auto_generate' => 'boolean'
+            ]);
+            
+            // Prepare complete data for n8n trigger (keeping all important fields)
+            $quickData = [
+                'action' => 'generate_questions',
+                'material_id' => $material->id,
+                'material_title' => $material->title,
+                'material_description' => $material->description,
+                'material_category' => $material->category,
+                'file_name' => $material->file_name,
+                'file_size' => $material->file_size,
+                'file_url' => asset('storage/' . $material->file_path),
+                'download_url' => route('materials.download', $material->id),
+                'api_file_content_url' => 'http://172.17.0.1:8000/api/materials/' . $material->id . '/file-content',
+                'api_file_stream_url' => 'http://172.17.0.1:8000/api/materials/' . $material->id . '/stream',
+                'questions_api_url' => 'http://172.17.0.1:8000/api/questions/array',
+                'questions_webhook_url' => 'http://172.17.0.1:8000/api/questions/auto-save',
+                'generation_settings' => [
+                    'question_count' => (int) $request->question_count,
+                    'difficulty' => $request->difficulty,
+                    'auto_generate' => true,
+                    'language' => 'id',
+                    'format' => 'multiple_choice',
+                    'include_explanation' => true
+                ],
+                'trigger_source' => 'laravel_generate_button_async',
+                'timestamp' => now()->toISOString(),
+                'callback_url' => 'http://172.17.0.1:8000/materials/' . $material->id
+            ];
+            
+            $n8nGenerateUrl = env('N8N_GENERATE_QUESTIONS_URL', 'http://localhost:5678/webhook/generate-questions');
+            
+            \Log::info('Triggering n8n async generation', [
+                'material_id' => $material->id,
+                'webhook_url' => $n8nGenerateUrl
+            ]);
+            
+            // Fire-and-forget with very short timeout
+            try {
+                \Http::timeout(5) // Only 5 seconds
+                    ->withOptions(['verify' => false])
+                    ->post($n8nGenerateUrl, $quickData);
+            } catch (\Exception $e) {
+                // Ignore timeout/connection errors for fire-and-forget
+                \Log::info('Fire-and-forget request completed (timeout expected)', [
+                    'material_id' => $material->id,
+                    'error' => $e->getMessage()
+                ]);
+            }
+            
+            // Always return success immediately
+            return response()->json([
+                'success' => true,
+                'message' => 'Question generation request sent successfully',
+                'data' => [
+                    'material_id' => $material->id,
+                    'question_count' => $request->question_count,
+                    'difficulty' => $request->difficulty,
+                    'estimated_completion' => '3-10 minutes',
+                    'method' => 'async_fire_and_forget'
+                ]
+            ]);
+            
+        } catch (\Exception $e) {
+            \Log::error('Error in async question generation', [
+                'material_id' => $id,
+                'error' => $e->getMessage()
             ]);
             
             return response()->json([

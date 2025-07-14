@@ -8,6 +8,48 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+// Debug route for testing n8n connection
+Route::get('/test-n8n-connection', function () {
+    try {
+        $testData = [
+            'action' => 'test_connection',
+            'timestamp' => now()->toISOString(),
+            'message' => 'Laravel connection test'
+        ];
+        
+        $n8nUrl = env('N8N_GENERATE_QUESTIONS_URL', 'http://localhost:5678/webhook/generate-questions');
+        
+        $response = \Http::timeout(120)
+            ->retry(2, 100)
+            ->withOptions([
+                'verify' => false,
+                'allow_redirects' => true,
+                'http_errors' => false
+            ])
+            ->post($n8nUrl, $testData);
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'n8n connection test completed',
+            'url' => $n8nUrl,
+            'request_data' => $testData,
+            'response' => [
+                'status' => $response->status(),
+                'headers' => $response->headers(),
+                'body' => $response->body(),
+                'successful' => $response->successful()
+            ]
+        ]);
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'error' => $e->getMessage(),
+            'error_class' => get_class($e)
+        ], 500);
+    }
+})->name('test.n8n.connection');
+
 // Material Routes
 Route::get('/materials', [MaterialController::class, 'index'])->name('materials.index');
 Route::get('/materials/create', [MaterialController::class, 'create'])->name('materials.create');
@@ -21,6 +63,8 @@ Route::get('/materials/{id}/questions', [MaterialController::class, 'questions']
 
 // Generate Questions with n8n
 Route::post('/materials/{id}/generate-questions', [MaterialController::class, 'generateQuestions'])->name('materials.generate-questions');
+Route::post('/materials/{id}/generate-questions-async', [MaterialController::class, 'generateQuestionsAsync'])->name('materials.generate-questions-async');
+Route::get('/materials/{id}/test-n8n', [MaterialController::class, 'testN8nConnection'])->name('materials.test-n8n');
 
 
 // Form Manual Input
