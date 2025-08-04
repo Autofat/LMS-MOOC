@@ -111,13 +111,7 @@
                     </div>
 
                     <!-- Submit Buttons -->
-                    <div class="flex justify-between items-center pt-8 border-t" style="border-color: rgba(28,88,113,0.1);">
-                        <a href="{{ route('materials.index') }}" 
-                           class="inline-flex items-center px-6 py-3 rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
-                           style="background: linear-gradient(135deg, rgba(107,114,128,0.8) 0%, rgba(75,85,99,0.9) 100%); color: white;">
-                            <i class="fas fa-arrow-left mr-2"></i>
-                            Kembali
-                        </a>
+                    <div class="flex justify-end items-center pt-8 border-t" style="border-color: rgba(28,88,113,0.1);">
                         <button type="submit"
                             class="inline-flex items-center px-8 py-3 rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
                             style="background: linear-gradient(135deg, rgba(28,88,113,0.8) 0%, rgba(34,108,137,0.9) 100%); color: white;">
