@@ -9,8 +9,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         .professional-gradient {
-            background: linear-gradient(135deg, rgba(28,88,113,1) 0%, rgba(35,105,135,1) 50%, rgba(42,122,157,1) 100%);
+            background: linear-gradient(135deg, rgba(28, 88, 113, 1) 0%, rgba(35, 105, 135, 1) 50%, rgba(42, 122, 157, 1) 100%);
         }
+
         .subtle-pattern {
             background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='rgba(28,88,113,0.03)' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
         }
@@ -34,7 +35,8 @@
             </a>
         </div>
 
-        <div class="bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl p-8 border" style="border-color: rgba(28,88,113,0.1);">
+        <div class="bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl p-8 border"
+            style="border-color: rgba(28,88,113,0.1);">
             <!-- Header -->
             <div class="text-center mb-8">
                 <div class="professional-gradient p-6 rounded-2xl mb-6">
@@ -48,18 +50,21 @@
 
             <!-- Auto-Fill Message -->
             @if (isset($autoFillData))
-                <div class="px-6 py-4 rounded-xl mb-6 flex items-center space-x-3" style="background: linear-gradient(135deg, rgba(28,88,113,0.1) 0%, rgba(42,122,157,0.08) 100%); border: 1px solid rgba(28,88,113,0.3); color: rgba(28,88,113,0.9);">
+                <div class="px-6 py-4 rounded-xl mb-6 flex items-center space-x-3"
+                    style="background: linear-gradient(135deg, rgba(28,88,113,0.1) 0%, rgba(42,122,157,0.08) 100%); border: 1px solid rgba(28,88,113,0.3); color: rgba(28,88,113,0.9);">
                     <i class="fas fa-magic text-xl" style="color: rgba(28,88,113,1);"></i>
                     <div>
-                        <strong>Form telah diisi otomatis oleh sistem!</strong> 
-                        <p class="text-sm mt-1">Data dari sistem telah dimuat. Anda dapat mengedit dan submit secara manual.</p>
+                        <strong>Form telah diisi otomatis oleh sistem!</strong>
+                        <p class="text-sm mt-1">Data dari sistem telah dimuat. Anda dapat mengedit dan submit secara
+                            manual.</p>
                     </div>
                 </div>
             @endif
 
             <!-- Error Messages -->
             @if ($errors->any())
-                <div class="bg-gradient-to-r from-red-100 to-red-50 border border-red-300 text-red-700 px-6 py-4 rounded-xl mb-6">
+                <div
+                    class="bg-gradient-to-r from-red-100 to-red-50 border border-red-300 text-red-700 px-6 py-4 rounded-xl mb-6">
                     <div class="flex items-center space-x-3 mb-2">
                         <i class="fas fa-exclamation-triangle text-red-600"></i>
                         <strong>Terdapat kesalahan:</strong>
@@ -78,7 +83,8 @@
 
                 <!-- Material Selection -->
                 <div>
-                    <label for="material_id" class="block text-sm font-semibold mb-3 flex items-center space-x-2" style="color: rgba(28,88,113,0.9);">
+                    <label for="material_id" class="block text-sm font-semibold mb-3 flex items-center space-x-2"
+                        style="color: rgba(28,88,113,0.9);">
                         <i class="fas fa-folder-open" style="color: rgba(28,88,113,1);"></i>
                         <span>Pilih Materi (Opsional)</span>
                     </label>
@@ -104,7 +110,8 @@
 
                 <!-- Question -->
                 <div>
-                    <label for="question" class="block text-sm font-semibold mb-3 flex items-center space-x-2" style="color: rgba(28,88,113,0.9);">
+                    <label for="question" class="block text-sm font-semibold mb-3 flex items-center space-x-2"
+                        style="color: rgba(28,88,113,0.9);">
                         <i class="fas fa-question-circle" style="color: rgba(28,88,113,1);"></i>
                         <span>Pertanyaan <span class="text-red-500">*</span></span>
                     </label>
@@ -118,8 +125,10 @@
                 <div class="grid md:grid-cols-2 gap-6">
                     <!-- Option A -->
                     <div>
-                        <label for="option_a" class="block text-sm font-semibold mb-3 flex items-center space-x-2" style="color: rgba(28,88,113,0.9);">
-                            <span class="px-2 py-1 rounded-lg text-xs font-bold text-white" style="background: rgba(28,88,113,1);">A</span>
+                        <label for="option_a" class="block text-sm font-semibold mb-3 flex items-center space-x-2"
+                            style="color: rgba(28,88,113,0.9);">
+                            <span class="px-2 py-1 rounded-lg text-xs font-bold text-white"
+                                style="background: rgba(28,88,113,1);">A</span>
                             <span>Pilihan A <span class="text-red-500">*</span></span>
                         </label>
                         <textarea id="option_a" name="option_a" rows="3"
@@ -130,8 +139,10 @@
 
                     <!-- Option B -->
                     <div>
-                        <label for="option_b" class="block text-sm font-semibold mb-3 flex items-center space-x-2" style="color: rgba(28,88,113,0.9);">
-                            <span class="px-2 py-1 rounded-lg text-xs font-bold text-white" style="background: rgba(28,88,113,1);">B</span>
+                        <label for="option_b" class="block text-sm font-semibold mb-3 flex items-center space-x-2"
+                            style="color: rgba(28,88,113,0.9);">
+                            <span class="px-2 py-1 rounded-lg text-xs font-bold text-white"
+                                style="background: rgba(28,88,113,1);">B</span>
                             <span>Pilihan B <span class="text-red-500">*</span></span>
                         </label>
                         <textarea id="option_b" name="option_b" rows="3"
@@ -142,8 +153,10 @@
 
                     <!-- Option C -->
                     <div>
-                        <label for="option_c" class="block text-sm font-semibold mb-3 flex items-center space-x-2" style="color: rgba(28,88,113,0.9);">
-                            <span class="px-2 py-1 rounded-lg text-xs font-bold text-white" style="background: rgba(28,88,113,1);">C</span>
+                        <label for="option_c" class="block text-sm font-semibold mb-3 flex items-center space-x-2"
+                            style="color: rgba(28,88,113,0.9);">
+                            <span class="px-2 py-1 rounded-lg text-xs font-bold text-white"
+                                style="background: rgba(28,88,113,1);">C</span>
                             <span>Pilihan C <span class="text-red-500">*</span></span>
                         </label>
                         <textarea id="option_c" name="option_c" rows="3"
@@ -154,8 +167,10 @@
 
                     <!-- Option D -->
                     <div>
-                        <label for="option_d" class="block text-sm font-semibold mb-3 flex items-center space-x-2" style="color: rgba(28,88,113,0.9);">
-                            <span class="px-2 py-1 rounded-lg text-xs font-bold text-white" style="background: rgba(28,88,113,1);">D</span>
+                        <label for="option_d" class="block text-sm font-semibold mb-3 flex items-center space-x-2"
+                            style="color: rgba(28,88,113,0.9);">
+                            <span class="px-2 py-1 rounded-lg text-xs font-bold text-white"
+                                style="background: rgba(28,88,113,1);">D</span>
                             <span>Pilihan D <span class="text-red-500">*</span></span>
                         </label>
                         <textarea id="option_d" name="option_d" rows="3"
@@ -163,11 +178,26 @@
                             style="border-color: rgba(28,88,113,0.2); background: linear-gradient(135deg, rgba(245,158,11,0.05) 0%, rgba(251,191,36,0.05) 100%);"
                             placeholder="Masukkan pilihan D..." required>{{ old('option_d', $autoFillData['option_d'] ?? '') }}</textarea>
                     </div>
+
+                    <!-- Option E -->
+                    <div>
+                        <label for="option_e" class="block text-sm font-semibold mb-3 flex items-center space-x-2"
+                            style="color: rgba(28,88,113,0.9);">
+                            <span class="px-2 py-1 rounded-lg text-xs font-bold text-white"
+                                style="background: rgba(28,88,113,1);">E</span>
+                            <span>Pilihan E (Opsional)</span>
+                        </label>
+                        <textarea id="option_e" name="option_e" rows="3"
+                            class="w-full px-4 py-3 rounded-xl shadow-sm focus:outline-none focus:ring-2 transition-all border-2"
+                            style="border-color: rgba(28,88,113,0.2); background: linear-gradient(135deg, rgba(245,158,11,0.05) 0%, rgba(251,191,36,0.05) 100%);"
+                            placeholder="Masukkan pilihan E... (opsional)">{{ old('option_e', $autoFillData['option_e'] ?? '') }}</textarea>
+                    </div>
                 </div>
 
                 <!-- Answer -->
                 <div>
-                    <label for="answer" class="block text-sm font-semibold mb-3 flex items-center space-x-2" style="color: rgba(28,88,113,0.9);">
+                    <label for="answer" class="block text-sm font-semibold mb-3 flex items-center space-x-2"
+                        style="color: rgba(28,88,113,0.9);">
                         <i class="fas fa-check-circle text-green-600"></i>
                         <span>Jawaban Benar <span class="text-red-500">*</span></span>
                     </label>
@@ -184,12 +214,15 @@
                             {{ old('answer', $autoFillData['answer'] ?? '') == 'C' ? 'selected' : '' }}>C</option>
                         <option value="D"
                             {{ old('answer', $autoFillData['answer'] ?? '') == 'D' ? 'selected' : '' }}>D</option>
+                        <option value="E"
+                            {{ old('answer', $autoFillData['answer'] ?? '') == 'E' ? 'selected' : '' }}>E</option>
                     </select>
                 </div>
 
                 <!-- Explanation -->
                 <div>
-                    <label for="explanation" class="block text-sm font-semibold mb-3 flex items-center space-x-2" style="color: rgba(28,88,113,0.9);">
+                    <label for="explanation" class="block text-sm font-semibold mb-3 flex items-center space-x-2"
+                        style="color: rgba(28,88,113,0.9);">
                         <i class="fas fa-lightbulb text-yellow-500"></i>
                         <span>Penjelasan (Opsional)</span>
                     </label>
@@ -201,7 +234,8 @@
 
                 <!-- Difficulty -->
                 <div>
-                    <label for="difficulty" class="block text-sm font-semibold mb-3 flex items-center space-x-2" style="color: rgba(28,88,113,0.9);">
+                    <label for="difficulty" class="block text-sm font-semibold mb-3 flex items-center space-x-2"
+                        style="color: rgba(28,88,113,0.9);">
                         <i class="fas fa-layer-group" style="color: rgba(28,88,113,1);"></i>
                         <span>Tingkat Kesulitan (Opsional)</span>
                     </label>
@@ -209,15 +243,15 @@
                         class="w-full px-4 py-3 rounded-xl shadow-sm focus:outline-none focus:ring-2 transition-all border-2"
                         style="border-color: rgba(28,88,113,0.2); background: linear-gradient(135deg, rgba(251,146,60,0.05) 0%, rgba(239,68,68,0.05) 100%);">
                         <option value="">Pilih tingkat kesulitan...</option>
-                        <option value="Mudah"
-                            {{ old('difficulty', $autoFillData['difficulty'] ?? '') == 'Mudah' ? 'selected' : '' }}>
-                            Mudah</option>
-                        <option value="Menengah"
-                            {{ old('difficulty', $autoFillData['difficulty'] ?? '') == 'Menengah' ? 'selected' : '' }}>
-                            Menengah</option>
-                        <option value="Sulit"
-                            {{ old('difficulty', $autoFillData['difficulty'] ?? '') == 'Sulit' ? 'selected' : '' }}>
-                            Sulit</option>
+                        <option value="easy"
+                            {{ old('difficulty', $autoFillData['difficulty'] ?? '') == 'easy' ? 'selected' : '' }}>
+                            Easy</option>
+                        <option value="medium"
+                            {{ old('difficulty', $autoFillData['difficulty'] ?? '') == 'medium' ? 'selected' : '' }}>
+                            Medium</option>
+                        <option value="hard"
+                            {{ old('difficulty', $autoFillData['difficulty'] ?? '') == 'hard' ? 'selected' : '' }}>
+                            Hard</option>
                     </select>
                 </div>
 

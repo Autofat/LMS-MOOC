@@ -34,38 +34,113 @@ class MaterialController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'category' => 'nullable|string|max:100',
-            'pdf_file' => 'required|file|mimes:pdf|max:10240', // Max 10MB
+        // Log the incoming request for debugging
+        \Log::info('MaterialController store method called', [
+            'expects_json' => $request->expectsJson(),
+            'is_ajax' => $request->ajax(),
+            'wants_json' => $request->wantsJson(),
+            'accept_header' => $request->header('Accept'),
+            'content_type' => $request->header('Content-Type'),
+            'x_requested_with' => $request->header('X-Requested-With'),
+            'has_file' => $request->hasFile('pdf_file')
         ]);
-
-        $uploadedFile = $request->file('pdf_file');
         
-        // Generate unique filename
-        $fileName = time() . '_' . $uploadedFile->getClientOriginalName();
-        
-        // Store file in storage/app/public/materials
-        $filePath = $uploadedFile->storeAs('materials', $fileName, 'public');
-        
-        // Create material record
-        $material = Material::create([
-            'title' => $request->title,
-            'description' => $request->description,
-            'file_path' => $filePath,
-            'file_name' => $uploadedFile->getClientOriginalName(),
-            'file_size' => $uploadedFile->getSize(),
-            'category' => $request->category,
-            'is_active' => true,
-        ]);
+        try {
+            $request->validate([
+                'title' => 'required|string|max:255',
+                'description' => 'nullable|string',
+                'category' => 'nullable|string|max:100',
+                'pdf_file' => 'required|file|mimes:pdf|max:10240', // Max 10MB
+            ]);
 
-        // Notify n8n
-        \Log::info('About to call notifyN8n', ['material_id' => $material->id]);
-        $webhookResult = $this->notifyN8n($material);
-        \Log::info('notifyN8n result', ['material_id' => $material->id, 'result' => $webhookResult]);
+            $uploadedFile = $request->file('pdf_file');
+            
+            // Generate unique filename
+            $fileName = time() . '_' . $uploadedFile->getClientOriginalName();
+            
+            // Store file in storage/app/public/materials
+            $filePath = $uploadedFile->storeAs('materials', $fileName, 'public');
+            
+            // Create material record
+            $material = Material::create([
+                'title' => $request->title,
+                'description' => $request->description,
+                'file_path' => $filePath,
+                'file_name' => $uploadedFile->getClientOriginalName(),
+                'file_size' => $uploadedFile->getSize(),
+                'category' => $request->category,
+                'is_active' => true,
+            ]);
 
-        return redirect()->route('materials.index')->with('success', 'Materi berhasil diupload!');
+            // Notify n8n
+            \Log::info('About to call notifyN8n', ['material_id' => $material->id]);
+            $webhookResult = $this->notifyN8n($material);
+            \Log::info('notifyN8n result', ['material_id' => $material->id, 'result' => $webhookResult]);
+
+            // Check if request expects JSON (AJAX request)
+            if ($request->expectsJson() || $request->ajax() || $request->wantsJson() || $request->header('Accept') === 'application/json') {
+                \Log::info('Returning JSON response for material upload', [
+                    'material_id' => $material->id,
+                    'expects_json' => $request->expectsJson(),
+                    'is_ajax' => $request->ajax(),
+                    'wants_json' => $request->wantsJson(),
+                    'accept_header' => $request->header('Accept')
+                ]);
+                
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Materi berhasil diupload!',
+                    'material' => [
+                        'id' => $material->id,
+                        'title' => $material->title,
+                        'description' => $material->description,
+                        'file_name' => $material->file_name
+                    ],
+                    'redirect_url' => route('materials.show', $material->id)
+                ], 201);
+            }
+
+            \Log::info('Returning redirect response for material upload', [
+                'material_id' => $material->id,
+                'expects_json' => $request->expectsJson(),
+                'is_ajax' => $request->ajax(),
+                'wants_json' => $request->wantsJson(),
+                'accept_header' => $request->header('Accept')
+            ]);
+
+            return redirect()->route('materials.index')->with('success', 'Materi berhasil diupload!');
+            
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::error('Validation error in material store', [
+                'errors' => $e->errors(),
+                'request_data' => $request->except(['pdf_file'])
+            ]);
+            
+            if ($request->expectsJson() || $request->ajax() || $request->wantsJson() || $request->header('Accept') === 'application/json') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $e->errors()
+                ], 422);
+            }
+            
+            return redirect()->back()->withErrors($e->errors())->withInput();
+            
+        } catch (\Exception $e) {
+            \Log::error('Error storing material', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            if ($request->expectsJson() || $request->ajax() || $request->wantsJson() || $request->header('Accept') === 'application/json') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to upload material: ' . $e->getMessage()
+                ], 500);
+            }
+            
+            return redirect()->back()->with('error', 'Error uploading material: ' . $e->getMessage())->withInput();
+        }
     }
 
     /**
@@ -232,6 +307,76 @@ class MaterialController extends Controller
     }
 
     /**
+     * API Download endpoint for n8n (no authentication required)
+     */
+    public function apiDownload($id)
+    {
+        try {
+            $material = Material::findOrFail($id);
+            
+            $filePath = storage_path('app/public/' . $material->file_path);
+            
+            if (!file_exists($filePath)) {
+                \Log::error('File not found for API download', [
+                    'material_id' => $id,
+                    'file_path' => $filePath,
+                    'expected_path' => $material->file_path
+                ]);
+                
+                return response()->json([
+                    'success' => false,
+                    'message' => 'File not found',
+                    'debug' => [
+                        'material_id' => $id,
+                        'file_path' => $material->file_path,
+                        'full_path' => $filePath,
+                        'exists' => false
+                    ]
+                ], 404);
+            }
+            
+            // Log the download attempt for security/tracking
+            \Log::info('API Download accessed', [
+                'material_id' => $id,
+                'file_name' => $material->file_name,
+                'file_size' => $material->file_size,
+                'user_agent' => request()->userAgent(),
+                'ip' => request()->ip(),
+                'timestamp' => now()->toISOString()
+            ]);
+            
+            // Return file with proper headers for download
+            return response()->file($filePath, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'attachment; filename="' . $material->file_name . '"',
+                'X-Material-ID' => $material->id,
+                'X-Material-Title' => $material->title,
+                'X-Material-Category' => $material->category ?? 'uncategorized',
+                'X-File-Size' => $material->file_size,
+                'Cache-Control' => 'no-cache, must-revalidate',
+                'Expires' => 'Mon, 26 Jul 1997 05:00:00 GMT'
+            ]);
+            
+        } catch (\Exception $e) {
+            \Log::error('Error in API download', [
+                'material_id' => $id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to download file: ' . $e->getMessage(),
+                'debug' => [
+                    'material_id' => $id,
+                    'error_line' => $e->getLine(),
+                    'error_file' => $e->getFile()
+                ]
+            ], 500);
+        }
+    }
+
+    /**
      * Download questions for specific material as Excel
      */
     public function downloadQuestionsExcel($id)
@@ -277,18 +422,21 @@ class MaterialController extends Controller
                 <tbody>';
 
         foreach ($questions as $index => $question) {
+            // Get options safely
+            $options = $question->options ?? [];
+            
             $excelContent .= '
                     <tr>
                         <td>' . ($index + 1) . '</td>
-                        <td>' . htmlspecialchars($question->question) . '</td>
-                        <td>' . htmlspecialchars($question->options['A'] ?? '') . '</td>
-                        <td>' . htmlspecialchars($question->options['B'] ?? '') . '</td>
-                        <td>' . htmlspecialchars($question->options['C'] ?? '') . '</td>
-                        <td>' . htmlspecialchars($question->options['D'] ?? '') . '</td>
-                        <td>' . htmlspecialchars($question->answer) . '</td>
+                        <td>' . htmlspecialchars($question->question ?? '') . '</td>
+                        <td>' . htmlspecialchars($options['A'] ?? '') . '</td>
+                        <td>' . htmlspecialchars($options['B'] ?? '') . '</td>
+                        <td>' . htmlspecialchars($options['C'] ?? '') . '</td>
+                        <td>' . htmlspecialchars($options['D'] ?? '') . '</td>
+                        <td>' . htmlspecialchars($question->answer ?? '') . '</td>
                         <td>' . htmlspecialchars($question->explanation ?? '') . '</td>
                         <td>' . htmlspecialchars($question->difficulty ?? '') . '</td>
-                        <td>' . $question->created_at->format('d/m/Y H:i:s') . '</td>
+                        <td>' . ($question->created_at ? $question->created_at->format('d/m/Y H:i:s') : '') . '</td>
                     </tr>';
         }
 
@@ -329,7 +477,7 @@ class MaterialController extends Controller
         
         try {
             // URL n8n webhook - bisa dikonfigurasi di .env
-            $n8nWebhookUrl = env('N8N_WEBHOOK_URL', 'http://localhost:5678/webhook-test/uploadFiles');
+            $n8nWebhookUrl = env('N8N_WEBHOOK_URL');
             
             \Log::info('Using webhook URL', ['webhook_url' => $n8nWebhookUrl]);
             
@@ -347,8 +495,9 @@ class MaterialController extends Controller
                 'file_size' => $material->file_size,
                 'file_url' => asset('storage/' . $material->file_path),
                 'download_url' => route('materials.download', $material->id),
-                'api_file_content_url' => url('/api/materials/' . $material->id . '/file-content'),
-                'api_file_stream_url' => url('/api/materials/' . $material->id . '/stream'),
+                'api_download_url' => url('/api/public/materials/' . $material->id . '/download'),
+                'api_file_content_url' => url('/api/public/materials/' . $material->id . '/file-content'),
+                'api_file_stream_url' => url('/api/public/materials/' . $material->id . '/stream'),
                 'created_at' => $material->created_at->toISOString(),
                 'trigger_source' => 'laravel_form_upload'
             ];
@@ -492,15 +641,20 @@ class MaterialController extends Controller
         try {
             $material = Material::findOrFail($id);
             
+            // Clear any existing completion cache to allow new generation
+            $cacheKey = "n8n_completion_material_{$material->id}";
+            cache()->forget($cacheKey);
+            \Log::info('Cleared previous completion cache for material', ['material_id' => $material->id]);
+            
             // Validate request
             $request->validate([
                 'question_count' => 'required|integer|min:1|max:50',
-                'difficulty' => 'required|in:mudah,menengah,sulit,campuran',
+                'difficulty' => 'required|in:mudah,menengah,sulit,campuran,easy,medium,hard,mixed',
                 'auto_generate' => 'boolean'
             ]);
             
             // URL n8n webhook untuk generate questions
-            $n8nGenerateUrl = env('N8N_GENERATE_QUESTIONS_URL', 'http://localhost:5678/webhook/generate-questions');
+            $n8nGenerateUrl = env('N8N_GENERATE_QUESTIONS_URL',);
             
             // Get file path
             $filePath = storage_path('app/public/' . $material->file_path);
@@ -514,12 +668,7 @@ class MaterialController extends Controller
                 'material_category' => $material->category,
                 'file_name' => $material->file_name,
                 'file_size' => $material->file_size,
-                'file_url' => asset('storage/' . $material->file_path),
-                'download_url' => route('materials.download', $material->id),
-                'api_file_content_url' => 'http://172.17.0.1:8000/api/materials/' . $material->id . '/file-content',
-                'api_file_stream_url' => 'http://172.17.0.1:8000/api/materials/' . $material->id . '/stream',
-                'questions_api_url' => 'http://172.17.0.1:8000/api/questions/array',
-                'questions_webhook_url' => 'http://172.17.0.1:8000/api/questions/auto-save',
+                'api_download_url' => 'http://' . env('DOCKER_HOST_ADDRESS', 'host.docker.internal') . ':8000/api/public/materials/' . $material->id . '/download',
                 'generation_settings' => [
                     'question_count' => (int) $request->question_count,
                     'difficulty' => $request->difficulty,
@@ -530,7 +679,7 @@ class MaterialController extends Controller
                 ],
                 'trigger_source' => 'laravel_generate_button',
                 'timestamp' => now()->toISOString(),
-                'callback_url' => 'http://172.17.0.1:8000/materials/' . $material->id
+                'callback_url' => 'http://' . env('DOCKER_HOST_ADDRESS', 'host.docker.internal') . ':8000/materials/' . $material->id
             ];
             
             // Add file content if file exists and not too large
@@ -641,7 +790,7 @@ class MaterialController extends Controller
                 'data' => [
                     'material_id' => $id,
                     'question_count' => $request->question_count ?? 10,
-                    'difficulty' => $request->difficulty ?? 'menengah',
+                    'difficulty' => $request->difficulty ?? 'medium',
                     'estimated_completion' => '3-10 minutes',
                     'timeout_occurred' => true
                 ]
@@ -670,10 +819,15 @@ class MaterialController extends Controller
         try {
             $material = Material::findOrFail($id);
             
+            // Clear any existing completion cache to allow new generation
+            $cacheKey = "n8n_completion_material_{$material->id}";
+            cache()->forget($cacheKey);
+            \Log::info('Cleared previous completion cache for async generation', ['material_id' => $material->id]);
+            
             // Validate request
             $request->validate([
                 'question_count' => 'required|integer|min:1|max:50',
-                'difficulty' => 'required|in:mudah,menengah,sulit,campuran',
+                'difficulty' => 'required|in:mudah,menengah,sulit,campuran,easy,medium,hard,mixed',
                 'auto_generate' => 'boolean'
             ]);
             
@@ -688,10 +842,11 @@ class MaterialController extends Controller
                 'file_size' => $material->file_size,
                 'file_url' => asset('storage/' . $material->file_path),
                 'download_url' => route('materials.download', $material->id),
-                'api_file_content_url' => 'http://172.17.0.1:8000/api/materials/' . $material->id . '/file-content',
-                'api_file_stream_url' => 'http://172.17.0.1:8000/api/materials/' . $material->id . '/stream',
-                'questions_api_url' => 'http://172.17.0.1:8000/api/questions/array',
-                'questions_webhook_url' => 'http://172.17.0.1:8000/api/questions/auto-save',
+                'api_download_url' => 'http://' . env('DOCKER_HOST_ADDRESS', 'host.docker.internal') . ':8000/api/public/materials/' . $material->id . '/download',
+                'api_file_content_url' => 'http://' . env('DOCKER_HOST_ADDRESS', 'host.docker.internal') . ':8000/api/public/materials/' . $material->id . '/file-content',
+                'api_file_stream_url' => 'http://' . env('DOCKER_HOST_ADDRESS', 'host.docker.internal') . ':8000/api/public/materials/' . $material->id . '/stream',
+                'questions_api_url' => 'http://' . env('DOCKER_HOST_ADDRESS', 'host.docker.internal') . ':8000/api/questions/array',
+                'questions_webhook_url' => 'http://' . env('DOCKER_HOST_ADDRESS', 'host.docker.internal') . ':8000/api/public/questions/auto-save',
                 'generation_settings' => [
                     'question_count' => (int) $request->question_count,
                     'difficulty' => $request->difficulty,
@@ -702,7 +857,7 @@ class MaterialController extends Controller
                 ],
                 'trigger_source' => 'laravel_generate_button_async',
                 'timestamp' => now()->toISOString(),
-                'callback_url' => 'http://172.17.0.1:8000/materials/' . $material->id
+                'callback_url' => 'http://' . env('DOCKER_HOST_ADDRESS', 'host.docker.internal') . ':8000/materials/' . $material->id
             ];
             
             $n8nGenerateUrl = env('N8N_GENERATE_QUESTIONS_URL', 'http://localhost:5678/webhook/generate-questions');
@@ -914,6 +1069,49 @@ class MaterialController extends Controller
                     'error_line' => $e->getLine(),
                     'error_file' => $e->getFile()
                 ]
+            ], 500);
+        }
+    }
+    
+    /**
+     * Clear generation state and cache for a material
+     */
+    public function clearGenerationState($id)
+    {
+        try {
+            $material = Material::findOrFail($id);
+            
+            // Clear completion cache
+            $cacheKey = "n8n_completion_material_{$material->id}";
+            cache()->forget($cacheKey);
+            
+            // Get current question count for fresh baseline
+            $currentQuestionCount = $material->questions()->count();
+            
+            \Log::info('Generation state cleared', [
+                'material_id' => $material->id,
+                'current_questions' => $currentQuestionCount
+            ]);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Generation state cleared successfully',
+                'data' => [
+                    'material_id' => $material->id,
+                    'current_questions_count' => $currentQuestionCount,
+                    'cache_cleared' => true
+                ]
+            ]);
+            
+        } catch (\Exception $e) {
+            \Log::error('Error clearing generation state', [
+                'material_id' => $id,
+                'error' => $e->getMessage()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Error clearing generation state: ' . $e->getMessage()
             ], 500);
         }
     }

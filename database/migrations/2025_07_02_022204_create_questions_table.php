@@ -15,7 +15,11 @@ public function up()
         $table->id(); // Kolom id auto increment
         $table->unsignedBigInteger('material_id')->nullable(); // Kolom untuk relasi ke materials
         $table->text('question'); // Kolom untuk pertanyaan
-        $table->json('options'); // Kolom untuk pilihan jawaban, tipe json
+        $table->text('option_a'); // Kolom untuk opsi A
+        $table->text('option_b'); // Kolom untuk opsi B
+        $table->text('option_c'); // Kolom untuk opsi C, bisa kosong
+        $table->text('option_d'); // Kolom untuk opsi D, bisa kosong
+        $table->text('option_e');
         $table->string('answer'); // Kolom untuk jawaban yang benar
         $table->text('explanation')->nullable(); // Kolom penjelasan, bisa kosong
         $table->string('difficulty')->nullable(); // Kolom untuk tingkat kesulitan

@@ -22,6 +22,18 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
+// Public routes for n8n (no authentication required)
+Route::prefix('public')->group(function () {
+    // PDF download for n8n without authentication
+    Route::get('/materials/{id}/download', [MaterialController::class, 'apiDownload']);
+    Route::get('/materials/{id}/file-content', [MaterialController::class, 'getFileForN8n']);
+    Route::get('/materials/{id}/stream', [MaterialController::class, 'streamFileForN8n']);
+    
+    // Question saving for n8n without authentication
+    Route::post('/questions/auto-save', [QuestionApiController::class, 'webhook']);
+    Route::post('/questions/webhook', [QuestionApiController::class, 'webhook']);
+});
+
 // Material API Routes
 Route::prefix('materials')->middleware(['throttle:60,1'])->group(function () {
     Route::get('/', [MaterialApiController::class, 'index']);
@@ -31,12 +43,10 @@ Route::prefix('materials')->middleware(['throttle:60,1'])->group(function () {
     Route::delete('/{id}', [MaterialApiController::class, 'destroy']);
     Route::get('/with-questions/all', [MaterialApiController::class, 'materialsWithQuestions']);
     
-    // Questions count for a specific material
-    Route::get('/{id}/questions-count', [MaterialApiController::class, 'getQuestionsCount']);
-    
     // File access for n8n
     Route::get('/{id}/file-content', [MaterialController::class, 'getFileForN8n']);
     Route::get('/{id}/stream', [MaterialController::class, 'streamFileForN8n']);
+    Route::get('/{id}/download', [MaterialController::class, 'apiDownload']);
     
     // Webhook endpoint for n8n automation
     Route::post('/webhook', [MaterialApiController::class, 'webhook']);
@@ -53,12 +63,14 @@ Route::prefix('questions')->middleware(['throttle:60,1'])->group(function () {
     // Get questions by material
     Route::get('/material/{materialId}', [QuestionApiController::class, 'getByMaterial']);
     
-    // Bulk create questions
-    Route::post('/bulk', [QuestionApiController::class, 'bulkStore']);
-    Route::post('/array', [QuestionApiController::class, 'storeFromArray']);
+    // Clear completion cache for a material
+    Route::delete('/cache/{materialId}', [QuestionApiController::class, 'clearCompletionCache']);
     
-    // Webhook endpoint for n8n automation
+    // Webhook endpoint for n8n automation - NEW FORMAT
     Route::post('/webhook', [QuestionApiController::class, 'webhook']);
+    
+    // Auto-save endpoint for n8n (alternative endpoint name)
+    Route::post('/auto-save', [QuestionApiController::class, 'webhook']);
 });
 
 // Health check endpoint
@@ -70,16 +82,106 @@ Route::get('/health', function () {
     ]);
 });
 
-// Endpoint utama untuk n8n - robust handling (RECOMMENDED)
-Route::any('/questions/n8n', [QuestionController::class, 'n8nEndpoint'])->name('api.questions.n8n');
+// N8N completion endpoint - handles both POST (from n8n) and GET (from frontend)
+// Supports success, error, and progress states
+Route::match(['GET', 'POST'], '/n8n/completion/{materialId?}', function (Request $request, $materialId = null) {
+    try {
+        if ($request->isMethod('POST')) {
+            // Handle POST request from n8n (completion, error, or progress update)
+            \Log::info('N8N status update received:', $request->all());
+            
+            $materialId = $request->input('material_id');
+            if (!$materialId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'material_id is required'
+                ], 400);
+            }
+            
+            // Get the material to verify it exists
+            $material = \App\Models\Material::find($materialId);
+            if (!$material) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Material not found'
+                ], 404);
+            }
+            
+            $status = $request->input('status', 'completed');
+            $questionsCount = $material->questions()->count();
+            
+            // Store status in cache (completed, error, or progress)
+            $cacheKey = "n8n_completion_material_{$materialId}";
+            $statusData = [
+                'status' => $status,
+                'message' => $request->input('message', 'Status updated'),
+                'material_id' => $materialId,
+                'questions_count' => $questionsCount,
+                'updated_at' => now()->toISOString()
+            ];
+            
+            // Add error details if status is error
+            if ($status === 'error') {
+                $statusData['error_details'] = $request->input('error_details', 'Unknown error occurred');
+            }
+            
+            cache()->put($cacheKey, $statusData, 600); // Cache for 10 minutes
+            \Log::info('N8N status cached:', $statusData);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Status received successfully',
+                'data' => $statusData
+            ]);
+            
+        } else {
+            // Handle GET request from frontend (check status)
+            if (!$materialId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'material_id is required in URL'
+                ], 400);
+            }
+            
+            $cacheKey = "n8n_completion_material_{$materialId}";
+            $statusData = cache()->get($cacheKey);
+            
+            if ($statusData) {
+                $response = [
+                    'success' => true,
+                    'status' => $statusData['status'],
+                    'data' => $statusData
+                ];
+                
+                // Set completed flag based on status
+                if ($statusData['status'] === 'completed') {
+                    $response['completed'] = true;
+                } elseif ($statusData['status'] === 'error') {
+                    $response['completed'] = false;
+                    $response['error'] = true;
+                } else {
+                    $response['completed'] = false;
+                    $response['progress'] = true;
+                }
+                
+                return response()->json($response);
+            } else {
+                return response()->json([
+                    'success' => true,
+                    'completed' => false,
+                    'status' => 'processing',
+                    'message' => 'N8N process still running...'
+                ]);
+            }
+        }
+        
+    } catch (\Exception $e) {
+        \Log::error('N8N completion error: ' . $e->getMessage());
+        return response()->json([
+            'success' => false,
+            'status' => 'error',
+            'message' => 'Error processing request: ' . $e->getMessage()
+        ], 500);
+    }
+});
 
-// Endpoint alternatif untuk n8n (backward compatibility)
-Route::any('/questions/auto-save', [QuestionController::class, 'autoSaveFromN8n'])->name('api.questions.auto.save');
-
-// Endpoint untuk testing dan debugging
-Route::any('/ping', [QuestionController::class, 'ping'])->name('api.ping');
-Route::any('/echo', [QuestionController::class, 'echo'])->name('api.echo');
-Route::any('/questions/debug', [QuestionController::class, 'testEndpoint'])->name('api.questions.debug');
-
-// API untuk mendapatkan semua questions (JSON output)
-Route::get('/questions', [QuestionController::class, 'index'])->name('api.questions.index');

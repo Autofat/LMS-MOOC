@@ -132,6 +132,7 @@ Route::middleware(['auth'])->group(function () {
     // Generate Questions with n8n
     Route::post('/materials/{id}/generate-questions', [MaterialController::class, 'generateQuestions'])->name('materials.generate-questions');
     Route::post('/materials/{id}/generate-questions-async', [MaterialController::class, 'generateQuestionsAsync'])->name('materials.generate-questions-async');
+    Route::post('/materials/{id}/clear-generation-state', [MaterialController::class, 'clearGenerationState'])->name('materials.clear-generation-state');
     Route::get('/materials/{id}/test-n8n', [MaterialController::class, 'testN8nConnection'])->name('materials.test-n8n');
 
     // Form Manual Input

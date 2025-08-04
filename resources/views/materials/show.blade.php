@@ -9,14 +9,15 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         .professional-gradient {
-            background: linear-gradient(135deg, rgba(28,88,113,0.9) 0%, rgba(34,108,137,0.95) 50%, rgba(52,211,153,0.9) 100%);
+            background: linear-gradient(135deg, rgba(28, 88, 113, 0.9) 0%, rgba(34, 108, 137, 0.95) 50%, rgba(52, 211, 153, 0.9) 100%);
         }
-        
+
         .glass-effect {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(28,88,113,0.1);
+            border: 1px solid rgba(28, 88, 113, 0.1);
         }
+
         .subtle-pattern {
             background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='rgba(28,88,113,0.03)' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
         }
@@ -30,9 +31,9 @@
     <div class="container mx-auto px-4 py-8">
         <!-- Back Button - Outside Container -->
         <div class="mb-4">
-            <a href="{{ route('materials.index') }}" 
-               class="inline-flex items-center px-4 py-2 rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
-               style="background: linear-gradient(135deg, rgba(28,88,113,1) 0%, rgba(35,105,135,1) 100%); color: white;">
+            <a href="{{ route('materials.index') }}"
+                class="inline-flex items-center px-4 py-2 rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+                style="background: linear-gradient(135deg, rgba(28,88,113,1) 0%, rgba(35,105,135,1) 100%); color: white;">
                 <i class="fas fa-arrow-left mr-2"></i>
                 Kembali
             </a>
@@ -59,8 +60,10 @@
                     </h2>
 
                     @if ($material->description)
-                        <div class="mb-4 p-4 rounded-xl" style="background: linear-gradient(135deg, rgba(28,88,113,0.05) 0%, rgba(34,108,137,0.05) 100%);">
-                            <span class="text-sm font-semibold flex items-center mb-2" style="color: rgba(28,88,113,0.8);">
+                        <div class="mb-4 p-4 rounded-xl"
+                            style="background: linear-gradient(135deg, rgba(28,88,113,0.05) 0%, rgba(34,108,137,0.05) 100%);">
+                            <span class="text-sm font-semibold flex items-center mb-2"
+                                style="color: rgba(28,88,113,0.8);">
                                 <i class="fas fa-align-left mr-2 text-blue-500"></i>
                                 Deskripsi:
                             </span>
@@ -69,33 +72,41 @@
                     @endif
 
                     <div class="space-y-3 text-sm">
-                        <div class="flex justify-between items-center p-3 rounded-lg" style="background: linear-gradient(135deg, rgba(245,158,11,0.05) 0%, rgba(251,191,36,0.05) 100%);">
+                        <div class="flex justify-between items-center p-3 rounded-lg"
+                            style="background: linear-gradient(135deg, rgba(245,158,11,0.05) 0%, rgba(251,191,36,0.05) 100%);">
                             <span class="flex items-center" style="color: rgba(28,88,113,0.7);">
                                 <i class="fas fa-file-pdf mr-2 text-red-500"></i>
                                 File:
                             </span>
-                            <span class="font-medium" style="color: rgba(28,88,113,0.9);">{{ $material->file_name }}</span>
+                            <span class="font-medium"
+                                style="color: rgba(28,88,113,0.9);">{{ $material->file_name }}</span>
                         </div>
-                        <div class="flex justify-between items-center p-3 rounded-lg" style="background: linear-gradient(135deg, rgba(245,158,11,0.05) 0%, rgba(251,191,36,0.05) 100%);">
+                        <div class="flex justify-between items-center p-3 rounded-lg"
+                            style="background: linear-gradient(135deg, rgba(245,158,11,0.05) 0%, rgba(251,191,36,0.05) 100%);">
                             <span class="flex items-center" style="color: rgba(28,88,113,0.7);">
                                 <i class="fas fa-weight mr-2 text-purple-500"></i>
                                 Ukuran:
                             </span>
-                            <span class="font-medium" style="color: rgba(28,88,113,0.9);">{{ $material->file_size_human }}</span>
+                            <span class="font-medium"
+                                style="color: rgba(28,88,113,0.9);">{{ $material->file_size_human }}</span>
                         </div>
-                        <div class="flex justify-between items-center p-3 rounded-lg" style="background: linear-gradient(135deg, rgba(245,158,11,0.05) 0%, rgba(251,191,36,0.05) 100%);">
+                        <div class="flex justify-between items-center p-3 rounded-lg"
+                            style="background: linear-gradient(135deg, rgba(245,158,11,0.05) 0%, rgba(251,191,36,0.05) 100%);">
                             <span class="flex items-center" style="color: rgba(28,88,113,0.7);">
                                 <i class="fas fa-question-circle mr-2 text-emerald-500"></i>
                                 Total Soal:
                             </span>
-                            <span class="font-semibold px-3 py-1 rounded-full text-sm" style="background: linear-gradient(135deg, rgba(28,88,113,0.1) 0%, rgba(34,108,137,0.1) 100%); color: rgba(28,88,113,0.9);">{{ $material->questions->count() }}</span>
+                            <span class="font-semibold px-3 py-1 rounded-full text-sm"
+                                style="background: linear-gradient(135deg, rgba(28,88,113,0.1) 0%, rgba(34,108,137,0.1) 100%); color: rgba(28,88,113,0.9);">{{ $material->questions->count() }}</span>
                         </div>
-                        <div class="flex justify-between items-center p-3 rounded-lg" style="background: linear-gradient(135deg, rgba(245,158,11,0.05) 0%, rgba(251,191,36,0.05) 100%);">
+                        <div class="flex justify-between items-center p-3 rounded-lg"
+                            style="background: linear-gradient(135deg, rgba(245,158,11,0.05) 0%, rgba(251,191,36,0.05) 100%);">
                             <span class="flex items-center" style="color: rgba(28,88,113,0.7);">
                                 <i class="fas fa-calendar-plus mr-2 text-blue-500"></i>
                                 Upload:
                             </span>
-                            <span class="font-medium" style="color: rgba(28,88,113,0.9);">{{ $material->created_at->format('d M Y H:i') }}</span>
+                            <span class="font-medium"
+                                style="color: rgba(28,88,113,0.9);">{{ $material->created_at->format('d M Y H:i') }}</span>
                         </div>
                     </div>
 
@@ -120,7 +131,8 @@
             <!-- Questions List -->
             <div class="lg:col-span-2">
                 <div class="glass-effect rounded-2xl shadow-xl p-6">
-                    <div class="flex justify-between items-center mb-6 pb-4 border-b" style="border-color: rgba(28,88,113,0.1);">
+                    <div class="flex justify-between items-center mb-6 pb-4 border-b"
+                        style="border-color: rgba(28,88,113,0.1);">
                         <h2 class="text-xl font-semibold flex items-center" style="color: rgba(28,88,113,0.9);">
                             <i class="fas fa-list-ol text-emerald-500 mr-2"></i>
                             Daftar Soal ({{ $material->questions->count() }})
@@ -143,12 +155,15 @@
                     @if ($material->questions->count() > 0)
                         <div class="space-y-4">
                             @foreach ($material->questions as $index => $question)
-                                <div class="border rounded-xl p-6 transition-all hover:shadow-md" style="border-color: rgba(28,88,113,0.2); background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(248,250,252,0.9) 100%);">
+                                <div class="border rounded-xl p-6 transition-all hover:shadow-md"
+                                    style="border-color: rgba(28,88,113,0.2); background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(248,250,252,0.9) 100%);">
                                     <div class="flex justify-between items-start">
                                         <div class="flex-1">
-                                            <h3 class="font-semibold mb-3 flex items-center" style="color: rgba(28,88,113,0.9);">
-                                                <span class="inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold mr-3"
-                                                      style="background: linear-gradient(135deg, rgba(28,88,113,0.1) 0%, rgba(34,108,137,0.1) 100%); color: rgba(28,88,113,0.9);">
+                                            <h3 class="font-semibold mb-3 flex items-center"
+                                                style="color: rgba(28,88,113,0.9);">
+                                                <span
+                                                    class="inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold mr-3"
+                                                    style="background: linear-gradient(135deg, rgba(28,88,113,0.1) 0%, rgba(34,108,137,0.1) 100%); color: rgba(28,88,113,0.9);">
                                                     {{ $index + 1 }}
                                                 </span>
                                                 {{ $question->question }}
@@ -159,15 +174,18 @@
                                                     <div class="flex items-center p-3 rounded-lg text-sm transition-all
                                                         {{ $question->answer === $key ? 'border-2' : 'border' }}"
                                                         style="{{ $question->answer === $key ? 'background: linear-gradient(135deg, rgba(16,185,129,0.1) 0%, rgba(5,150,105,0.1) 100%); border-color: rgba(16,185,129,0.5); color: rgba(5,150,105,0.9);' : 'background: linear-gradient(135deg, rgba(243,244,246,0.8) 0%, rgba(249,250,251,0.8) 100%); border-color: rgba(28,88,113,0.1); color: rgba(28,88,113,0.7);' }}">
-                                                        <span class="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold mr-3"
-                                                              style="{{ $question->answer === $key ? 'background: rgba(16,185,129,0.2); color: rgba(5,150,105,1);' : 'background: rgba(28,88,113,0.1); color: rgba(28,88,113,0.7);' }}">
+                                                        <span
+                                                            class="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold mr-3"
+                                                            style="{{ $question->answer === $key ? 'background: rgba(16,185,129,0.2); color: rgba(5,150,105,1);' : 'background: rgba(28,88,113,0.1); color: rgba(28,88,113,0.7);' }}">
                                                             {{ $key }}
                                                         </span>
-                                                        <span class="{{ $question->answer === $key ? 'font-semibold' : '' }}">
+                                                        <span
+                                                            class="{{ $question->answer === $key ? 'font-semibold' : '' }}">
                                                             {{ Str::limit($option, 80) }}
                                                         </span>
                                                         @if ($question->answer === $key)
-                                                            <i class="fas fa-check-circle ml-auto text-emerald-500"></i>
+                                                            <i
+                                                                class="fas fa-check-circle ml-auto text-emerald-500"></i>
                                                         @endif
                                                     </div>
                                                 @endforeach
@@ -194,7 +212,8 @@
                                                             $textClass = 'text-gray-700';
                                                         }
                                                     @endphp
-                                                    <span class="inline-flex items-center {{ $bgClass }} {{ $textClass }} text-xs px-3 py-1 rounded-full font-medium">
+                                                    <span
+                                                        class="inline-flex items-center {{ $bgClass }} {{ $textClass }} text-xs px-3 py-1 rounded-full font-medium">
                                                         <i class="fas fa-layer-group mr-1"></i>
                                                         {{ ucfirst($question->difficulty) }}
                                                     </span>
@@ -234,13 +253,16 @@
                         <div class="text-center py-12">
                             <div class="mb-6">
                                 <div class="mx-auto h-16 w-16 rounded-full flex items-center justify-center"
-                                     style="background: linear-gradient(135deg, rgba(28,88,113,0.1) 0%, rgba(34,108,137,0.1) 100%);">
-                                    <i class="fas fa-question-circle text-2xl" style="color: rgba(28,88,113,0.7);"></i>
+                                    style="background: linear-gradient(135deg, rgba(28,88,113,0.1) 0%, rgba(34,108,137,0.1) 100%);">
+                                    <i class="fas fa-question-circle text-2xl"
+                                        style="color: rgba(28,88,113,0.7);"></i>
                                 </div>
                             </div>
-                            <h3 class="text-xl font-semibold mb-3" style="color: rgba(28,88,113,0.9);">Belum Ada Soal</h3>
+                            <h3 class="text-xl font-semibold mb-3" style="color: rgba(28,88,113,0.9);">Belum Ada Soal
+                            </h3>
                             <p class="mb-6 max-w-sm mx-auto" style="color: rgba(28,88,113,0.7);">
-                                Mulai dengan menambahkan soal untuk materi ini atau gunakan fitur otomatis untuk generate soal.
+                                Mulai dengan menambahkan soal untuk materi ini atau gunakan fitur otomatis untuk
+                                generate soal.
                             </p>
 
                             <div class="flex flex-col sm:flex-row gap-3 justify-center">
@@ -265,12 +287,13 @@
     </div>
 
     <!-- Progress Modal -->
-    <div id="progressModal" class="hidden fixed inset-0 bg-black bg-opacity-50 overflow-y-auto h-full w-full backdrop-blur-sm">
+    <div id="progressModal"
+        class="hidden fixed inset-0 bg-black bg-opacity-50 overflow-y-auto h-full w-full backdrop-blur-sm">
         <div class="relative top-20 mx-auto p-6 border w-96 shadow-2xl rounded-2xl glass-effect">
             <div class="text-center">
                 <div class="mb-4">
                     <div class="mx-auto h-16 w-16 rounded-full flex items-center justify-center"
-                         style="background: linear-gradient(135deg, rgba(168,85,247,0.1) 0%, rgba(147,51,234,0.1) 100%);">
+                        style="background: linear-gradient(135deg, rgba(168,85,247,0.1) 0%, rgba(147,51,234,0.1) 100%);">
                         <i class="fas fa-magic text-2xl text-purple-500"></i>
                     </div>
                 </div>
@@ -278,12 +301,16 @@
                 <div class="mb-6">
                     <div class="rounded-full h-3" style="background: rgba(28,88,113,0.1);">
                         <div id="progressBar" class="h-3 rounded-full transition-all duration-300"
-                            style="width: 0%; background: linear-gradient(135deg, rgba(168,85,247,0.8) 0%, rgba(147,51,234,0.9) 100%);"></div>
+                            style="width: 0%; background: linear-gradient(135deg, rgba(168,85,247,0.8) 0%, rgba(147,51,234,0.9) 100%);">
+                        </div>
                     </div>
-                    <p id="progressText" class="text-sm mt-3" style="color: rgba(28,88,113,0.7);">Menganalisis materi PDF...</p>
+                    <p id="progressText" class="text-sm mt-3" style="color: rgba(28,88,113,0.7);">Menganalisis materi
+                        PDF...</p>
                 </div>
                 <div class="mb-6">
-                    <div class="animate-spin rounded-full h-10 w-10 border-4 border-purple-200 border-t-purple-500 mx-auto"></div>
+                    <div
+                        class="animate-spin rounded-full h-10 w-10 border-4 border-purple-200 border-t-purple-500 mx-auto">
+                    </div>
                 </div>
                 <div>
                     <button onclick="cancelGeneration()" id="cancelBtn"
@@ -434,12 +461,6 @@
 
         async function triggerN8nGeneration(materialId, questionCount, difficulty) {
             try {
-                console.log('=== Triggering n8n Generation ===');
-                console.log('Material ID:', materialId);
-                console.log('Question Count:', questionCount);
-                console.log('Difficulty:', difficulty);
-                console.log('CSRF Token:', '{{ csrf_token() }}');
-
                 const requestData = {
                     question_count: questionCount,
                     difficulty: difficulty,
@@ -447,7 +468,7 @@
                 };
                 console.log('Request Data:', requestData);
 
-                // First, trigger the n8n workflow using async method
+                // Trigger the n8n workflow using async method
                 const response = await fetch(`/materials/${materialId}/generate-questions-async`, {
                     method: 'POST',
                     headers: {
@@ -476,14 +497,11 @@
 
                     console.log('n8n triggered successfully:', result);
 
-                    // Start polling the auto-save endpoint
+                    // Start polling the completion endpoint
                     startPollingAutoSave();
                 } else {
                     // Response is likely HTML (error page)
                     const htmlResponse = await response.text();
-                    console.error('HTML Response received instead of JSON:');
-                    console.error('First 500 chars:', htmlResponse.substring(0, 500));
-
                     if (response.status === 419) {
                         throw new Error('CSRF token mismatch. Please refresh the page and try again.');
                     } else if (response.status === 500) {
@@ -495,7 +513,6 @@
                 }
 
             } catch (error) {
-                console.error('Error triggering n8n:', error);
                 showError(error.message);
             }
         }
@@ -504,176 +521,85 @@
             const progressText = document.getElementById('progressText');
             progressText.textContent = 'n8n sedang memproses PDF dan mengirim ke sistem...';
 
-            let initialQuestionCount = {{ $material->questions->count() }};
+            // Initialize polling variables
             let pollAttempts = 0;
             let startTime = Date.now();
 
-            console.log('Starting infinite polling with initial question count:', initialQuestionCount);
+            console.log('Starting polling - waiting for n8n status updates (completion/error/progress)');
 
-            // Wait 5 minutes before starting to poll to give n8n more time to process
-            setTimeout(() => {
-                progressText.textContent = 'Sistem sedang menganalisis materi dan membuat soal...';
+            // Start polling immediately - no delay
+            progressText.textContent = 'Sistem sedang menganalisis materi dan membuat soal...';
 
-                pollInterval = setInterval(async () => {
-                    pollAttempts++;
-                    const elapsedMinutes = Math.floor((Date.now() - startTime) / 60000);
+            pollInterval = setInterval(async () => {
+                pollAttempts++;
+                const elapsedMinutes = Math.floor((Date.now() - startTime) / 60000);
 
-                    console.log(`Polling attempt ${pollAttempts} (${elapsedMinutes} minutes elapsed)`);
+                console.log(`Polling attempt ${pollAttempts} (${elapsedMinutes} minutes elapsed)`);
 
-                    try {
-                        // Check if new questions were added to this material
-                        const checkResponse = await fetch(
-                            `/api/materials/${currentMaterialId}/questions-count`, {
-                                method: 'GET',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                                }
-                            });
-
-                        if (checkResponse.ok) {
-                            try {
-                                const data = await checkResponse.json();
-                                console.log(`API Response:`, data);
-                                console.log(
-                                    `Current questions: ${data.count}, Initial: ${initialQuestionCount}`
-                                );
-
-                                // If questions count increased, assume AI generation completed
-                                if (data.count > initialQuestionCount) {
-                                    clearInterval(pollInterval);
-                                    pollInterval = null;
-                                    const newQuestionsCount = data.count - initialQuestionCount;
-                                    console.log(`Success! ${newQuestionsCount} new questions created`);
-                                    completeProgress(
-                                        `Berhasil! ${newQuestionsCount} soal baru telah dibuat.`);
-                                    return;
-                                }
-                            } catch (jsonError) {
-                                console.error('JSON parsing error:', jsonError);
-                                const responseText = await checkResponse.text();
-                                console.error('Raw response:', responseText);
+                try {
+                    // Check single unified endpoint for all status updates (completion, error, progress)
+                    const statusResponse = await fetch(
+                        `/api/n8n/completion/${currentMaterialId}`, {
+                            method: 'GET',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
                             }
-                        } else {
-                            console.warn('Failed to fetch questions count:', checkResponse.status,
-                                checkResponse.statusText);
-                            try {
-                                const responseText = await checkResponse.text();
-                                console.warn('Response body:', responseText);
-                            } catch (e) {
-                                console.warn('Could not read response body');
+                        });
+
+                    if (statusResponse.ok) {
+                        const statusData = await statusResponse.json();
+                        console.log('Status check response:', statusData);
+
+                        if (statusData.success) {
+                            // Handle different status types
+                            if (statusData.status === 'completed' && statusData.completed) {
+                                // Success completion
+                                clearInterval(pollInterval);
+                                pollInterval = null;
+                                console.log('N8N completion detected!');
+                                completeProgress('Berhasil! Pembuatan soal telah selesai.');
+                                return;
+                            } else if (statusData.status === 'error' && statusData.error) {
+                                // Error occurred
+                                clearInterval(pollInterval);
+                                pollInterval = null;
+                                console.log('N8N error detected:', statusData.data);
+                                const errorMessage = statusData.data?.error_details || statusData.data
+                                    ?.message || 'Terjadi kesalahan saat memproses';
+                                showError(errorMessage);
+                                return;
+                            } else if (statusData.status === 'processing' || statusData.progress) {
+                                // Still processing - continue polling
+                                console.log('N8N still processing...');
                             }
                         }
-
-                        // Update progress text with elapsed time and helpful messages (only when page is visible)
-                        if (pollAttempts % 20 === 0) { // Update every minute (20 * 3s = 60s)
-                            if (elapsedMinutes < 2) {
-                                progressText.textContent =
-                                    `AI sedang memproses... (${elapsedMinutes} menit)`;
-                            } else if (elapsedMinutes < 5) {
-                                progressText.textContent =
-                                    `AI menganalisis konten PDF... (${elapsedMinutes} menit)`;
-                            } else if (elapsedMinutes < 10) {
-                                progressText.textContent =
-                                    `AI memproses dokumen yang kompleks... (${elapsedMinutes} menit)`;
-                            } else if (elapsedMinutes < 15) {
-                                progressText.textContent =
-                                    `Pemrosesan AI memakan waktu lebih lama... (${elapsedMinutes} menit)`;
-                            } else {
-                                progressText.textContent =
-                                    `⏳ Dokumen besar atau kompleks sedang diproses... (${elapsedMinutes} menit)`;
-                            }
-                        }
-
-                        // Show encouraging messages and tips at longer intervals (only when page is visible)
-                        if (elapsedMinutes >= 5 && pollAttempts % 60 ===
-                            0) { // Every 3 minutes after 5 min mark
-                            console.log(`Long processing time: ${elapsedMinutes} minutes`);
-
-                            if (elapsedMinutes >= 15) {
-                                progressText.textContent =
-                                    `⚠️ Proses berjalan lebih lama dari biasanya (${elapsedMinutes} menit). AI mungkin memproses dokumen yang sangat besar atau kompleks.`;
-                            } else if (elapsedMinutes >= 10) {
-                                progressText.textContent =
-                                    `💭 AI sedang menganalisis konten secara mendalam... (${elapsedMinutes} menit)`;
-                            } else {
-                                progressText.textContent =
-                                    `🔄 Tetap menunggu, AI sedang bekerja... (${elapsedMinutes} menit)`;
-                            }
-                        }
-
-                    } catch (error) {
-                        console.warn('Polling check error (continuing):', error.message);
-                        // Continue polling, don't stop on network errors
-
-                        // Show connection error message but keep trying
-                        if (pollAttempts % 10 === 0) {
-                            progressText.textContent =
-                                `Mencoba koneksi ulang... (${elapsedMinutes} menit)`;
-                        }
-                    }
-
-                    // No timeout limit - polling continues until success or manual cancel
-                    // This ensures the loading bar keeps running until n8n actually responds
-
-                }, 3000); // Poll every 3 seconds
-
-            }, 300000); // Wait 5 minutes (300 seconds) before starting to poll
-        }
-
-        // Test function to manually check questions count
-        async function testQuestionsCount() {
-            const materialId = {{ $material->id }};
-            console.log('Testing questions count for material:', materialId);
-
-            try {
-                // Test both the questions count API and the n8n debug endpoint
-                console.log('=== Testing Questions Count API ===');
-                const response = await fetch(`/api/materials/${materialId}/questions-count`, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    }
-                });
-
-                console.log('Response status:', response.status);
-                console.log('Response ok:', response.ok);
-
-                if (response.ok) {
-                    const data = await response.json();
-                    console.log('Questions count response:', data);
-
-                    // Also test the n8n connection
-                    console.log('=== Testing n8n Connection ===');
-                    const n8nResponse = await fetch('/test-n8n-connection', {
-                        method: 'GET',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                        }
-                    });
-
-                    if (n8nResponse.ok) {
-                        const n8nData = await n8nResponse.json();
-                        console.log('n8n connection test:', n8nData);
-
-                        alert(
-                            `✅ Tests Complete!\n\nQuestions Count: ${data.count}\nn8n Status: ${n8nData.response.status}\nn8n Response: ${n8nData.response.successful ? 'Success' : 'Failed'}`
-                        );
                     } else {
-                        alert(`✅ Questions API works! Count: ${data.count}\n❌ n8n test failed: ${n8nResponse.status}`);
+                        console.log('Status check failed:', statusResponse.status);
+                        // Don't treat HTTP errors as fatal - continue polling
                     }
-                } else {
-                    const errorText = await response.text();
-                    console.error('Error response:', errorText);
-                    alert(`❌ Questions API Error: ${response.status}\n${errorText}`);
+                } catch (error) {
+                    console.log('Status check error:', error);
+                    // Don't treat network errors as fatal - continue polling
                 }
-            } catch (error) {
-                console.error('Network error:', error);
-                alert(`❌ Network error: ${error.message}`);
-            }
+
+                // Update progress text with elapsed time
+                if (pollAttempts % 20 === 0) { // Update every minute (20 * 3s = 60s)
+                    if (elapsedMinutes < 2) {
+                        progressText.textContent = `AI sedang memproses...`;
+                    } else if (elapsedMinutes < 5) {
+                        progressText.textContent = `AI menganalisis bahan mengajar...`;
+                    } else if (elapsedMinutes < 10) {
+                        progressText.textContent =
+                            `AI memproses dokumen yang kompleks...`;
+                    } else {
+                        progressText.textContent = `⏳ Dokumen sedang diproses... (${elapsedMinutes} menit)`;
+                    }
+                }
+
+            }, 3000); // Poll every 3 seconds
         }
+
 
         // Close modal when clicking outside (only if not generating)
         window.onclick = function(event) {
@@ -682,6 +608,31 @@
             if (event.target === progressModal && !isGenerating) {
                 closeModal();
             }
+        }
+
+        // Function to manually clear completion cache (for debugging)
+        function clearCompletionCache(materialId) {
+            fetch(`/api/questions/cache/${materialId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        console.log('Cache cleared successfully:', data);
+                        alert('Completion cache cleared successfully!');
+                    } else {
+                        console.error('Failed to clear cache:', data);
+                        alert('Failed to clear cache: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error clearing cache:', error);
+                    alert('Error clearing cache: ' + error.message);
+                });
         }
     </script>
 

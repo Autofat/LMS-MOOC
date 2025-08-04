@@ -35,21 +35,21 @@ public function store(Request $request)
         'option_b' => 'required|string',
         'option_c' => 'required|string',
         'option_d' => 'required|string',
-        'answer' => 'required|in:A,B,C,D',
+        'option_e' => 'nullable|string',
+        'answer' => 'required|in:A,B,C,D,E',
         'explanation' => 'nullable|string',
         'difficulty' => 'nullable|string',
     ]);
 
-    // Simpan data soal ke dalam database
+    // Simpan data soal ke dalam database using individual columns
     $question = Question::create([
         'material_id' => $request->material_id,
         'question' => $request->question,
-        'options' => [
-            'A' => $request->option_a,
-            'B' => $request->option_b,
-            'C' => $request->option_c,
-            'D' => $request->option_d,
-        ],
+        'option_A' => $request->option_a,
+        'option_B' => $request->option_b,
+        'option_C' => $request->option_c,
+        'option_D' => $request->option_d,
+        'option_E' => $request->option_e,
         'answer' => $request->answer,
         'explanation' => $request->explanation,
         'difficulty' => $request->difficulty,
@@ -132,15 +132,21 @@ public function store(Request $request)
             'options.B' => 'required|string', 
             'options.C' => 'required|string',
             'options.D' => 'required|string',
-            'answer' => 'required|in:A,B,C,D',
+            'options.E' => 'nullable|string',
+            'answer' => 'required|in:A,B,C,D,E',
             'explanation' => 'nullable|string',
             'difficulty' => 'nullable|string',
         ]);
 
+        $options = $request->options;
         $question = Question::create([
             'material_id' => $request->material_id,
             'question' => $request->question,
-            'options' => $request->options,
+            'option_A' => $options['A'],
+            'option_B' => $options['B'],
+            'option_C' => $options['C'],
+            'option_D' => $options['D'],
+            'option_E' => $options['E'] ?? null,
             'answer' => $request->answer,
             'explanation' => $request->explanation,
             'difficulty' => $request->difficulty,
@@ -176,7 +182,8 @@ public function store(Request $request)
                     'options.B' => 'required|string', 
                     'options.C' => 'required|string',
                     'options.D' => 'required|string',
-                    'answer' => 'required|in:A,B,C,D',
+                    'options.E' => 'nullable|string',
+                    'answer' => 'required|in:A,B,C,D,E',
                     'explanation' => 'nullable|string',
                     'difficulty' => 'nullable|string',
                 ]);
@@ -186,10 +193,15 @@ public function store(Request $request)
                     continue;
                 }
                 
+                $options = $questionData['options'];
                 $question = Question::create([
                     'material_id' => $questionData['material_id'] ?? null,
                     'question' => $questionData['question'],
-                    'options' => $questionData['options'],
+                    'option_A' => $options['A'],
+                    'option_B' => $options['B'],
+                    'option_C' => $options['C'],
+                    'option_D' => $options['D'],
+                    'option_E' => $options['E'] ?? null,
                     'answer' => $questionData['answer'],
                     'explanation' => $questionData['explanation'] ?? null,
                     'difficulty' => $questionData['difficulty'] ?? null,
@@ -198,7 +210,7 @@ public function store(Request $request)
                 $savedQuestions[] = [
                     'id' => $question->id,
                     'question' => $question->question,
-                    'options' => $question->options,
+                    'options' => $question->options, // This will use the accessor
                     'answer' => $question->answer,
                     'explanation' => $question->explanation,
                 ];
@@ -1101,7 +1113,8 @@ public function store(Request $request)
             'option_b' => 'required|string',
             'option_c' => 'required|string',
             'option_d' => 'required|string',
-            'answer' => 'required|in:A,B,C,D',
+            'option_e' => 'nullable|string',
+            'answer' => 'required|in:A,B,C,D,E',
             'explanation' => 'nullable|string',
             'difficulty' => 'nullable|string',
         ]);
@@ -1111,12 +1124,11 @@ public function store(Request $request)
         $question->update([
             'material_id' => $request->material_id,
             'question' => $request->question,
-            'options' => [
-                'A' => $request->option_a,
-                'B' => $request->option_b,
-                'C' => $request->option_c,
-                'D' => $request->option_d,
-            ],
+            'option_A' => $request->option_a,
+            'option_B' => $request->option_b,
+            'option_C' => $request->option_c,
+            'option_D' => $request->option_d,
+            'option_E' => $request->option_e,
             'answer' => $request->answer,
             'explanation' => $request->explanation,
             'difficulty' => $request->difficulty,

@@ -81,26 +81,37 @@
                                                 <p class="text-sm text-yellow-800">
                                                     <span class="font-semibold">Tingkat Kesulitan:</span>
                                                     @php
-                                                        $difficulty = $question->difficulty;
-                                                        
-                                                        if ($difficulty === 'Mudah') {
-                                                            $bgStyle = 'background: rgba(34,197,94,0.12); color: rgba(21,128,61,0.9);';
+                                                        $difficulty = strtolower($question->difficulty);
+
+                                                        // Handle both Indonesian and English difficulty levels
+                                                        if (in_array($difficulty, ['mudah', 'easy'])) {
+                                                            $bgStyle =
+                                                                'background: rgba(34,197,94,0.12); color: rgba(21,128,61,0.9);';
                                                             $icon = 'fas fa-circle';
-                                                        } elseif ($difficulty === 'Menengah') {
-                                                            $bgStyle = 'background: rgba(251,191,36,0.12); color: rgba(180,83,9,0.9);';
+                                                            $displayText = $difficulty === 'easy' ? 'Easy' : 'Mudah';
+                                                        } elseif (in_array($difficulty, ['menengah', 'medium'])) {
+                                                            $bgStyle =
+                                                                'background: rgba(251,191,36,0.12); color: rgba(180,83,9,0.9);';
                                                             $icon = 'fas fa-adjust';
-                                                        } elseif ($difficulty === 'Sulit') {
-                                                            $bgStyle = 'background: rgba(248,113,113,0.12); color: rgba(185,28,28,0.9);';
+                                                            $displayText =
+                                                                $difficulty === 'medium' ? 'Medium' : 'Menengah';
+                                                        } elseif (in_array($difficulty, ['sulit', 'hard'])) {
+                                                            $bgStyle =
+                                                                'background: rgba(248,113,113,0.12); color: rgba(185,28,28,0.9);';
                                                             $icon = 'fas fa-fire';
+                                                            $displayText = $difficulty === 'hard' ? 'Hard' : 'Sulit';
                                                         } else {
-                                                            $bgStyle = 'background: rgba(156,163,175,0.12); color: rgba(75,85,99,0.9);';
+                                                            $bgStyle =
+                                                                'background: rgba(156,163,175,0.12); color: rgba(75,85,99,0.9);';
                                                             $icon = 'fas fa-question';
+                                                            $displayText = ucfirst($question->difficulty);
                                                         }
                                                     @endphp
-                                                    <span class="inline-flex items-center text-xs px-3 py-1 rounded-full font-medium ml-1"
-                                                          style="{{ $bgStyle }}">
+                                                    <span
+                                                        class="inline-flex items-center text-xs px-3 py-1 rounded-full font-medium ml-1"
+                                                        style="{{ $bgStyle }}">
                                                         <i class="{{ $icon }} mr-1"></i>
-                                                        {{ $question->difficulty }}
+                                                        {{ $displayText }}
                                                     </span>
                                                 </p>
                                             </div>
@@ -122,7 +133,8 @@
                                     </a>
 
                                     <form method="POST" action="{{ route('questions.destroy', $question->id) }}"
-                                        onsubmit="event.preventDefault(); showDeleteConfirmation(this, 'Yakin ingin menghapus soal ini? Aksi ini tidak dapat dibatalkan.'); return false;" class="inline">
+                                        onsubmit="event.preventDefault(); showDeleteConfirmation(this, 'Yakin ingin menghapus soal ini? Aksi ini tidak dapat dibatalkan.'); return false;"
+                                        class="inline">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit"
