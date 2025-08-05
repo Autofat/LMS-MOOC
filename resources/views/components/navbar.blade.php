@@ -93,10 +93,6 @@
                     class="block py-2 text-teal-100 hover:text-white transition-colors {{ request()->routeIs('questions.*') ? 'text-white font-semibold' : '' }}">
                     <i class="fas fa-question-circle mr-2"></i>Soal
                 </a>
-                <a href="{{ route('test.n8n.connection') }}"
-                    class="block py-2 text-teal-100 hover:text-white transition-colors">
-                    <i class="fas fa-plug mr-2"></i>Test n8n
-                </a>
                 <div class="border-t border-teal-500 pt-2 mt-2">
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
