@@ -26,6 +26,11 @@
                     <i class="fas fa-question-circle"></i>
                     <span>Soal</span>
                 </a>
+                <a href="{{ route('admin.manage') }}"
+                    class="flex items-center space-x-2 text-blue-100 hover:text-white transition-colors {{ request()->routeIs('admin.*') ? 'text-white font-semibold bg-white/20 px-3 py-2 rounded-lg backdrop-blur-sm' : '' }}">
+                    <i class="fas fa-users-cog"></i>
+                    <span>User</span>
+                </a>
             </div>
 
             <!-- User Menu - Far Right -->
@@ -93,6 +98,10 @@
                     class="block py-2 text-teal-100 hover:text-white transition-colors {{ request()->routeIs('questions.*') ? 'text-white font-semibold' : '' }}">
                     <i class="fas fa-question-circle mr-2"></i>Soal
                 </a>
+                <a href="{{ route('admin.manage') }}"
+                    class="block py-2 text-teal-100 hover:text-white transition-colors {{ request()->routeIs('admin.*') ? 'text-white font-semibold' : '' }}">
+                    <i class="fas fa-users-cog mr-2"></i>User
+                </a>
                 <div class="border-t border-teal-500 pt-2 mt-2">
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
@@ -107,99 +116,8 @@
     </div>
 </nav>
 
-<!-- Success/Error Messages - Toast Style -->
-<div id="toastContainer" class="fixed top-28 right-4 z-50 space-y-3">
-    @if (session('success'))
-        <div id="successToast"
-            class="bg-green-500 text-white px-8 py-5 rounded-lg shadow-xl max-w-md transform translate-x-full opacity-0 transition-all duration-500 ease-in-out">
-            <div class="flex items-center">
-                <div class="flex-shrink-0">
-                    <i class="fas fa-check-circle text-2xl"></i>
-                </div>
-                <div class="ml-4 flex-1">
-                    <p class="text-base font-medium">{{ session('success') }}</p>
-                </div>
-                <button onclick="hideToast('successToast')"
-                    class="ml-4 text-white hover:text-gray-200 transition-colors">
-                    <i class="fas fa-times text-lg"></i>
-                </button>
-            </div>
-        </div>
-    @endif
-
-    @if (session('error'))
-        <div id="errorToast"
-            class="bg-red-500 text-white px-8 py-5 rounded-lg shadow-xl max-w-md transform translate-x-full opacity-0 transition-all duration-500 ease-in-out">
-            <div class="flex items-center">
-                <div class="flex-shrink-0">
-                    <i class="fas fa-exclamation-circle text-2xl"></i>
-                </div>
-                <div class="ml-4 flex-1">
-                    <p class="text-base font-medium">{{ session('error') }}</p>
-                </div>
-                <button onclick="hideToast('errorToast')" class="ml-4 text-white hover:text-gray-200 transition-colors">
-                    <i class="fas fa-times text-lg"></i>
-                </button>
-            </div>
-        </div>
-    @endif
-
-    @if (session('info'))
-        <div id="infoToast"
-            class="bg-blue-500 text-white px-8 py-5 rounded-lg shadow-xl max-w-md transform translate-x-full opacity-0 transition-all duration-500 ease-in-out">
-            <div class="flex items-center">
-                <div class="flex-shrink-0">
-                    <i class="fas fa-info-circle text-2xl"></i>
-                </div>
-                <div class="ml-4 flex-1">
-                    <p class="text-base font-medium">{{ session('info') }}</p>
-                </div>
-                <button onclick="hideToast('infoToast')" class="ml-4 text-white hover:text-gray-200 transition-colors">
-                    <i class="fas fa-times text-lg"></i>
-                </button>
-            </div>
-        </div>
-    @endif
-</div>
-
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Toast notification system
-        function showToast(toastId) {
-            const toast = document.getElementById(toastId);
-            if (toast) {
-                // Show the toast with slide-in animation
-                setTimeout(() => {
-                    toast.classList.remove('translate-x-full', 'opacity-0');
-                    toast.classList.add('translate-x-0', 'opacity-100');
-                }, 100);
-
-                // Auto-hide after 4 seconds
-                setTimeout(() => {
-                    hideToast(toastId);
-                }, 4000);
-            }
-        }
-
-        // Function to hide toast (can be called manually or automatically)
-        window.hideToast = function(toastId) {
-            const toast = document.getElementById(toastId);
-            if (toast) {
-                toast.classList.remove('translate-x-0', 'opacity-100');
-                toast.classList.add('translate-x-full', 'opacity-0');
-
-                // Remove from DOM after animation completes
-                setTimeout(() => {
-                    toast.remove();
-                }, 500);
-            }
-        }
-
-        // Show all existing toasts
-        showToast('successToast');
-        showToast('errorToast');
-        showToast('infoToast');
-
         // User menu dropdown
         const userMenuButton = document.getElementById('userMenuButton');
         const userDropdown = document.getElementById('userDropdown');

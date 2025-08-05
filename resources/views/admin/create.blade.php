@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Register - KemenLH/BPLH E-Learning Platform</title>
+    <title>Tambah User - KemenLH/BPLH E-Learning Platform</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -14,24 +14,29 @@
         .professional-gradient {
             background: linear-gradient(135deg, rgba(28,88,113,1) 0%, rgba(35,105,135,1) 50%, rgba(42,122,157,1) 100%);
         }
+        .subtle-pattern {
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='rgba(28,88,113,0.03)' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
     </style>
 </head>
 
-<body class="bg-white min-h-screen flex items-center justify-center py-8">
-    <div class="max-w-md w-full mx-auto px-4">
-        <div class="bg-white rounded-2xl shadow-xl border" style="border-color: rgba(28,88,113,0.1);">
+<body class="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 min-h-screen subtle-pattern">
+    <!-- Include Navbar Component -->
+    @include('components.navbar')
+
+    <div class="container mx-auto px-4 py-8">
+        <div class="max-w-2xl mx-auto">
             <!-- Header -->
-            <div class="professional-gradient p-8 rounded-t-2xl text-center">
-                <div class="mb-4">
-                    <i class="fas fa-user-plus text-5xl text-white"></i>
+            <div class="bg-white/95 backdrop-blur-sm rounded-3xl shadow-xl border p-8 mb-8" style="border-color: rgba(28,88,113,0.1);">
+                <div class="text-center mb-8">
+                    <div class="professional-gradient rounded-full p-6 inline-block mb-4">
+                        <i class="fas fa-user-plus text-4xl text-white"></i>
+                    </div>
+                    <h1 class="text-3xl font-bold mb-2" style="color: rgba(28,88,113,1);">Tambah User Baru</h1>
+                    <p class="text-gray-600">Buat akun user baru untuk mengakses Platform E-Learning KemenLH/BPLH</p>
                 </div>
-                <h1 class="text-2xl font-bold text-white mb-2">Daftar</h1>
-                <p class="text-blue-100 text-sm">KemenLH/BPLH E-Learning Platform</p>
-            </div>
-            
-            <!-- Body -->
-            <div class="p-8">
-                <!-- Error Messages -->
+
+                <!-- Success/Error Messages -->
                 @if($errors->any())
                     <div class="bg-gradient-to-r from-red-100 to-red-50 border border-red-300 text-red-700 px-4 py-3 rounded-xl mb-6">
                         <div class="flex items-center space-x-3 mb-2">
@@ -45,9 +50,21 @@
                         </ul>
                     </div>
                 @endif
-                
-                <!-- Register Form -->
-                <form method="POST" action="{{ route('register') }}" class="space-y-6">
+
+                <!-- User Info -->
+                <div class="mb-8 p-4 rounded-xl" style="background: rgba(28,88,113,0.05); border: 1px solid rgba(28,88,113,0.1);">
+                    <div class="text-sm" style="color: rgba(28,88,113,0.8);">
+                        <h4 class="font-semibold mb-2"><i class="fas fa-info-circle mr-2"></i>Informasi User</h4>
+                        <ul class="space-y-1 ml-6">
+                            <li>• User yang dibuat akan memiliki akses penuh ke sistem</li>
+                            <li>• User dapat mengelola materi, soal, dan user lainnya</li>
+                            <li>• Password minimal 8 karakter untuk keamanan</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Create Admin Form -->
+                <form method="POST" action="{{ route('admin.store') }}" class="space-y-6">
                     @csrf
                     
                     <!-- Name -->
@@ -60,7 +77,7 @@
                                id="name" 
                                name="name" 
                                value="{{ old('name') }}"
-                               placeholder="Masukkan nama lengkap Anda..."
+                               placeholder="Masukkan nama lengkap user..."
                                class="w-full px-4 py-3 rounded-xl shadow-sm focus:outline-none focus:ring-2 transition-all border-2"
                                style="border-color: rgba(28,88,113,0.2); background: linear-gradient(135deg, rgba(28,88,113,0.05) 0%, rgba(35,105,135,0.05) 100%);"
                                required autofocus>
@@ -76,7 +93,7 @@
                                id="email" 
                                name="email" 
                                value="{{ old('email') }}"
-                               placeholder="Masukkan email Anda..."
+                               placeholder="Masukkan email user..."
                                class="w-full px-4 py-3 rounded-xl shadow-sm focus:outline-none focus:ring-2 transition-all border-2"
                                style="border-color: rgba(28,88,113,0.2); background: linear-gradient(135deg, rgba(28,88,113,0.05) 0%, rgba(35,105,135,0.05) 100%);"
                                required>
@@ -92,12 +109,11 @@
                             <input type="password" 
                                    id="password" 
                                    name="password" 
-                                   placeholder="Masukkan password Anda..."
+                                   placeholder="Masukkan password..."
                                    class="w-full px-4 py-3 pr-12 rounded-xl shadow-sm focus:outline-none focus:ring-2 transition-all border-2"
                                    style="border-color: rgba(28,88,113,0.2); background: linear-gradient(135deg, rgba(28,88,113,0.05) 0%, rgba(35,105,135,0.05) 100%);"
                                    required minlength="8">
                             <button type="button" 
-                                    id="togglePassword"
                                     class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-600 hover:text-gray-800 transition-colors"
                                     onclick="togglePasswordVisibility('password', 'passwordIcon')">
                                 <i id="passwordIcon" class="fas fa-eye" style="color: rgba(28,88,113,0.6);"></i>
@@ -115,121 +131,37 @@
                             <input type="password" 
                                    id="password_confirmation" 
                                    name="password_confirmation" 
-                                   placeholder="Masukkan ulang password Anda..."
+                                   placeholder="Masukkan ulang password..."
                                    class="w-full px-4 py-3 pr-12 rounded-xl shadow-sm focus:outline-none focus:ring-2 transition-all border-2"
                                    style="border-color: rgba(28,88,113,0.2); background: linear-gradient(135deg, rgba(28,88,113,0.05) 0%, rgba(35,105,135,0.05) 100%);"
                                    required minlength="8">
                             <button type="button" 
-                                    id="togglePasswordConfirm"
                                     class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-600 hover:text-gray-800 transition-colors"
                                     onclick="togglePasswordVisibility('password_confirmation', 'passwordConfirmIcon')">
                                 <i id="passwordConfirmIcon" class="fas fa-eye" style="color: rgba(28,88,113,0.6);"></i>
                             </button>
                         </div>
                     </div>
-                    
-                    <!-- Register Button -->
-                    <button type="submit" 
-                            class="w-full py-3 px-4 professional-gradient text-white rounded-xl hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-300 font-semibold flex items-center justify-center space-x-2">
-                        <i class="fas fa-user-plus"></i>
-                        <span>Daftar</span>
-                    </button>
-                </form>
-                
-                <!-- Divider -->
-                <div class="my-6 flex items-center">
-                    <div class="flex-1 border-t" style="border-color: rgba(28,88,113,0.2);"></div>
-                    <span class="px-4 text-sm" style="color: rgba(28,88,113,0.6);">atau</span>
-                    <div class="flex-1 border-t" style="border-color: rgba(28,88,113,0.2);"></div>
-                </div>
-                
-                <!-- Login Link -->
-                <div class="text-center">
-                    <p class="text-sm" style="color: rgba(28,88,113,0.7);">
-                        Sudah punya akun? 
-                        <a href="{{ route('login') }}" 
-                           class="font-semibold hover:underline transition-all duration-300"
-                           style="color: rgba(28,88,113,1);">
-                            Masuk sekarang
+
+                    <!-- Action Buttons -->
+                    <div class="pt-6 flex space-x-4">
+                        <a href="{{ route('admin.manage') }}" 
+                           class="flex-1 py-3 px-6 bg-gray-500 hover:bg-gray-600 text-white rounded-xl hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 transition-all duration-300 font-semibold flex items-center justify-center space-x-2">
+                            <i class="fas fa-times"></i>
+                            <span>Batal</span>
                         </a>
-                    </p>
-                </div>
+                        <button type="submit" 
+                                class="flex-1 py-3 px-6 professional-gradient text-white rounded-xl hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-300 font-semibold flex items-center justify-center space-x-2">
+                            <i class="fas fa-user-plus"></i>
+                            <span>Buat User</span>
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
 
-    <!-- Success/Error Messages - Toast Style -->
-    <div id="toastContainer" class="fixed top-8 right-4 z-50 space-y-3">
-        @if(session('success'))
-            <div id="successToast" class="bg-green-500 text-white px-8 py-5 rounded-lg shadow-xl max-w-md transform translate-x-full opacity-0 transition-all duration-500 ease-in-out">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <i class="fas fa-check-circle text-2xl"></i>
-                    </div>
-                    <div class="ml-4 flex-1">
-                        <p class="text-base font-medium">{{ session('success') }}</p>
-                    </div>
-                    <button onclick="hideToast('successToast')" class="ml-4 text-white hover:text-gray-200 transition-colors">
-                        <i class="fas fa-times text-lg"></i>
-                    </button>
-                </div>
-            </div>
-        @endif
-
-        @if(session('error'))
-            <div id="errorToast" class="bg-red-500 text-white px-8 py-5 rounded-lg shadow-xl max-w-md transform translate-x-full opacity-0 transition-all duration-500 ease-in-out">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <i class="fas fa-exclamation-circle text-2xl"></i>
-                    </div>
-                    <div class="ml-4 flex-1">
-                        <p class="text-base font-medium">{{ session('error') }}</p>
-                    </div>
-                    <button onclick="hideToast('errorToast')" class="ml-4 text-white hover:text-gray-200 transition-colors">
-                        <i class="fas fa-times text-lg"></i>
-                    </button>
-                </div>
-            </div>
-        @endif
-    </div>
-
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Toast functionality
-        function showToast(toastId) {
-            const toast = document.getElementById(toastId);
-            if (toast) {
-                // Show toast with animation
-                setTimeout(() => {
-                    toast.classList.remove('translate-x-full', 'opacity-0');
-                    toast.classList.add('translate-x-0', 'opacity-100');
-                }, 100);
-                
-                // Auto hide after 5 seconds
-                setTimeout(() => {
-                    hideToast(toastId);
-                }, 5000);
-            }
-        }
-        
-        window.hideToast = function(toastId) {
-            const toast = document.getElementById(toastId);
-            if (toast) {
-                toast.classList.remove('translate-x-0', 'opacity-100');
-                toast.classList.add('translate-x-full', 'opacity-0');
-                
-                // Remove from DOM after animation completes
-                setTimeout(() => {
-                    toast.remove();
-                }, 500);
-            }
-        }
-        
-        // Show all existing toasts
-        showToast('successToast');
-        showToast('errorToast');
-    });
-
     // Toggle password visibility
     function togglePasswordVisibility(inputId, iconId) {
         const passwordInput = document.getElementById(inputId);
@@ -248,4 +180,3 @@
     </script>
 </body>
 </html>
-

@@ -22,8 +22,9 @@ Route::get('/', function () {
 // Authentication Routes
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
-Route::get('/register', [AuthController::class, 'showRegisterForm'])->name('register');
-Route::post('/register', [AuthController::class, 'register']);
+// Register routes disabled - Admin only access
+// Route::get('/register', [AuthController::class, 'showRegisterForm'])->name('register');
+// Route::post('/register', [AuthController::class, 'register']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Temporary route to clear session
@@ -35,8 +36,8 @@ Route::get('/clear-session', function () {
 });
 
 
-// Protected Routes (require authentication)
-Route::middleware(['auth'])->group(function () {
+// Protected Routes (require authentication and admin access)
+Route::middleware(['auth', 'admin'])->group(function () {
     
 
     // Material Routes
@@ -65,4 +66,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/questions/{id}/edit', [QuestionController::class, 'edit'])->name('questions.edit');
     Route::put('/questions/{id}', [QuestionController::class, 'update'])->name('questions.update');
     Route::delete('/questions/{id}', [QuestionController::class, 'destroy'])->name('questions.destroy');
+
+    // Admin Management Routes
+    Route::get('/admin/create', [AuthController::class, 'showCreateAdminForm'])->name('admin.create');
+    Route::post('/admin/create', [AuthController::class, 'createAdmin'])->name('admin.store');
+    Route::get('/admin/manage', [AuthController::class, 'manageAdmins'])->name('admin.manage');
+    Route::delete('/admin/{id}', [AuthController::class, 'deleteAdmin'])->name('admin.delete');
 });

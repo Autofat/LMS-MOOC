@@ -31,20 +31,6 @@
             
             <!-- Body -->
             <div class="p-8">
-                <!-- Error Messages -->
-                @if($errors->any())
-                    <div class="bg-gradient-to-r from-red-100 to-red-50 border border-red-300 text-red-700 px-4 py-3 rounded-xl mb-6">
-                        <div class="flex items-center space-x-3 mb-2">
-                            <i class="fas fa-exclamation-triangle text-red-600"></i>
-                            <strong>Terdapat kesalahan:</strong>
-                        </div>
-                        <ul class="list-disc list-inside ml-6">
-                            @foreach($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                @endif
                 
                 <!-- Login Form -->
                 <form method="POST" action="{{ route('login') }}" class="space-y-6">
@@ -72,13 +58,21 @@
                             <i class="fas fa-lock" style="color: rgba(28,88,113,1);"></i>
                             <span>Password</span>
                         </label>
-                        <input type="password" 
-                               id="password" 
-                               name="password" 
-                               placeholder="Masukkan password Anda..."
-                               class="w-full px-4 py-3 rounded-xl shadow-sm focus:outline-none focus:ring-2 transition-all border-2"
-                               style="border-color: rgba(28,88,113,0.2); background: linear-gradient(135deg, rgba(28,88,113,0.05) 0%, rgba(35,105,135,0.05) 100%);"
-                               required>
+                        <div class="relative">
+                            <input type="password" 
+                                   id="password" 
+                                   name="password" 
+                                   placeholder="Masukkan password Anda..."
+                                   class="w-full px-4 py-3 pr-12 rounded-xl shadow-sm focus:outline-none focus:ring-2 transition-all border-2"
+                                   style="border-color: rgba(28,88,113,0.2); background: linear-gradient(135deg, rgba(28,88,113,0.05) 0%, rgba(35,105,135,0.05) 100%);"
+                                   required>
+                            <button type="button" 
+                                    id="togglePassword"
+                                    class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-600 hover:text-gray-800 transition-colors"
+                                    onclick="togglePasswordVisibility()">
+                                <i id="passwordIcon" class="fas fa-eye" style="color: rgba(28,88,113,0.6);"></i>
+                            </button>
+                        </div>
                     </div>
                     
                     <!-- Remember Me -->
@@ -101,22 +95,11 @@
                     </button>
                 </form>
                 
-                <!-- Divider -->
-                <div class="my-6 flex items-center">
-                    <div class="flex-1 border-t" style="border-color: rgba(28,88,113,0.2);"></div>
-                    <span class="px-4 text-sm" style="color: rgba(28,88,113,0.6);">atau</span>
-                    <div class="flex-1 border-t" style="border-color: rgba(28,88,113,0.2);"></div>
-                </div>
-                
-                <!-- Register Link -->
-                <div class="text-center">
-                    <p class="text-sm" style="color: rgba(28,88,113,0.7);">
-                        Belum punya akun? 
-                        <a href="{{ route('register') }}" 
-                           class="font-semibold hover:underline transition-all duration-300"
-                           style="color: rgba(28,88,113,1);">
-                            Daftar sekarang
-                        </a>
+                <!-- Admin Access Only Notice -->
+                <div class="mt-6 text-center">
+                    <p class="text-xs" style="color: rgba(28,88,113,0.6);">
+                        <i class="fas fa-shield-alt mr-1"></i>
+                        Akses khusus admin KemenLH/BPLH
                     </p>
                 </div>
             </div>
@@ -126,7 +109,7 @@
     <!-- Success/Error Messages - Toast Style -->
     <div id="toastContainer" class="fixed top-8 right-4 z-50 space-y-3">
         @if(session('success'))
-            <div id="successToast" class="bg-green-500 text-white px-8 py-5 rounded-lg shadow-xl max-w-md transform translate-x-full opacity-0 transition-all duration-500 ease-in-out">
+            <div id="loginSuccessToast" class="bg-green-500 text-white px-8 py-5 rounded-lg shadow-xl max-w-md transform translate-x-full opacity-0 transition-all duration-500 ease-in-out">
                 <div class="flex items-center">
                     <div class="flex-shrink-0">
                         <i class="fas fa-check-circle text-2xl"></i>
@@ -134,23 +117,28 @@
                     <div class="ml-4 flex-1">
                         <p class="text-base font-medium">{{ session('success') }}</p>
                     </div>
-                    <button onclick="hideToast('successToast')" class="ml-4 text-white hover:text-gray-200 transition-colors">
+                    <button onclick="hideLoginToast('loginSuccessToast')" class="ml-4 text-white hover:text-gray-200 transition-colors">
                         <i class="fas fa-times text-lg"></i>
                     </button>
                 </div>
             </div>
         @endif
 
-        @if(session('error'))
-            <div id="errorToast" class="bg-red-500 text-white px-8 py-5 rounded-lg shadow-xl max-w-md transform translate-x-full opacity-0 transition-all duration-500 ease-in-out">
+        @if(session('error') || $errors->any())
+            <div id="loginErrorToast" class="bg-red-500 text-white px-8 py-5 rounded-lg shadow-xl max-w-md transform translate-x-full opacity-0 transition-all duration-500 ease-in-out">
                 <div class="flex items-center">
                     <div class="flex-shrink-0">
                         <i class="fas fa-exclamation-circle text-2xl"></i>
                     </div>
                     <div class="ml-4 flex-1">
-                        <p class="text-base font-medium">{{ session('error') }}</p>
+                        @if(session('error'))
+                            <p class="text-base font-medium">{{ session('error') }}</p>
+                        @endif
+                        @foreach($errors->all() as $error)
+                            <p class="text-base font-medium">{{ $error }}</p>
+                        @endforeach
                     </div>
-                    <button onclick="hideToast('errorToast')" class="ml-4 text-white hover:text-gray-200 transition-colors">
+                    <button onclick="hideLoginToast('loginErrorToast')" class="ml-4 text-white hover:text-gray-200 transition-colors">
                         <i class="fas fa-times text-lg"></i>
                     </button>
                 </div>
@@ -160,8 +148,8 @@
 
     <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Toast functionality
-        function showToast(toastId) {
+        // Login page specific toast functionality
+        function showLoginToast(toastId) {
             const toast = document.getElementById(toastId);
             if (toast) {
                 // Show toast with animation
@@ -172,12 +160,12 @@
                 
                 // Auto hide after 5 seconds
                 setTimeout(() => {
-                    hideToast(toastId);
+                    hideLoginToast(toastId);
                 }, 5000);
             }
         }
         
-        window.hideToast = function(toastId) {
+        window.hideLoginToast = function(toastId) {
             const toast = document.getElementById(toastId);
             if (toast) {
                 toast.classList.remove('translate-x-0', 'opacity-100');
@@ -191,9 +179,25 @@
         }
         
         // Show all existing toasts
-        showToast('successToast');
-        showToast('errorToast');
+        showLoginToast('loginSuccessToast');
+        showLoginToast('loginErrorToast');
     });
+
+    // Toggle password visibility
+    function togglePasswordVisibility() {
+        const passwordInput = document.getElementById('password');
+        const passwordIcon = document.getElementById('passwordIcon');
+        
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            passwordIcon.classList.remove('fa-eye');
+            passwordIcon.classList.add('fa-eye-slash');
+        } else {
+            passwordInput.type = 'password';
+            passwordIcon.classList.remove('fa-eye-slash');
+            passwordIcon.classList.add('fa-eye');
+        }
+    }
     </script>
 </body>
 </html>
