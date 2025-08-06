@@ -51,7 +51,20 @@
                                         </h3>
 
                                         <div class="grid grid-cols-2 gap-2 my-3">
-                                            @foreach ($question->options as $key => $option)
+                                            @php
+                                                $options = [
+                                                    'A' => $question->option_a,
+                                                    'B' => $question->option_b,
+                                                    'C' => $question->option_c,
+                                                    'D' => $question->option_d,
+                                                    'E' => $question->option_e
+                                                ];
+                                                // Filter out empty options
+                                                $options = array_filter($options, function($value) {
+                                                    return !empty($value);
+                                                });
+                                            @endphp
+                                            @foreach ($options as $key => $option)
                                                 <div
                                                     class="flex items-center p-2 rounded
                                                     {{ $question->answer === $key ? 'bg-green-100 border border-green-300' : 'bg-gray-50' }}">

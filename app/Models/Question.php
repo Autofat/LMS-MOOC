@@ -9,11 +9,11 @@ class Question extends Model
     protected $fillable = [
         'material_id',
         'question',
-        'option_A',
-        'option_B',
-        'option_C',
-        'option_D',
-        'option_E',
+        'option_a',
+        'option_b',
+        'option_c',
+        'option_d',
+        'option_e',
         'answer',
         'explanation',
         'difficulty'
@@ -26,11 +26,11 @@ class Question extends Model
     {
         $options = [];
         
-        if (!empty($this->option_A)) $options['A'] = $this->option_A;
-        if (!empty($this->option_B)) $options['B'] = $this->option_B;
-        if (!empty($this->option_C)) $options['C'] = $this->option_C;
-        if (!empty($this->option_D)) $options['D'] = $this->option_D;
-        if (!empty($this->option_E)) $options['E'] = $this->option_E;
+        if (!empty($this->option_a)) $options['A'] = $this->option_a;
+        if (!empty($this->option_b)) $options['B'] = $this->option_b;
+        if (!empty($this->option_c)) $options['C'] = $this->option_c;
+        if (!empty($this->option_d)) $options['D'] = $this->option_d;
+        if (!empty($this->option_e)) $options['E'] = $this->option_e;
         
         return $options;
     }
@@ -41,11 +41,11 @@ class Question extends Model
     public function setOptionsAttribute($value)
     {
         if (is_array($value)) {
-            $this->option_A = $value['A'] ?? null;
-            $this->option_B = $value['B'] ?? null;
-            $this->option_C = $value['C'] ?? null;
-            $this->option_D = $value['D'] ?? null;
-            $this->option_E = $value['E'] ?? null;
+            $this->option_a = $value['A'] ?? null;
+            $this->option_b = $value['B'] ?? null;
+            $this->option_c = $value['C'] ?? null;
+            $this->option_d = $value['D'] ?? null;
+            $this->option_e = $value['E'] ?? null;
         }
     }
 

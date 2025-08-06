@@ -11,8 +11,9 @@
         .glass-effect {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(28,88,113,0.1);
+            border: 1px solid rgba(28, 88, 113, 0.1);
         }
+
         .subtle-pattern {
             background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='rgba(28,88,113,0.03)' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
         }
@@ -54,8 +55,10 @@
         </div>
 
         @if ($questions->count() > 0)
-            <div class="rounded-2xl overflow-hidden backdrop-blur-md" style="background: rgba(255,255,255,0.95); border: 1px solid rgba(255,255,255,0.3); box-shadow: 0 8px 32px rgba(0,0,0,0.1);">
-                <div class="px-6 py-5" style="background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(248,250,252,0.9) 100%); border-bottom: 1px solid rgba(28,88,113,0.08);">
+            <div class="rounded-2xl overflow-hidden backdrop-blur-md"
+                style="background: rgba(255,255,255,0.95); border: 1px solid rgba(255,255,255,0.3); box-shadow: 0 8px 32px rgba(0,0,0,0.1);">
+                <div class="px-6 py-5"
+                    style="background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(248,250,252,0.9) 100%); border-bottom: 1px solid rgba(28,88,113,0.08);">
                     <h2 class="text-xl font-bold flex items-center" style="color: rgba(28,88,113,0.9);">
                         <i class="fas fa-list-check mr-3" style="color: rgba(28,88,113,0.7);"></i>
                         Daftar Soal
@@ -67,34 +70,41 @@
 
                 <div class="divide-y" style="border-color: rgba(28,88,113,0.08);">
                     @foreach ($questions as $index => $question)
-                        <div class="p-6 transition-all hover:shadow-lg" style="background: linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(250,252,255,0.98) 100%); border-left: 4px solid rgba(28,88,113,0.1);" 
-                             onmouseover="this.style.borderLeftColor='rgba(28,88,113,0.3)'"
-                             onmouseout="this.style.borderLeftColor='rgba(28,88,113,0.1)'">
+                        <div class="p-6 transition-all hover:shadow-lg"
+                            style="background: linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(250,252,255,0.98) 100%); border-left: 4px solid rgba(28,88,113,0.1);"
+                            onmouseover="this.style.borderLeftColor='rgba(28,88,113,0.3)'"
+                            onmouseout="this.style.borderLeftColor='rgba(28,88,113,0.1)'">
                             <div class="flex justify-between items-start">
                                 <div class="flex-1">
                                     <div class="mb-4">
-                                        <h3 class="text-lg font-semibold mb-3 flex items-center" style="color: rgba(28,88,113,0.85);">
-                                            <span class="inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold mr-3"
-                                                  style="background: linear-gradient(135deg, rgba(28,88,113,0.08) 0%, rgba(34,108,137,0.08) 100%); color: rgba(28,88,113,0.75); border: 1px solid rgba(28,88,113,0.15);">
+                                        <h3 class="text-lg font-semibold mb-3 flex items-center"
+                                            style="color: rgba(28,88,113,0.85);">
+                                            <span
+                                                class="inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold mr-3"
+                                                style="background: linear-gradient(135deg, rgba(28,88,113,0.08) 0%, rgba(34,108,137,0.08) 100%); color: rgba(28,88,113,0.75); border: 1px solid rgba(28,88,113,0.15);">
                                                 {{ $index + 1 + ($questions->currentPage() - 1) * $questions->perPage() }}
                                             </span>
                                             {{ $question->question }}
                                         </h3>
 
                                         @if ($question->material)
-                                            <div class="p-4 rounded-xl mb-3" style="background: linear-gradient(135deg, rgba(99,102,241,0.06) 0%, rgba(79,70,229,0.06) 100%); border-left: 3px solid rgba(99,102,241,0.3);">
+                                            <div class="p-4 rounded-xl mb-3"
+                                                style="background: linear-gradient(135deg, rgba(99,102,241,0.06) 0%, rgba(79,70,229,0.06) 100%); border-left: 3px solid rgba(99,102,241,0.3);">
                                                 <p class="text-sm" style="color: rgba(79,70,229,0.8);">
                                                     <span class="font-semibold flex items-center mb-2">
-                                                        <i class="fas fa-book-open mr-2" style="color: rgba(99,102,241,0.7);"></i>
+                                                        <i class="fas fa-book-open mr-2"
+                                                            style="color: rgba(99,102,241,0.7);"></i>
                                                         Materi:
                                                     </span>
                                                     <a href="{{ route('materials.show', $question->material->id) }}"
-                                                        class="hover:underline font-medium" style="color: rgba(147,51,234,0.8);">
+                                                        class="hover:underline font-medium"
+                                                        style="color: rgba(147,51,234,0.8);">
                                                         {{ $question->material->title }}
                                                     </a>
                                                     @if ($question->material->category)
-                                                        <span class="inline-block text-xs px-3 py-1 rounded-full ml-2 font-medium"
-                                                              style="background: rgba(168,85,247,0.2); color: rgba(147,51,234,0.9);">
+                                                        <span
+                                                            class="inline-block text-xs px-3 py-1 rounded-full ml-2 font-medium"
+                                                            style="background: rgba(168,85,247,0.2); color: rgba(147,51,234,0.9);">
                                                             {{ $question->material->category }}
                                                         </span>
                                                     @endif
@@ -102,7 +112,8 @@
                                             </div>
                                         @endif
                                         @if ($question->difficulty)
-                                            <div class="p-4 rounded-xl" style="background: linear-gradient(135deg, rgba(28,88,113,0.05) 0%, rgba(34,108,137,0.05) 100%); border-left: 4px solid rgba(28,88,113,0.3);">
+                                            <div class="p-4 rounded-xl"
+                                                style="background: linear-gradient(135deg, rgba(28,88,113,0.05) 0%, rgba(34,108,137,0.05) 100%); border-left: 4px solid rgba(28,88,113,0.3);">
                                                 <p class="text-sm" style="color: rgba(28,88,113,0.8);">
                                                     <span class="font-semibold flex items-center mb-2">
                                                         <i class="fas fa-layer-group mr-2"></i>
@@ -110,64 +121,79 @@
                                                     </span>
                                                     @php
                                                         $difficulty = $question->difficulty;
-                                                        
+
                                                         if ($difficulty === 'Mudah' || $difficulty === 'easy') {
-                                                            $bgStyle = 'background: rgba(34,197,94,0.12); color: rgba(21,128,61,0.9);';
+                                                            $bgStyle =
+                                                                'background: rgba(34,197,94,0.12); color: rgba(21,128,61,0.9);';
                                                             $icon = 'fas fa-circle';
-                                                        } elseif ($difficulty === 'Menengah' || $difficulty === 'medium') {
-                                                            $bgStyle = 'background: rgba(251,191,36,0.12); color: rgba(180,83,9,0.9);';
+                                                        } elseif (
+                                                            $difficulty === 'Menengah' ||
+                                                            $difficulty === 'medium'
+                                                        ) {
+                                                            $bgStyle =
+                                                                'background: rgba(251,191,36,0.12); color: rgba(180,83,9,0.9);';
                                                             $icon = 'fas fa-adjust';
                                                         } elseif ($difficulty === 'Sulit' || $difficulty === 'hard') {
-                                                            $bgStyle = 'background: rgba(248,113,113,0.12); color: rgba(185,28,28,0.9);';
+                                                            $bgStyle =
+                                                                'background: rgba(248,113,113,0.12); color: rgba(185,28,28,0.9);';
                                                             $icon = 'fas fa-fire';
                                                         } else {
-                                                            $bgStyle = 'background: rgba(156,163,175,0.12); color: rgba(75,85,99,0.9);';
+                                                            $bgStyle =
+                                                                'background: rgba(156,163,175,0.12); color: rgba(75,85,99,0.9);';
                                                             $icon = 'fas fa-question';
                                                         }
                                                     @endphp
-                                                    <span class="inline-flex items-center text-xs px-3 py-1 rounded-full font-medium ml-1"
-                                                          style="{{ $bgStyle }}">
+                                                    <span
+                                                        class="inline-flex items-center text-xs px-3 py-1 rounded-full font-medium ml-1"
+                                                        style="{{ $bgStyle }}">
                                                         <i class="{{ $icon }} mr-1"></i>
                                                         {{ $question->difficulty }}
                                                     </span>
                                                 </p>
                                             </div>
                                         @endif
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 my-4">
-                            @foreach ($question->options as $key => $option)
-                                <div class="flex items-center p-3 rounded-lg text-sm transition-all
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 my-4">
+                                            @foreach ($question->options as $key => $option)
+                                                <div class="flex items-center p-3 rounded-lg text-sm transition-all
                                     {{ $question->answer === $key ? 'border-2' : 'border' }}"
-                                    style="{{ $question->answer === $key ? 'background: linear-gradient(135deg, rgba(34,197,94,0.06) 0%, rgba(21,128,61,0.06) 100%); border-color: rgba(34,197,94,0.3); color: rgba(21,128,61,0.85);' : 'background: linear-gradient(135deg, rgba(248,250,252,0.9) 0%, rgba(241,245,249,0.9) 100%); border-color: rgba(28,88,113,0.08); color: rgba(28,88,113,0.7);' }}">
-                                    <span class="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold mr-3"
-                                          style="{{ $question->answer === $key ? 'background: rgba(34,197,94,0.15); color: rgba(21,128,61,0.9);' : 'background: rgba(28,88,113,0.08); color: rgba(28,88,113,0.7);' }}">
-                                        {{ $key }}
-                                    </span>
-                                    <span class="{{ $question->answer === $key ? 'font-semibold' : '' }}">
-                                        {{ Str::limit($option, 60) }}
-                                    </span>
-                                    @if ($question->answer === $key)
-                                        <i class="fas fa-check-circle ml-auto" style="color: rgba(34,197,94,0.7);"></i>
-                                    @endif
-                                </div>
-                            @endforeach
-                        </div>
+                                                    style="{{ $question->answer === $key ? 'background: linear-gradient(135deg, rgba(34,197,94,0.06) 0%, rgba(21,128,61,0.06) 100%); border-color: rgba(34,197,94,0.3); color: rgba(21,128,61,0.85);' : 'background: linear-gradient(135deg, rgba(248,250,252,0.9) 0%, rgba(241,245,249,0.9) 100%); border-color: rgba(28,88,113,0.08); color: rgba(28,88,113,0.7);' }}">
+                                                    <span
+                                                        class="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold mr-3"
+                                                        style="{{ $question->answer === $key ? 'background: rgba(34,197,94,0.15); color: rgba(21,128,61,0.9);' : 'background: rgba(28,88,113,0.08); color: rgba(28,88,113,0.7);' }}">
+                                                        {{ $key }}
+                                                    </span>
+                                                    <span
+                                                        class="{{ $question->answer === $key ? 'font-semibold' : '' }}">
+                                                        {{ Str::limit($option, 60) }}
+                                                    </span>
+                                                    @if ($question->answer === $key)
+                                                        <i class="fas fa-check-circle ml-auto"
+                                                            style="color: rgba(34,197,94,0.7);"></i>
+                                                    @endif
+                                                </div>
+                                            @endforeach
+                                        </div>
 
-                        @if ($question->explanation)
-                            <div class="p-4 rounded-xl" style="background: linear-gradient(135deg, rgba(59,130,246,0.06) 0%, rgba(37,99,235,0.06) 100%); border-left: 3px solid rgba(59,130,246,0.35);">
-                                <p class="text-sm" style="color: rgba(37,99,235,0.75);">
-                                    <span class="font-semibold flex items-center mb-2">
-                                        <i class="fas fa-lightbulb mr-2" style="color: rgba(251,191,36,0.8);"></i>
-                                        Penjelasan:
-                                    </span>
-                                    {{ $question->explanation }}
-                                </p>
-                            </div>
-                        @endif
+                                        @if ($question->explanation)
+                                            <div class="p-4 rounded-xl"
+                                                style="background: linear-gradient(135deg, rgba(59,130,246,0.06) 0%, rgba(37,99,235,0.06) 100%); border-left: 3px solid rgba(59,130,246,0.35);">
+                                                <p class="text-sm" style="color: rgba(37,99,235,0.75);">
+                                                    <span class="font-semibold flex items-center mb-2">
+                                                        <i class="fas fa-lightbulb mr-2"
+                                                            style="color: rgba(251,191,36,0.8);"></i>
+                                                        Penjelasan:
+                                                    </span>
+                                                    {{ $question->explanation }}
+                                                </p>
+                                            </div>
+                                        @endif
                                     </div>
 
-                                    <div class="text-sm flex items-center space-x-4" style="color: rgba(28,88,113,0.5);">
+                                    <div class="text-sm flex items-center space-x-4"
+                                        style="color: rgba(28,88,113,0.5);">
                                         <span class="flex items-center">
-                                            <i class="fas fa-calendar-plus mr-1" style="color: rgba(28,88,113,0.4);"></i>
+                                            <i class="fas fa-calendar-plus mr-1"
+                                                style="color: rgba(28,88,113,0.4);"></i>
                                             Dibuat: {{ $question->created_at->format('d M Y H:i') }}
                                         </span>
                                         @if ($question->updated_at != $question->created_at)
@@ -190,7 +216,8 @@
                                     </a>
 
                                     <form method="POST" action="{{ route('questions.destroy', $question->id) }}"
-                                        onsubmit="event.preventDefault(); showDeleteConfirmation(this, 'Yakin ingin menghapus soal ini? Aksi ini tidak dapat dibatalkan.'); return false;" class="inline">
+                                        onsubmit="event.preventDefault(); showDeleteConfirmation(this, 'Yakin ingin menghapus soal ini? Aksi ini tidak dapat dibatalkan.'); return false;"
+                                        class="inline">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit"
@@ -210,15 +237,18 @@
 
                 <!-- Pagination -->
                 @if ($questions->hasPages())
-                    <div class="p-6 border-t" style="background: linear-gradient(135deg, rgba(248,250,252,0.8) 0%, rgba(241,245,249,0.8) 100%); border-color: rgba(28,88,113,0.06);">
+                    <div class="p-6 border-t"
+                        style="background: linear-gradient(135deg, rgba(248,250,252,0.8) 0%, rgba(241,245,249,0.8) 100%); border-color: rgba(28,88,113,0.06);">
                         {{ $questions->links() }}
                     </div>
                 @endif
             </div>
         @else
-            <div class="rounded-2xl p-10 text-center backdrop-blur-md" style="background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(250,252,255,0.95) 100%); border: 1px solid rgba(255,255,255,0.3); box-shadow: 0 8px 32px rgba(0,0,0,0.08);">
+            <div class="rounded-2xl p-10 text-center backdrop-blur-md"
+                style="background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(250,252,255,0.95) 100%); border: 1px solid rgba(255,255,255,0.3); box-shadow: 0 8px 32px rgba(0,0,0,0.08);">
                 <div class="mb-6" style="color: rgba(28,88,113,0.4);">
-                    <div class="inline-flex items-center justify-center w-24 h-24 rounded-full" style="background: rgba(28,88,113,0.05);">
+                    <div class="inline-flex items-center justify-center w-24 h-24 rounded-full"
+                        style="background: rgba(28,88,113,0.05);">
                         <i class="fas fa-question-circle text-4xl"></i>
                     </div>
                 </div>
@@ -236,16 +266,6 @@
                         <i class="fas fa-plus mr-2"></i>
                         Tambah Soal Manual
                     </a>
-
-                    <div class="p-5 rounded-xl" style="background: linear-gradient(135deg, rgba(28,88,113,0.04) 0%, rgba(34,108,137,0.04) 100%); border: 1px solid rgba(28,88,113,0.08);">
-                        <p class="text-sm font-medium mb-3" style="color: rgba(28,88,113,0.7);">
-                            <i class="fas fa-code mr-2"></i>
-                            Atau gunakan endpoint untuk n8n:
-                        </p>
-                        <code class="inline-block px-4 py-2 rounded-lg text-sm font-mono" style="background: rgba(28,88,113,0.08); color: rgba(28,88,113,0.75);">
-                            POST http://172.29.192.1:8000/api/questions/auto-save
-                        </code>
-                    </div>
                 </div>
             </div>
         @endif

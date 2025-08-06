@@ -89,7 +89,7 @@
                         <textarea id="option_a" name="option_a" rows="3" required
                             class="w-full rounded-xl px-4 py-3 focus:outline-none focus:ring-2 transition-all border-2"
                             style="border-color: rgba(28,88,113,0.2); background: linear-gradient(135deg, rgba(28,88,113,0.03) 0%, rgba(42,122,157,0.05) 100%);"
-                            placeholder="Masukkan pilihan A...">{{ old('option_a', $question->options['A']) }}</textarea>
+                            placeholder="Masukkan pilihan A...">{{ old('option_a', $question->option_a) }}</textarea>
                         @error('option_a')
                             <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                         @enderror
@@ -105,7 +105,7 @@
                         <textarea id="option_b" name="option_b" rows="3" required
                             class="w-full rounded-xl px-4 py-3 focus:outline-none focus:ring-2 transition-all border-2"
                             style="border-color: rgba(28,88,113,0.2); background: linear-gradient(135deg, rgba(28,88,113,0.03) 0%, rgba(42,122,157,0.05) 100%);"
-                            placeholder="Masukkan pilihan B...">{{ old('option_b', $question->options['B']) }}</textarea>
+                            placeholder="Masukkan pilihan B...">{{ old('option_b', $question->option_b) }}</textarea>
                         @error('option_b')
                             <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                         @enderror
@@ -121,7 +121,7 @@
                         <textarea id="option_c" name="option_c" rows="3" required
                             class="w-full rounded-xl px-4 py-3 focus:outline-none focus:ring-2 transition-all border-2"
                             style="border-color: rgba(28,88,113,0.2); background: linear-gradient(135deg, rgba(28,88,113,0.03) 0%, rgba(42,122,157,0.05) 100%);"
-                            placeholder="Masukkan pilihan C...">{{ old('option_c', $question->options['C']) }}</textarea>
+                            placeholder="Masukkan pilihan C...">{{ old('option_c', $question->option_c) }}</textarea>
                         @error('option_c')
                             <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                         @enderror
@@ -137,7 +137,7 @@
                         <textarea id="option_d" name="option_d" rows="3" required
                             class="w-full rounded-xl px-4 py-3 focus:outline-none focus:ring-2 transition-all border-2"
                             style="border-color: rgba(28,88,113,0.2); background: linear-gradient(135deg, rgba(28,88,113,0.03) 0%, rgba(42,122,157,0.05) 100%);"
-                            placeholder="Masukkan pilihan D...">{{ old('option_d', $question->options['D']) }}</textarea>
+                            placeholder="Masukkan pilihan D...">{{ old('option_d', $question->option_d) }}</textarea>
                         @error('option_d')
                             <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                         @enderror
@@ -154,7 +154,7 @@
                         <textarea id="option_e" name="option_e" rows="3"
                             class="w-full rounded-xl px-4 py-3 focus:outline-none focus:ring-2 transition-all border-2"
                             style="border-color: rgba(28,88,113,0.2); background: linear-gradient(135deg, rgba(28,88,113,0.03) 0%, rgba(42,122,157,0.05) 100%);"
-                            placeholder="Masukkan pilihan E... (opsional)">{{ old('option_e', $question->options['E'] ?? '') }}</textarea>
+                            placeholder="Masukkan pilihan E... (opsional)">{{ old('option_e', $question->option_e ?? '') }}</textarea>
                         @error('option_e')
                             <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                         @enderror
