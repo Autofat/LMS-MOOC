@@ -45,6 +45,7 @@ public function store(Request $request)
     $question = Question::create([
         'material_id' => $request->material_id,
         'question' => $request->question,
+        'tipe_soal' => $request->tipe_soal ?: 'pilihan_ganda',
         'option_a' => $request->option_a,
         'option_b' => $request->option_b,
         'option_c' => $request->option_c,
@@ -142,6 +143,7 @@ public function store(Request $request)
         $question = Question::create([
             'material_id' => $request->material_id,
             'question' => $request->question,
+            'tipe_soal' => $request->tipe_soal ?: 'pilihan_ganda',
             'option_a' => $options['A'],
             'option_b' => $options['B'],
             'option_c' => $options['C'],
@@ -197,6 +199,7 @@ public function store(Request $request)
                 $question = Question::create([
                     'material_id' => $questionData['material_id'] ?? null,
                     'question' => $questionData['question'],
+                    'tipe_soal' => $questionData['tipe_soal'] ?? 'pilihan_ganda',
                     'option_a' => $options['A'],
                     'option_b' => $options['B'],
                     'option_c' => $options['C'],

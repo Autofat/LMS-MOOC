@@ -14,7 +14,8 @@ public function up()
     Schema::create('questions', function (Blueprint $table) {
         $table->id(); // Kolom id auto increment
         $table->unsignedBigInteger('material_id')->nullable(); // Kolom untuk relasi ke materials
-        $table->text('question'); // Kolom untuk pertanyaan
+        $table->text('question');
+        $table->string('tipe_soal')->default('pilihan_ganda'); // Kolom untuk tipe soal
         $table->text('option_a'); // Kolom untuk opsi A
         $table->text('option_b'); // Kolom untuk opsi B
         $table->text('option_c'); // Kolom untuk opsi C, bisa kosong

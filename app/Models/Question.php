@@ -9,6 +9,7 @@ class Question extends Model
     protected $fillable = [
         'material_id',
         'question',
+        'tipe_soal',
         'option_a',
         'option_b',
         'option_c',
@@ -17,6 +18,13 @@ class Question extends Model
         'answer',
         'explanation',
         'difficulty'
+    ];
+
+    /**
+     * The attributes with their default values.
+     */
+    protected $attributes = [
+        'tipe_soal' => 'pilihan_ganda',
     ];
 
     /**
@@ -55,6 +63,14 @@ class Question extends Model
     public function setDifficultyAttribute($value)
     {
         $this->attributes['difficulty'] = $value ? strtolower($value) : null;
+    }
+
+    /**
+     * Set tipe_soal with default value
+     */
+    public function setTipeSoalAttribute($value)
+    {
+        $this->attributes['tipe_soal'] = $value ?: 'pilihan_ganda';
     }
 
     /**

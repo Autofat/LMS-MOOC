@@ -85,6 +85,7 @@ class QuestionApiController extends Controller
             $questionData = [
                 'material_id' => (int) $request->material_id,
                 'question' => trim($request->question),
+                'tipe_soal' => $request->tipe_soal ?: 'pilihan_ganda',
                 'option_a' => trim($request->options['A']),
                 'option_b' => trim($request->options['B']),
                 'option_c' => trim($request->options['C']),
@@ -307,6 +308,7 @@ class QuestionApiController extends Controller
                     $question = Question::create([
                         'material_id' => $materialId,
                         'question' => trim($questionData['question']),
+                        'tipe_soal' => $questionData['tipe_soal'] ?? 'pilihan_ganda',
                         'option_a' => trim($options['A']),
                         'option_b' => trim($options['B']),
                         'option_c' => trim($options['C']),
