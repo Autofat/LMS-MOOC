@@ -8,6 +8,7 @@ use App\Models\Material;
 use App\Models\Question;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Log;
 
 class MaterialApiController extends Controller
 {
@@ -38,14 +39,21 @@ class MaterialApiController extends Controller
     public function store(Request $request)
     {
         try {
-            $validator = Validator::make($request->all(), [
+            Log::info('API Material upload started', [
+                'request_data' => $request->except(['pdf_file']),
+                'has_file' => $request->hasFile('pdf_file')
+            ]);
+
+            // Basic validation first
+                        $validator = Validator::make($request->all(), [
                 'title' => 'required|string|max:255',
                 'description' => 'nullable|string',
                 'category' => 'nullable|string|max:100',
-                'pdf_file' => 'required|file|mimes:pdf|max:10240', // Max 10MB
+                'pdf_file' => 'nullable|file|max:10240', // Max 10MB, removed mimes:pdf
             ]);
 
             if ($validator->fails()) {
+                Log::error('API Basic validation failed', ['errors' => $validator->errors()]);
                 return response()->json([
                     'success' => false,
                     'message' => 'Validation failed',
@@ -53,24 +61,86 @@ class MaterialApiController extends Controller
                 ], 422);
             }
 
-            $uploadedFile = $request->file('pdf_file');
+            $file = $request->file('pdf_file');
             
+            // Custom PDF validation
+            $fileExtension = strtolower($file->getClientOriginalExtension());
+            $fileMimeType = $file->getMimeType();
+            $fileSize = $file->getSize();
+            
+            Log::info('API File details', [
+                'original_name' => $file->getClientOriginalName(),
+                'extension' => $fileExtension,
+                'mime_type' => $fileMimeType,
+                'size' => $fileSize
+            ]);
+
+            // Check file extension
+            if ($fileExtension !== 'pdf') {
+                Log::error('API Invalid file extension', ['extension' => $fileExtension]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'File harus berformat PDF. Ekstensi file yang diterima: .pdf',
+                    'details' => [
+                        'detected_extension' => $fileExtension,
+                        'file_name' => $file->getClientOriginalName()
+                    ]
+                ], 422);
+            }
+
+            // Check MIME type (flexible for different PDF creators)
+            $allowedMimeTypes = [
+                'application/pdf',
+                'application/x-pdf',
+                'application/x-download',
+                'application/octet-stream'
+            ];
+
+            if (!in_array($fileMimeType, $allowedMimeTypes)) {
+                Log::warning('API Uncommon MIME type detected', [
+                    'mime_type' => $fileMimeType,
+                    'file_name' => $file->getClientOriginalName()
+                ]);
+            }
+
+            // Verify PDF header (read first 4 bytes)
+            $fileContent = file_get_contents($file->getRealPath(), false, null, 0, 4);
+            if ($fileContent !== '%PDF') {
+                Log::error('API Invalid PDF header', [
+                    'header_bytes' => bin2hex($fileContent),
+                    'file_name' => $file->getClientOriginalName()
+                ]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'File yang diupload bukan file PDF yang valid',
+                    'details' => [
+                        'mime_type' => $fileMimeType,
+                        'file_name' => $file->getClientOriginalName(),
+                        'reason' => 'Header file tidak sesuai format PDF'
+                    ]
+                ], 422);
+            }
+
+            Log::info('API PDF validation passed');
+
             // Generate unique filename
-            $fileName = time() . '_' . $uploadedFile->getClientOriginalName();
+            $fileName = time() . '_' . $file->getClientOriginalName();
             
             // Store file in storage/app/public/materials
-            $filePath = $uploadedFile->storeAs('materials', $fileName, 'public');
+            $filePath = $file->storeAs('materials', $fileName, 'public');
             
             // Create material record
             $material = Material::create([
                 'title' => $request->title,
                 'description' => $request->description,
                 'file_path' => $filePath,
-                'file_name' => $uploadedFile->getClientOriginalName(),
-                'file_size' => $uploadedFile->getSize(),
+                'file_name' => $file->getClientOriginalName(),
+                'file_size' => $file->getSize(),
                 'category' => $request->category,
                 'is_active' => true,
             ]);
+
+            Log::info('API Material created successfully', ['material_id' => $material->id]);
 
             return response()->json([
                 'success' => true,
@@ -134,7 +204,7 @@ class MaterialApiController extends Controller
                 'title' => 'required|string|max:255',
                 'description' => 'nullable|string',
                 'category' => 'nullable|string|max:100',
-                'pdf_file' => 'nullable|file|mimes:pdf|max:10240', // Max 10MB
+                'pdf_file' => 'nullable|file|max:10240', // Max 10MB, removed mimes:pdf
             ]);
 
             if ($validator->fails()) {
@@ -147,19 +217,57 @@ class MaterialApiController extends Controller
 
             // Handle file upload if new file is provided
             if ($request->hasFile('pdf_file')) {
+                $file = $request->file('pdf_file');
+                
+                // Custom PDF validation
+                $fileExtension = strtolower($file->getClientOriginalExtension());
+                $fileMimeType = $file->getMimeType();
+                
+                Log::info('API Update file details', [
+                    'original_name' => $file->getClientOriginalName(),
+                    'extension' => $fileExtension,
+                    'mime_type' => $fileMimeType,
+                    'size' => $file->getSize()
+                ]);
+
+                // Check file extension
+                if ($fileExtension !== 'pdf') {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'File harus berformat PDF. Ekstensi file yang diterima: .pdf',
+                        'details' => [
+                            'detected_extension' => $fileExtension,
+                            'file_name' => $file->getClientOriginalName()
+                        ]
+                    ], 422);
+                }
+
+                // Verify PDF header
+                $fileContent = file_get_contents($file->getRealPath(), false, null, 0, 4);
+                if ($fileContent !== '%PDF') {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'File yang diupload bukan file PDF yang valid',
+                        'details' => [
+                            'mime_type' => $fileMimeType,
+                            'file_name' => $file->getClientOriginalName(),
+                            'reason' => 'Header file tidak sesuai format PDF'
+                        ]
+                    ], 422);
+                }
+                
                 // Delete old file
                 if (Storage::disk('public')->exists($material->file_path)) {
                     Storage::disk('public')->delete($material->file_path);
                 }
                 
-                $uploadedFile = $request->file('pdf_file');
-                $fileName = time() . '_' . $uploadedFile->getClientOriginalName();
-                $filePath = $uploadedFile->storeAs('materials', $fileName, 'public');
+                $fileName = time() . '_' . $file->getClientOriginalName();
+                $filePath = $file->storeAs('materials', $fileName, 'public');
                 
                 $material->update([
                     'file_path' => $filePath,
-                    'file_name' => $uploadedFile->getClientOriginalName(),
-                    'file_size' => $uploadedFile->getSize(),
+                    'file_name' => $file->getClientOriginalName(),
+                    'file_size' => $file->getSize(),
                 ]);
             }
 
@@ -252,13 +360,13 @@ class MaterialApiController extends Controller
     {
         try {
             // Log incoming webhook data for debugging
-            \Log::info('Material webhook received:', $request->all());
+            Log::info('Material webhook received:', $request->all());
 
             $validator = Validator::make($request->all(), [
                 'title' => 'required|string|max:255',
                 'description' => 'nullable|string',
                 'category' => 'nullable|string|max:100',
-                'pdf_file' => 'required|file|mimes:pdf|max:10240',
+                'pdf_file' => 'required|file|max:10240', // Removed mimes:pdf
                 'automation_id' => 'nullable|string', // For n8n tracking
             ]);
 
@@ -270,16 +378,54 @@ class MaterialApiController extends Controller
                 ], 422);
             }
 
-            $uploadedFile = $request->file('pdf_file');
-            $fileName = time() . '_' . $uploadedFile->getClientOriginalName();
-            $filePath = $uploadedFile->storeAs('materials', $fileName, 'public');
+            $file = $request->file('pdf_file');
+            
+            // Custom PDF validation for webhook
+            $fileExtension = strtolower($file->getClientOriginalExtension());
+            $fileMimeType = $file->getMimeType();
+            
+            Log::info('Webhook file details', [
+                'original_name' => $file->getClientOriginalName(),
+                'extension' => $fileExtension,
+                'mime_type' => $fileMimeType,
+                'size' => $file->getSize()
+            ]);
+
+            // Check file extension
+            if ($fileExtension !== 'pdf') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'File harus berformat PDF. Ekstensi file yang diterima: .pdf',
+                    'details' => [
+                        'detected_extension' => $fileExtension,
+                        'file_name' => $file->getClientOriginalName()
+                    ]
+                ], 422);
+            }
+
+            // Verify PDF header
+            $fileContent = file_get_contents($file->getRealPath(), false, null, 0, 4);
+            if ($fileContent !== '%PDF') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'File yang diupload bukan file PDF yang valid',
+                    'details' => [
+                        'mime_type' => $fileMimeType,
+                        'file_name' => $file->getClientOriginalName(),
+                        'reason' => 'Header file tidak sesuai format PDF'
+                    ]
+                ], 422);
+            }
+
+            $fileName = time() . '_' . $file->getClientOriginalName();
+            $filePath = $file->storeAs('materials', $fileName, 'public');
             
             $material = Material::create([
                 'title' => $request->title,
                 'description' => $request->description,
                 'file_path' => $filePath,
-                'file_name' => $uploadedFile->getClientOriginalName(),
-                'file_size' => $uploadedFile->getSize(),
+                'file_name' => $file->getClientOriginalName(),
+                'file_size' => $file->getSize(),
                 'category' => $request->category,
                 'is_active' => true,
             ]);
@@ -300,7 +446,7 @@ class MaterialApiController extends Controller
             ], 201);
 
         } catch (\Exception $e) {
-            \Log::error('Material webhook error: ' . $e->getMessage());
+            Log::error('Material webhook error: ' . $e->getMessage());
             
             return response()->json([
                 'success' => false,

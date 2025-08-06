@@ -10,6 +10,47 @@
 </head>
 
 <body class="bg-gray-50">
+    <!-- Toast Messages -->
+    @if(session('success'))
+        <div id="editQuestionsSuccessToast" class="fixed top-8 right-4 z-50 backdrop-blur-md rounded-2xl shadow-2xl max-w-md"
+            style="background: linear-gradient(135deg, rgba(34,197,94,0.95) 0%, rgba(21,128,61,0.95) 100%); border: 1px solid rgba(255,255,255,0.2);">
+            <div class="flex items-center p-6">
+                <div class="flex-shrink-0">
+                    <div class="w-10 h-10 rounded-full flex items-center justify-center"
+                        style="background: rgba(255,255,255,0.2);">
+                        <i class="fas fa-check-circle text-white text-lg"></i>
+                    </div>
+                </div>
+                <div class="ml-4 flex-1">
+                    <p class="text-white font-semibold text-base">{{ session('success') }}</p>
+                </div>
+                <button onclick="hideEditQuestionsToast('editQuestionsSuccessToast')" class="ml-4 p-2 rounded-lg transition-all duration-200 hover:bg-white/20">
+                    <i class="fas fa-times text-white"></i>
+                </button>
+            </div>
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div id="editQuestionsErrorToast" class="fixed top-8 right-4 z-50 backdrop-blur-md rounded-2xl shadow-2xl max-w-md"
+            style="background: linear-gradient(135deg, rgba(239,68,68,0.95) 0%, rgba(220,38,38,0.95) 100%); border: 1px solid rgba(255,255,255,0.2);">
+            <div class="flex items-center p-6">
+                <div class="flex-shrink-0">
+                    <div class="w-10 h-10 rounded-full flex items-center justify-center"
+                        style="background: rgba(255,255,255,0.2);">
+                        <i class="fas fa-exclamation-circle text-white text-lg"></i>
+                    </div>
+                </div>
+                <div class="ml-4 flex-1">
+                    <p class="text-white font-semibold text-base">{{ session('error') }}</p>
+                </div>
+                <button onclick="hideEditQuestionsToast('editQuestionsErrorToast')" class="ml-4 p-2 rounded-lg transition-all duration-200 hover:bg-white/20">
+                    <i class="fas fa-times text-white"></i>
+                </button>
+            </div>
+        </div>
+    @endif
+
     <div class="container mx-auto px-4 py-8">
         <!-- Header -->
         <div class="bg-white rounded-lg shadow-md p-6 mb-6">
@@ -22,7 +63,7 @@
                     @if ($savedQuestionsCount > 0)
                         <p class="text-gray-600 mt-2">
                             <i class="fas fa-info-circle mr-1"></i>
-                            {{ $savedQuestionsCount }} soal berhasil disimpan dari n8n
+                            {{ $savedQuestionsCount }} soal berhasil disimpan dari Generate AI
                         </p>
                     @endif
                 </div>
@@ -46,7 +87,7 @@
                     @if ($autoFillData)
                         <div class="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded mb-6">
                             <i class="fas fa-robot mr-2"></i>
-                            Form telah diisi otomatis dari data n8n. Silakan edit sesuai kebutuhan.
+                            Form telah diisi otomatis dari data Generate AI. Silakan edit sesuai kebutuhan.
                         </div>
                     @endif
 
@@ -223,7 +264,7 @@
                         <div class="text-center text-gray-500 py-8">
                             <i class="fas fa-inbox text-4xl mb-3"></i>
                             <p>Belum ada soal tersimpan</p>
-                            <p class="text-sm">Kirim data dari n8n untuk melihat soal di sini</p>
+                            <p class="text-sm">Gunakan Generate AI untuk melihat soal di sini</p>
                         </div>
                     @endif
                 </div>
@@ -232,7 +273,7 @@
                 <div class="bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg shadow-md p-6 mt-6 text-white">
                     <h3 class="text-lg font-semibold mb-3">
                         <i class="fas fa-robot mr-2"></i>
-                        Endpoint n8n
+                        Endpoint Generate AI
                     </h3>
                     <div class="space-y-2 text-sm">
                         <div class="bg-white/20 rounded p-2">
@@ -268,6 +309,33 @@
 
         // Auto-resize textareas
         document.addEventListener('DOMContentLoaded', function() {
+            // Edit questions page toast functionality - simplified like admin
+            window.hideEditQuestionsToast = function(toastId) {
+                const toast = document.getElementById(toastId);
+                if (toast) {
+                    toast.style.transform = 'translateX(100%)';
+                    setTimeout(() => {
+                        toast.remove();
+                    }, 300);
+                }
+            }
+            
+            // Auto hide toasts after 5 seconds
+            const editQuestionsSuccessToast = document.getElementById('editQuestionsSuccessToast');
+            const editQuestionsErrorToast = document.getElementById('editQuestionsErrorToast');
+            
+            if (editQuestionsSuccessToast) {
+                setTimeout(() => {
+                    hideEditQuestionsToast('editQuestionsSuccessToast');
+                }, 5000);
+            }
+            
+            if (editQuestionsErrorToast) {
+                setTimeout(() => {
+                    hideEditQuestionsToast('editQuestionsErrorToast');
+                }, 5000);
+            }
+
             const textareas = document.querySelectorAll('textarea');
             textareas.forEach(textarea => {
                 textarea.addEventListener('input', function() {

@@ -34,112 +34,184 @@ class MaterialController extends Controller
      */
     public function store(Request $request)
     {
-        // Log the incoming request for debugging
-        \Log::info('MaterialController store method called', [
-            'expects_json' => $request->expectsJson(),
-            'is_ajax' => $request->ajax(),
-            'wants_json' => $request->wantsJson(),
-            'accept_header' => $request->header('Accept'),
-            'content_type' => $request->header('Content-Type'),
-            'x_requested_with' => $request->header('X-Requested-With'),
-            'has_file' => $request->hasFile('pdf_file')
-        ]);
-        
         try {
+            // Validasi sederhana dengan pengecekan file terlebih dahulu
+            if (!$request->hasFile('pdf_file')) {
+                throw new \Exception("Tidak ada file yang diupload.");
+            }
+            
+            $file = $request->file('pdf_file');
+            
+            // Check file upload errors
+            if (!$file->isValid()) {
+                $errorCode = $file->getError();
+                $errorMessage = $file->getErrorMessage();
+                
+                switch ($errorCode) {
+                    case UPLOAD_ERR_INI_SIZE:
+                        throw new \Exception('Ukuran file melebihi batas maksimal PHP (upload_max_filesize). Saat ini: ' . ini_get('upload_max_filesize'));
+                    case UPLOAD_ERR_FORM_SIZE:
+                        throw new \Exception('Ukuran file melebihi batas maksimal form.');
+                    case UPLOAD_ERR_PARTIAL:
+                        throw new \Exception('File hanya terupload sebagian. Coba upload ulang.');
+                    case UPLOAD_ERR_NO_TMP_DIR:
+                        throw new \Exception('Folder temporary tidak ditemukan.');
+                    case UPLOAD_ERR_CANT_WRITE:
+                        throw new \Exception('Gagal menulis file ke disk.');
+                    default:
+                        throw new \Exception('Error upload file: ' . $errorMessage);
+                }
+            }
+            
+            // Validasi dengan pengecekan MIME type yang lebih fleksibel
+            $file = $request->file('pdf_file');
+            $originalName = $file->getClientOriginalName();
+            $extension = strtolower($file->getClientOriginalExtension());
+            $mimeType = $file->getMimeType();
+            $fileSize = $file->getSize();
+            
+            // Validate basic requirements first
             $request->validate([
                 'title' => 'required|string|max:255',
                 'description' => 'nullable|string',
-                'category' => 'nullable|string|max:100',
-                'pdf_file' => 'required|file|mimes:pdf|max:10240', // Max 10MB
+                'pdf_file' => 'required|file|max:10240', // Max 10MB
+            ], [
+                'title.required' => 'Judul materi harus diisi.',
+                'pdf_file.required' => 'File PDF harus diupload.',
+                'pdf_file.file' => 'Yang diupload harus berupa file.',
+                'pdf_file.max' => 'Ukuran file maksimal 10MB.',
             ]);
+            
+            // Custom PDF validation - check extension
+            if (!in_array($extension, ['pdf'])) {
+                throw new \Illuminate\Validation\ValidationException(
+                    \Illuminate\Support\Facades\Validator::make([], [])
+                        ->errors()
+                        ->add('pdf_file', "File harus berformat PDF. Ekstensi file Anda: .{$extension}")
+                );
+            }
+            
+            // Check MIME type more flexibly (PDF files can have different MIME types)
+            $allowedMimeTypes = [
+                'application/pdf',
+                'application/x-pdf',
+                'application/x-download',
+                'application/octet-stream'
+            ];
+            
+            if (!in_array($mimeType, $allowedMimeTypes)) {
+                // Try to read file header to verify it's actually a PDF
+                try {
+                    $fileHandle = fopen($file->getRealPath(), 'rb');
+                    $header = fread($fileHandle, 4);
+                    fclose($fileHandle);
+                    
+                    if ($header !== '%PDF') {
+                        Log::error('File header check failed', [
+                            'expected' => '%PDF',
+                            'actual' => bin2hex($header),
+                            'mime_type' => $mimeType
+                        ]);
+                        
+                        throw new \Illuminate\Validation\ValidationException(
+                            \Illuminate\Support\Facades\Validator::make([], [])
+                                ->errors()
+                                ->add('pdf_file', "File bukan PDF yang valid. MIME type: {$mimeType}")
+                        );
+                    }
+                    
+                    Log::info('File verified as PDF by header check', [
+                        'mime_type' => $mimeType,
+                        'header_valid' => true
+                    ]);
+                } catch (\Exception $e) {
+                    Log::error('Error reading file header', [
+                        'error' => $e->getMessage(),
+                        'mime_type' => $mimeType
+                    ]);
+                    
+                    throw new \Illuminate\Validation\ValidationException(
+                        \Illuminate\Support\Facades\Validator::make([], [])
+                            ->errors()
+                            ->add('pdf_file', "Tidak dapat memverifikasi file PDF. MIME type: {$mimeType}")
+                    );
+                }
+            }
 
-            $uploadedFile = $request->file('pdf_file');
-            
             // Generate unique filename
-            $fileName = time() . '_' . $uploadedFile->getClientOriginalName();
+            $fileName = time() . '_' . $file->getClientOriginalName();
             
-            // Store file in storage/app/public/materials
-            $filePath = $uploadedFile->storeAs('materials', $fileName, 'public');
+            // Store file
+            $filePath = $file->storeAs('materials', $fileName, 'public');
             
             // Create material record
             $material = Material::create([
                 'title' => $request->title,
                 'description' => $request->description,
                 'file_path' => $filePath,
-                'file_name' => $uploadedFile->getClientOriginalName(),
-                'file_size' => $uploadedFile->getSize(),
-                'category' => $request->category,
+                'file_name' => $file->getClientOriginalName(),
+                'file_size' => $file->getSize(),
                 'is_active' => true,
             ]);
 
-            // Notify n8n
-            \Log::info('About to call notifyN8n', ['material_id' => $material->id]);
-            $webhookResult = $this->notifyN8n($material);
-            \Log::info('notifyN8n result', ['material_id' => $material->id, 'result' => $webhookResult]);
-
-            // Check if request expects JSON (AJAX request)
-            if ($request->expectsJson() || $request->ajax() || $request->wantsJson() || $request->header('Accept') === 'application/json') {
-                \Log::info('Returning JSON response for material upload', [
-                    'material_id' => $material->id,
-                    'expects_json' => $request->expectsJson(),
-                    'is_ajax' => $request->ajax(),
-                    'wants_json' => $request->wantsJson(),
-                    'accept_header' => $request->header('Accept')
-                ]);
-                
+            // Return JSON untuk AJAX request
+            if ($request->wantsJson()) {
                 return response()->json([
                     'success' => true,
                     'message' => 'Materi berhasil diupload!',
-                    'material' => [
-                        'id' => $material->id,
-                        'title' => $material->title,
-                        'description' => $material->description,
-                        'file_name' => $material->file_name
-                    ],
-                    'redirect_url' => route('materials.show', $material->id)
-                ], 201);
+                    'material' => $material
+                ]);
             }
 
-            \Log::info('Returning redirect response for material upload', [
-                'material_id' => $material->id,
-                'expects_json' => $request->expectsJson(),
-                'is_ajax' => $request->ajax(),
-                'wants_json' => $request->wantsJson(),
-                'accept_header' => $request->header('Accept')
-            ]);
+            return redirect()->route('materials.show', $material)
+                ->with('success', 'Materi berhasil diupload!');
 
-            return redirect()->route('materials.index')->with('success', 'Materi berhasil diupload!');
-            
         } catch (\Illuminate\Validation\ValidationException $e) {
-            \Log::error('Validation error in material store', [
+            Log::error('Validation failed in store method', [
                 'errors' => $e->errors(),
-                'request_data' => $request->except(['pdf_file'])
+                'validator_errors' => $e->validator->errors()->toArray(),
+                'has_file' => $request->hasFile('pdf_file'),
+                'file_details' => $request->hasFile('pdf_file') ? [
+                    'name' => $request->file('pdf_file')->getClientOriginalName(),
+                    'size' => $request->file('pdf_file')->getSize(),
+                    'size_mb' => round($request->file('pdf_file')->getSize() / 1024 / 1024, 2),
+                    'mime' => $request->file('pdf_file')->getMimeType(),
+                    'extension' => $request->file('pdf_file')->getClientOriginalExtension(),
+                    'is_valid' => $request->file('pdf_file')->isValid(),
+                    'error_code' => $request->file('pdf_file')->getError()
+                ] : 'no_file_uploaded'
             ]);
             
-            if ($request->expectsJson() || $request->ajax() || $request->wantsJson() || $request->header('Accept') === 'application/json') {
+            if ($request->wantsJson()) {
+                // Get first specific error message
+                $firstError = collect($e->errors())->flatten()->first();
+                
                 return response()->json([
                     'success' => false,
-                    'message' => 'Validation failed',
-                    'errors' => $e->errors()
+                    'message' => $firstError,
+                    'errors' => $e->errors(),
+                    'debug' => [
+                        'has_file' => $request->hasFile('pdf_file'),
+                        'php_limits' => [
+                            'upload_max_filesize' => ini_get('upload_max_filesize'),
+                            'post_max_size' => ini_get('post_max_size')
+                        ]
+                    ]
                 ], 422);
             }
-            
-            return redirect()->back()->withErrors($e->errors())->withInput();
+            return back()->withErrors($e->errors())->withInput();
             
         } catch (\Exception $e) {
-            \Log::error('Error storing material', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
+            Log::error('Material upload error: ' . $e->getMessage());
             
-            if ($request->expectsJson() || $request->ajax() || $request->wantsJson() || $request->header('Accept') === 'application/json') {
+            if ($request->wantsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Failed to upload material: ' . $e->getMessage()
+                    'message' => 'Terjadi kesalahan saat upload: ' . $e->getMessage()
                 ], 500);
             }
             
-            return redirect()->back()->with('error', 'Error uploading material: ' . $e->getMessage())->withInput();
+            return back()->with('error', 'Terjadi kesalahan saat upload: ' . $e->getMessage())->withInput();
         }
     }
 
@@ -185,32 +257,6 @@ class MaterialController extends Controller
 
         $material = Material::findOrFail($id);
         
-        // Comprehensive debugging
-        $debugInfo = [
-            'has_file' => $request->hasFile('pdf_file'),
-            'php_upload_max' => ini_get('upload_max_filesize'),
-            'php_post_max' => ini_get('post_max_size'),
-            'php_max_execution' => ini_get('max_execution_time'),
-            'storage_path_exists' => Storage::disk('public')->exists('materials'),
-            'storage_writable' => is_writable(storage_path('app/public')),
-        ];
-        
-        if ($request->hasFile('pdf_file')) {
-            $file = $request->file('pdf_file');
-            $debugInfo['file_info'] = [
-                'name' => $file->getClientOriginalName(),
-                'size' => $file->getSize(),
-                'size_mb' => round($file->getSize() / 1024 / 1024, 2),
-                'mime' => $file->getMimeType(),
-                'extension' => $file->getClientOriginalExtension(),
-                'is_valid' => $file->isValid(),
-                'error' => $file->getError(),
-                'error_message' => $file->getErrorMessage(),
-            ];
-        }
-        
-        Log::info('Material Update Debug Info:', $debugInfo);
-        
         $fileUpdated = false;
         
         // Handle file upload if new file is provided
@@ -219,7 +265,6 @@ class MaterialController extends Controller
                 // Delete old file
                 if (Storage::disk('public')->exists($material->file_path)) {
                     Storage::disk('public')->delete($material->file_path);
-                    Log::info('Old file deleted: ' . $material->file_path);
                 }
                 
                 $uploadedFile = $request->file('pdf_file');
@@ -228,14 +273,11 @@ class MaterialController extends Controller
                 // Ensure materials directory exists
                 if (!Storage::disk('public')->exists('materials')) {
                     Storage::disk('public')->makeDirectory('materials');
-                    Log::info('Created materials directory');
                 }
                 
                 $filePath = $uploadedFile->storeAs('materials', $fileName, 'public');
                 
                 if ($filePath) {
-                    Log::info('New file uploaded successfully: ' . $filePath);
-                    
                     $material->update([
                         'file_path' => $filePath,
                         'file_name' => $uploadedFile->getClientOriginalName(),
@@ -244,7 +286,6 @@ class MaterialController extends Controller
                     
                     $fileUpdated = true;
                 } else {
-                    Log::error('File upload failed - storeAs returned false');
                     return redirect()->back()->withErrors(['pdf_file' => 'Failed to store the PDF file. Please try again.']);
                 }
                 
@@ -300,7 +341,7 @@ class MaterialController extends Controller
         $material = Material::findOrFail($id);
         
         if (Storage::disk('public')->exists($material->file_path)) {
-            return Storage::disk('public')->download($material->file_path, $material->file_name);
+            return response()->download(storage_path('app/public/' . $material->file_path), $material->file_name);
         }
         
         return redirect()->back()->with('error', 'File tidak ditemukan!');
@@ -317,7 +358,7 @@ class MaterialController extends Controller
             $filePath = storage_path('app/public/' . $material->file_path);
             
             if (!file_exists($filePath)) {
-                \Log::error('File not found for API download', [
+                Log::error('File not found for API download', [
                     'material_id' => $id,
                     'file_path' => $filePath,
                     'expected_path' => $material->file_path
@@ -336,7 +377,7 @@ class MaterialController extends Controller
             }
             
             // Log the download attempt for security/tracking
-            \Log::info('API Download accessed', [
+            Log::info('API Download accessed', [
                 'material_id' => $id,
                 'file_name' => $material->file_name,
                 'file_size' => $material->file_size,
@@ -358,7 +399,7 @@ class MaterialController extends Controller
             ]);
             
         } catch (\Exception $e) {
-            \Log::error('Error in API download', [
+            Log::error('Error in API download', [
                 'material_id' => $id,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
@@ -377,7 +418,7 @@ class MaterialController extends Controller
     }
 
     /**
-     * Download questions for specific material as Excel
+     * Download questions for specific material as Excel (.xls format)
      */
     public function downloadQuestionsExcel($id)
     {
@@ -388,72 +429,75 @@ class MaterialController extends Controller
             return redirect()->back()->with('error', 'Tidak ada soal untuk materi ini!');
         }
 
-        // Create Excel content using HTML table format that Excel can read
+        // Generate filename
         $filename = 'soal_' . Str::slug($material->title) . '_' . date('Y-m-d_H-i-s') . '.xls';
         
-        $excelContent = '
-        <html>
-        <head>
-            <meta charset="UTF-8">
-            <style>
-                table { border-collapse: collapse; width: 100%; }
-                th, td { border: 1px solid #000; padding: 8px; text-align: left; }
-                th { background-color: #f2f2f2; font-weight: bold; }
-            </style>
-        </head>
-        <body>
-            <h2>Kumpulan Soal: ' . htmlspecialchars($material->title) . '</h2>
-            <p>Tanggal Export: ' . date('d/m/Y H:i:s') . '</p>
-            <table>
-                <thead>
-                    <tr>
-                        <th>No</th>
-                        <th>Pertanyaan</th>
-                        <th>Pilihan A</th>
-                        <th>Pilihan B</th>
-                        <th>Pilihan C</th>
-                        <th>Pilihan D</th>
-                        <th>Jawaban Benar</th>
-                        <th>Penjelasan</th>
-                        <th>Tingkat Kesulitan</th>
-                        <th>Tanggal Dibuat</th>
-                    </tr>
-                </thead>
-                <tbody>';
-
-        foreach ($questions as $index => $question) {
+        // Create proper CSV content
+        $output = fopen('php://temp', 'r+');
+        
+        // Add BOM for UTF-8 encoding
+        fwrite($output, "\xEF\xBB\xBF");
+        
+        // Add headers
+        $headers = [
+            'Teks Soal',
+            'Tipe Soal', 
+            'Jawaban',
+            'Opsi A',
+            'Opsi B',
+            'Opsi C',
+            'Opsi D',
+            'Opsi E',
+            'Tingkat Kesulitan'
+        ];
+        
+        fputcsv($output, $headers);
+        
+        // Add data rows
+        foreach ($questions as $question) {
             // Get options safely
             $options = $question->options ?? [];
             
-            $excelContent .= '
-                    <tr>
-                        <td>' . ($index + 1) . '</td>
-                        <td>' . htmlspecialchars($question->question ?? '') . '</td>
-                        <td>' . htmlspecialchars($options['A'] ?? '') . '</td>
-                        <td>' . htmlspecialchars($options['B'] ?? '') . '</td>
-                        <td>' . htmlspecialchars($options['C'] ?? '') . '</td>
-                        <td>' . htmlspecialchars($options['D'] ?? '') . '</td>
-                        <td>' . htmlspecialchars($question->answer ?? '') . '</td>
-                        <td>' . htmlspecialchars($question->explanation ?? '') . '</td>
-                        <td>' . htmlspecialchars($question->difficulty ?? '') . '</td>
-                        <td>' . ($question->created_at ? $question->created_at->format('d/m/Y H:i:s') : '') . '</td>
-                    </tr>';
+            // Determine question type (default to multiple choice if not specified)
+            $questionType = $question->type ?? 'pilihan_ganda';
+            
+            // Format answer based on question type
+            $answer = '';
+            if ($questionType === 'pilihan_ganda' || $questionType === 'multiple_choice') {
+                $answer = strtoupper($question->answer ?? '');
+            } else {
+                $answer = $question->answer ?? '';
+            }
+            
+            // Prepare row data
+            $rowData = [
+                $question->question ?? '',
+                $questionType,
+                $answer,
+                $options['A'] ?? '',
+                $options['B'] ?? '',
+                $options['C'] ?? '',
+                $options['D'] ?? '',
+                $options['E'] ?? '',
+                $question->difficulty ?? ''
+            ];
+            
+            fputcsv($output, $rowData);
         }
-
-        $excelContent .= '
-                </tbody>
-            </table>
-        </body>
-        </html>';
-
-        return response($excelContent)
+        
+        // Get the content
+        rewind($output);
+        $csvContent = stream_get_contents($output);
+        fclose($output);
+        
+        // Return as downloadable file
+        return response($csvContent)
             ->header('Content-Type', 'application/vnd.ms-excel; charset=UTF-8')
             ->header('Content-Disposition', 'attachment; filename="' . $filename . '"')
             ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
             ->header('Pragma', 'no-cache')
             ->header('Expires', '0');
     }
-
     /**
      * Show questions for specific material
      */
@@ -470,7 +514,7 @@ class MaterialController extends Controller
      */
     private function notifyN8n($material)
     {
-        \Log::info('notifyN8n method called', [
+        Log::info('notifyN8n method called', [
             'material_id' => $material->id,
             'material_title' => $material->title
         ]);
@@ -479,7 +523,7 @@ class MaterialController extends Controller
             // URL n8n webhook - bisa dikonfigurasi di .env
             $n8nWebhookUrl = env('N8N_WEBHOOK_URL');
             
-            \Log::info('Using webhook URL', ['webhook_url' => $n8nWebhookUrl]);
+            Log::info('Using webhook URL', ['webhook_url' => $n8nWebhookUrl]);
             
             // Get file path
             $filePath = storage_path('app/public/' . $material->file_path);
@@ -509,7 +553,7 @@ class MaterialController extends Controller
                     $fileSize = filesize($filePath);
                     $maxFileSize = env('N8N_FILE_SIZE_LIMIT', 5242880); // Default 5MB
                     if ($fileSize > $maxFileSize) {
-                        \Log::warning('File too large for base64 encoding', [
+                        Log::warning('File too large for base64 encoding', [
                             'material_id' => $material->id,
                             'file_size' => $fileSize,
                             'limit' => $maxFileSize
@@ -539,7 +583,7 @@ class MaterialController extends Controller
                         unset($fileContent, $base64Content);
                     }
                 } catch (\Exception $fileError) {
-                    \Log::error('Error processing file for n8n', [
+                    Log::error('Error processing file for n8n', [
                         'material_id' => $material->id,
                         'file_path' => $filePath,
                         'error' => $fileError->getMessage()
@@ -555,7 +599,7 @@ class MaterialController extends Controller
             }
 
             // Log webhook attempt
-            \Log::info('Attempting to send webhook to n8n', [
+            Log::info('Attempting to send webhook to n8n', [
                 'material_id' => $material->id,
                 'webhook_url' => $n8nWebhookUrl,
                 'file_size' => $material->file_size,
@@ -565,17 +609,17 @@ class MaterialController extends Controller
 
             // Kirim ke n8n menggunakan HTTP client dengan error handling untuk JSON
             try {
-                $response = \Http::timeout(30)->post($n8nWebhookUrl, $data);
+                $response = Http::timeout(30)->post($n8nWebhookUrl, $data);
                 
                 if ($response->successful()) {
-                    \Log::info('n8n notification sent successfully', [
+                    Log::info('n8n notification sent successfully', [
                         'material_id' => $material->id,
                         'response_status' => $response->status(),
                         'response_body' => $response->body()
                     ]);
                     return true;
                 } else {
-                    \Log::error('n8n notification failed', [
+                    Log::error('n8n notification failed', [
                         'material_id' => $material->id,
                         'status' => $response->status(),
                         'response' => $response->body(),
@@ -584,7 +628,7 @@ class MaterialController extends Controller
                     return false;
                 }
             } catch (\Exception $httpError) {
-                \Log::error('HTTP error sending to n8n', [
+                Log::error('HTTP error sending to n8n', [
                     'material_id' => $material->id,
                     'error' => $httpError->getMessage(),
                     'webhook_url' => $n8nWebhookUrl
@@ -592,7 +636,7 @@ class MaterialController extends Controller
                 return false;
             }
         } catch (\Exception $e) {
-            \Log::error('n8n notification error', [
+            Log::error('n8n notification error', [
                 'material_id' => $material->id,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
@@ -620,7 +664,7 @@ class MaterialController extends Controller
             }
             
         } catch (\Exception $e) {
-            \Log::error('Error resending to n8n', [
+            Log::error('Error resending to n8n', [
                 'material_id' => $id,
                 'error' => $e->getMessage()
             ]);
@@ -644,7 +688,7 @@ class MaterialController extends Controller
             // Clear any existing completion cache to allow new generation
             $cacheKey = "n8n_completion_material_{$material->id}";
             cache()->forget($cacheKey);
-            \Log::info('Cleared previous completion cache for material', ['material_id' => $material->id]);
+            Log::info('Cleared previous completion cache for material', ['material_id' => $material->id]);
             
             // Validate request
             $request->validate([
@@ -692,7 +736,7 @@ class MaterialController extends Controller
                         $data['file_content_base64'] = $base64Content;
                         $data['file_included'] = true;
                     } catch (\Exception $e) {
-                        \Log::warning('Could not include file content in generation request', [
+                        Log::warning('Could not include file content in generation request', [
                             'material_id' => $material->id,
                             'error' => $e->getMessage()
                         ]);
@@ -712,7 +756,7 @@ class MaterialController extends Controller
             
             // Send to n8n with increased timeout and better error handling
             // Use async request to prevent PHP timeout
-            $response = \Http::timeout(30) // Reduce to 30 seconds for faster response
+            $response = Http::timeout(30) // Reduce to 30 seconds for faster response
                 ->retry(1, 100) // Only retry once
                 ->withOptions([
                     'verify' => false, // Disable SSL verification for localhost
@@ -722,7 +766,7 @@ class MaterialController extends Controller
                 ->post($n8nGenerateUrl, $data);
             
             if ($response->successful()) {
-                \Log::info('n8n question generation triggered successfully', [
+                Log::info('n8n question generation triggered successfully', [
                     'material_id' => $material->id,
                     'response_status' => $response->status(),
                     'response_body' => $response->body()
@@ -740,7 +784,7 @@ class MaterialController extends Controller
                     ]
                 ]);
             } else {
-                \Log::error('n8n question generation failed', [
+                Log::error('n8n question generation failed', [
                     'material_id' => $material->id,
                     'response_status' => $response->status(),
                     'response_body' => $response->body(),
@@ -774,7 +818,7 @@ class MaterialController extends Controller
             }
             
         } catch (\Illuminate\Http\Client\ConnectionException $e) {
-            \Log::warning('Connection timeout when triggering question generation - continuing with polling', [
+            Log::warning('Connection timeout when triggering question generation - continuing with polling', [
                 'material_id' => $id,
                 'error' => $e->getMessage(),
                 'webhook_url' => $n8nGenerateUrl ?? 'not_set',
@@ -796,7 +840,7 @@ class MaterialController extends Controller
                 ]
             ]);
         } catch (\Exception $e) {
-            \Log::error('Error triggering question generation', [
+            Log::error('Error triggering question generation', [
                 'material_id' => $id,
                 'error' => $e->getMessage(),
                 'error_class' => get_class($e),
@@ -822,7 +866,7 @@ class MaterialController extends Controller
             // Clear any existing completion cache to allow new generation
             $cacheKey = "n8n_completion_material_{$material->id}";
             cache()->forget($cacheKey);
-            \Log::info('Cleared previous completion cache for async generation', ['material_id' => $material->id]);
+            Log::info('Cleared previous completion cache for async generation', ['material_id' => $material->id]);
             
             // Validate request
             $request->validate([
@@ -862,19 +906,19 @@ class MaterialController extends Controller
             
             $n8nGenerateUrl = env('N8N_GENERATE_QUESTIONS_URL', 'http://localhost:5678/webhook/generate-questions');
             
-            \Log::info('Triggering n8n async generation', [
+            Log::info('Triggering n8n async generation', [
                 'material_id' => $material->id,
                 'webhook_url' => $n8nGenerateUrl
             ]);
             
             // Fire-and-forget with very short timeout
             try {
-                \Http::timeout(5) // Only 5 seconds
+                Http::timeout(5) // Only 5 seconds
                     ->withOptions(['verify' => false])
                     ->post($n8nGenerateUrl, $quickData);
             } catch (\Exception $e) {
                 // Ignore timeout/connection errors for fire-and-forget
-                \Log::info('Fire-and-forget request completed (timeout expected)', [
+                Log::info('Fire-and-forget request completed (timeout expected)', [
                     'material_id' => $material->id,
                     'error' => $e->getMessage()
                 ]);
@@ -894,7 +938,7 @@ class MaterialController extends Controller
             ]);
             
         } catch (\Exception $e) {
-            \Log::error('Error in async question generation', [
+            Log::error('Error in async question generation', [
                 'material_id' => $id,
                 'error' => $e->getMessage()
             ]);
@@ -929,7 +973,7 @@ class MaterialController extends Controller
                 usleep(500000); // 0.5 second delay
             }
             
-            \Log::info('Bulk send to n8n completed', [
+            Log::info('Bulk send to n8n completed', [
                 'total_materials' => $materials->count(),
                 'success_count' => $successCount,
                 'error_count' => $errorCount
@@ -940,7 +984,7 @@ class MaterialController extends Controller
             );
             
         } catch (\Exception $e) {
-            \Log::error('Error bulk sending to n8n', [
+            Log::error('Error bulk sending to n8n', [
                 'error' => $e->getMessage()
             ]);
             
@@ -960,7 +1004,7 @@ class MaterialController extends Controller
             $filePath = storage_path('app/public/' . $material->file_path);
             
             if (!file_exists($filePath)) {
-                \Log::error('File not found for material', [
+                Log::error('File not found for material', [
                     'material_id' => $id,
                     'file_path' => $filePath,
                     'expected_path' => $material->file_path
@@ -998,7 +1042,7 @@ class MaterialController extends Controller
             ]);
             
         } catch (\Exception $e) {
-            \Log::error('Error retrieving file for n8n', [
+            Log::error('Error retrieving file for n8n', [
                 'material_id' => $id,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
@@ -1027,7 +1071,7 @@ class MaterialController extends Controller
             $filePath = storage_path('app/public/' . $material->file_path);
             
             if (!file_exists($filePath)) {
-                \Log::error('File not found for streaming', [
+                Log::error('File not found for streaming', [
                     'material_id' => $id,
                     'file_path' => $filePath,
                     'expected_path' => $material->file_path
@@ -1055,7 +1099,7 @@ class MaterialController extends Controller
             ]);
             
         } catch (\Exception $e) {
-            \Log::error('Error streaming file for n8n', [
+            Log::error('Error streaming file for n8n', [
                 'material_id' => $id,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
@@ -1088,7 +1132,7 @@ class MaterialController extends Controller
             // Get current question count for fresh baseline
             $currentQuestionCount = $material->questions()->count();
             
-            \Log::info('Generation state cleared', [
+            Log::info('Generation state cleared', [
                 'material_id' => $material->id,
                 'current_questions' => $currentQuestionCount
             ]);
@@ -1104,7 +1148,7 @@ class MaterialController extends Controller
             ]);
             
         } catch (\Exception $e) {
-            \Log::error('Error clearing generation state', [
+            Log::error('Error clearing generation state', [
                 'material_id' => $id,
                 'error' => $e->getMessage()
             ]);

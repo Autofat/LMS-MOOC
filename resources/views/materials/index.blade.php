@@ -21,6 +21,31 @@
     <!-- Include Navbar Component -->
     @include('components.navbar')
 
+    <!-- Toast Messages -->
+    @if(session('success'))
+        <div id="materialsSuccessToast" class="fixed top-8 right-4 z-50 bg-green-500 text-white px-8 py-5 rounded-lg shadow-xl max-w-md">
+            <div class="flex items-center">
+                <i class="fas fa-check-circle text-2xl mr-4"></i>
+                <p class="text-base font-medium">{{ session('success') }}</p>
+                <button onclick="hideMaterialsToast('materialsSuccessToast')" class="ml-4 text-white hover:text-gray-200">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div id="materialsErrorToast" class="fixed top-8 right-4 z-50 bg-red-500 text-white px-8 py-5 rounded-lg shadow-xl max-w-md">
+            <div class="flex items-center">
+                <i class="fas fa-exclamation-circle text-2xl mr-4"></i>
+                <p class="text-base font-medium">{{ session('error') }}</p>
+                <button onclick="hideMaterialsToast('materialsErrorToast')" class="ml-4 text-white hover:text-gray-200">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+    @endif
+
     <!-- Hero Section -->
     <div class="professional-gradient text-white py-16 mb-8">
         <div class="container mx-auto px-4">
@@ -233,6 +258,37 @@
 
     <!-- Include Delete Confirmation Modal -->
     @include('components.delete-confirmation-modal')
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Materials page toast functionality
+        window.hideMaterialsToast = function(toastId) {
+            const toast = document.getElementById(toastId);
+            if (toast) {
+                toast.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    toast.remove();
+                }, 300);
+            }
+        }
+        
+        // Auto hide toasts after 5 seconds
+        const materialsSuccessToast = document.getElementById('materialsSuccessToast');
+        const materialsErrorToast = document.getElementById('materialsErrorToast');
+        
+        if (materialsSuccessToast) {
+            setTimeout(() => {
+                hideMaterialsToast('materialsSuccessToast');
+            }, 5000);
+        }
+        
+        if (materialsErrorToast) {
+            setTimeout(() => {
+                hideMaterialsToast('materialsErrorToast');
+            }, 5000);
+        }
+    });
+    </script>
 </body>
 
 </html>

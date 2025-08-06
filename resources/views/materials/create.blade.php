@@ -25,6 +25,52 @@
     <!-- Include Navbar Component -->
     @include('components.navbar')
 
+    <!-- Toast Messages -->
+    @if(session('success'))
+        <div id="createSuccessToast" class="fixed top-8 right-4 z-50 bg-green-500 text-white px-8 py-5 rounded-lg shadow-xl max-w-md">
+            <div class="flex items-center">
+                <i class="fas fa-check-circle text-2xl mr-4"></i>
+                <p class="text-base font-medium">{{ session('success') }}</p>
+                <button onclick="hideCreateToast('createSuccessToast')" class="ml-4 text-white hover:text-gray-200">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div id="createErrorToast" class="fixed top-8 right-4 z-50 bg-red-500 text-white px-8 py-5 rounded-lg shadow-xl max-w-md">
+            <div class="flex items-center">
+                <i class="fas fa-exclamation-circle text-2xl mr-4"></i>
+                <div class="ml-4 flex-1">
+                    <p class="text-base font-medium">{{ session('error') }}</p>
+                </div>
+                <button onclick="hideCreateToast('createErrorToast')" class="ml-4 text-white hover:text-gray-200">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+    @endif
+
+    @if($errors->any())
+        <div id="createValidationToast" class="fixed top-8 right-4 z-50 bg-red-500 text-white px-8 py-5 rounded-lg shadow-xl max-w-md">
+            <div class="flex items-center">
+                <i class="fas fa-exclamation-triangle text-2xl mr-4"></i>
+                <div class="ml-4 flex-1">
+                    <p class="text-base font-medium">Error Validasi:</p>
+                    <ul class="text-sm mt-1">
+                        @foreach($errors->all() as $error)
+                            <li>• {{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+                <button onclick="hideCreateToast('createValidationToast')" class="ml-4 text-white hover:text-gray-200">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+    @endif
+
     <div class="container mx-auto px-4 pb-8 pt-8">
         <div class="max-w-2xl mx-auto">
             <div class="glass-effect rounded-2xl shadow-xl p-8">
@@ -111,7 +157,11 @@
                                     </label>
                                     <p class="pl-2 self-center">atau drag and drop</p>
                                 </div>
-                                <p class="text-xs" style="color: rgba(28,88,113,0.6);">PDF hingga 10MB</p>
+                                <p class="text-xs" style="color: rgba(28,88,113,0.6);">
+                                    <i class="fas fa-info-circle mr-1"></i>
+                                    PDF hingga 10MB • Format yang didukung: .pdf
+                                </p>
+
                                 <p id="file-name" class="text-sm font-medium" style="color: rgba(28,88,113,0.8);"></p>
                             </div>
                         </div>
@@ -177,6 +227,45 @@
         </div>
     </div>
 
+    <!-- Error Modal -->
+    <div id="errorModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-lg w-full mx-4">
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-exclamation-triangle text-2xl text-red-500"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-800 mb-2">Upload Gagal</h3>
+                <p class="text-gray-600" id="errorMessage">Terjadi kesalahan saat mengupload materi.</p>
+            </div>
+
+            <!-- Error Details -->
+            <div id="errorDetails" class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 hidden">
+                <h4 class="font-semibold text-red-800 mb-2">Detail Error:</h4>
+                <p class="text-red-700 text-sm" id="errorDetailsText"></p>
+            </div>
+
+            <!-- Common Solutions -->
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                <h4 class="font-semibold text-blue-800 mb-2">Solusi yang Disarankan:</h4>
+                <ul class="space-y-1" id="solutionsList">
+                    <li class="text-blue-700 text-sm">• Pastikan file yang dipilih adalah file PDF</li>
+                    <li class="text-blue-700 text-sm">• Periksa ukuran file tidak melebihi 10MB</li>
+                    <li class="text-blue-700 text-sm">• Pastikan file tidak rusak atau corrupt</li>
+                    <li class="text-blue-700 text-sm">• Coba refresh halaman dan upload ulang</li>
+                </ul>
+            </div>
+
+            <div class="flex justify-center space-x-3">
+                <button onclick="closeErrorModal()" class="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">
+                    <i class="fas fa-times mr-2"></i>Tutup
+                </button>
+                <button onclick="retryUpload()" class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+                    <i class="fas fa-redo mr-2"></i>Coba Lagi
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
         function updateFileName(input) {
             const fileNameElement = document.getElementById('file-name');
@@ -208,96 +297,183 @@
             }
         }
 
+        function showErrorModal(error) {
+            // Hide loading modal
+            document.getElementById('loadingModal').classList.add('hidden');
+            
+            // Get modal elements
+            const errorModal = document.getElementById('errorModal');
+            const errorMessage = document.getElementById('errorMessage');
+            const errorDetails = document.getElementById('errorDetails');
+            const errorDetailsText = document.getElementById('errorDetailsText');
+            const solutionsList = document.getElementById('solutionsList');
+            
+            // Default values
+            let mainMessage = 'Terjadi kesalahan saat mengupload materi.';
+            let showDetails = false;
+            let solutions = [
+                'Pastikan file yang dipilih adalah file PDF',
+                'Periksa ukuran file tidak melebihi 10MB',
+                'Pastikan file tidak rusak atau corrupt',
+                'Coba refresh halaman dan upload ulang'
+            ];
+
+            // Handle specific error types
+            if (error.message) {
+                if (error.message.includes('No file was uploaded')) {
+                    mainMessage = 'Tidak ada file yang dipilih untuk diupload.';
+                    solutions = [
+                        'Klik tombol "Upload file PDF" untuk memilih file',
+                        'Pastikan file yang dipilih adalah format PDF',
+                        'Drag and drop file PDF ke area upload'
+                    ];
+                } else if (error.message.includes('file size') || error.message.includes('10MB')) {
+                    mainMessage = 'Ukuran file terlalu besar.';
+                    solutions = [
+                        'Maksimal ukuran file adalah 10MB',
+                        'Kompres file PDF untuk mengurangi ukuran',
+                        'Pilih file PDF dengan ukuran yang lebih kecil'
+                    ];
+                } else if (error.message.includes('mimes') || error.message.includes('PDF')) {
+                    mainMessage = 'Format file tidak didukung.';
+                    solutions = [
+                        'Hanya file PDF yang diperbolehkan',
+                        'Pastikan ekstensi file adalah .pdf',
+                        'Konversi file ke format PDF terlebih dahulu'
+                    ];
+                } else if (error.message.includes('CSRF')) {
+                    mainMessage = 'Sesi Anda telah berakhir.';
+                    solutions = [
+                        'Refresh halaman dan coba lagi',
+                        'Login ulang jika diperlukan'
+                    ];
+                } else {
+                    showDetails = true;
+                }
+            }
+            
+            // Set error message
+            errorMessage.textContent = mainMessage;
+            
+            // Show/hide error details
+            if (showDetails && error.message) {
+                errorDetailsText.textContent = error.message;
+                errorDetails.classList.remove('hidden');
+            } else {
+                errorDetails.classList.add('hidden');
+            }
+            
+            // Update solutions list
+            solutionsList.innerHTML = '';
+            solutions.forEach(solution => {
+                const li = document.createElement('li');
+                li.textContent = '• ' + solution;
+                li.className = 'text-blue-700 text-sm mb-1';
+                solutionsList.appendChild(li);
+            });
+            
+            // Show modal
+            errorModal.classList.remove('hidden');
+        }
+
+        function closeErrorModal() {
+            document.getElementById('errorModal').classList.add('hidden');
+        }
+
+        function retryUpload() {
+            closeErrorModal();
+            // Reset form if needed
+            const form = document.getElementById('materialForm');
+            // Don't reset the form, just allow user to try again
+        }
+
         document.getElementById('materialForm').addEventListener('submit', function(e) {
             e.preventDefault();
+
+            // Check if file is selected
+            const fileInput = document.getElementById('pdf_file');
+            if (!fileInput.files || !fileInput.files[0]) {
+                showErrorModal({ message: 'No file was uploaded. Please select a PDF file.' });
+                return;
+            }
 
             // Show loading modal
             document.getElementById('loadingModal').classList.remove('hidden');
             updateProgress(1, 'Mengupload file PDF...', 25);
 
-            // Create FormData for upload
-            const formData = new FormData(this);
-
             // Upload the material
             fetch(this.action, {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute(
-                                'content') ||
-                            document.querySelector('input[name="_token"]').value,
-                        'Accept': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest'
+                method: 'POST',
+                body: new FormData(this),
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(async response => {
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    // Handle validation errors specifically
+                    if (response.status === 422 && data.errors) {
+                        const firstError = Object.values(data.errors)[0][0];
+                        throw new Error(firstError);
                     }
-                })
-                .then(async response => {
-                    console.log('Response status:', response.status);
-                    console.log('Response headers:', Object.fromEntries(response.headers));
+                    throw new Error(data.message || `Upload failed: ${response.status}`);
+                }
 
-                    // Check if response is JSON or HTML
-                    const contentType = response.headers.get('content-type');
-                    console.log('Content-Type:', contentType);
-
-                    if (contentType && contentType.includes('application/json')) {
-                        // Parse JSON response
-                        const data = await response.json();
-                        console.log('Material upload response:', data);
-
-                        if (!response.ok) {
-                            throw new Error(data.message ||
-                                `HTTP ${response.status}: ${data.error || 'Unknown error'}`);
-                        }
-
-                        return data;
-                    } else {
-                        // Response is HTML (error page)
-                        const htmlResponse = await response.text();
-                        console.error('Received HTML response instead of JSON:', htmlResponse.substring(0,
-                            500));
-
-                        if (response.status === 419) {
-                            throw new Error('CSRF token mismatch. Please refresh the page and try again.');
-                        } else if (response.status === 422) {
-                            throw new Error('Validation error. Please check your form inputs.');
-                        } else if (response.status === 500) {
-                            throw new Error('Server error occurred. Please try again or contact support.');
-                        } else {
-                            throw new Error(
-                                `Server returned HTML instead of JSON (Status: ${response.status}). Please refresh and try again.`
-                            );
-                        }
-                    }
-                })
-                .then(data => {
-                    console.log('Processing JSON data:', data);
-
-                    if (data.success && data.material && data.material.id) {
-                        // Simulate progress through steps
-                        updateProgress(2, 'File berhasil diupload!', 50);
-
+                // Success - show progress
+                updateProgress(2, 'File berhasil diupload!', 50);
+                setTimeout(() => {
+                    updateProgress(3, 'Memproses materi...', 75);
+                    setTimeout(() => {
+                        updateProgress(4, 'Proses selesai! Mengalihkan halaman...', 100);
                         setTimeout(() => {
-                            updateProgress(3, 'Memproses materi...', 75);
+                            window.location.href = `/materials/${data.material.id}`;
+                        }, 1500);
+                    }, 500);
+                }, 500);
+            })
+            .catch(error => {
+                showErrorModal(error);
+            });
+        });
 
-                            setTimeout(() => {
-                                updateProgress(4, 'Proses selesai! Mengalihkan halaman...',
-                                100);
-
-                                setTimeout(() => {
-                                    window.location.href =
-                                        `/materials/${data.material.id}`;
-                                }, 1500);
-                            }, 500);
-                        }, 500);
-
-                    } else {
-                        throw new Error(data.message || 'Upload failed');
-                    }
-                })
-                .catch(error => {
-                    console.error('Upload error:', error);
-                    document.getElementById('loadingModal').classList.add('hidden');
-                    alert('Error uploading material: ' + error.message);
-                });
+        // Toast functionality for materials create page
+        window.hideCreateToast = function(toastId) {
+            const toast = document.getElementById(toastId);
+            if (toast) {
+                toast.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    toast.remove();
+                }, 300);
+            }
+        }
+        
+        // Auto hide toasts after 7 seconds (longer for error messages)
+        document.addEventListener('DOMContentLoaded', function() {
+            const createSuccessToast = document.getElementById('createSuccessToast');
+            const createErrorToast = document.getElementById('createErrorToast');
+            const createValidationToast = document.getElementById('createValidationToast');
+            
+            if (createSuccessToast) {
+                setTimeout(() => {
+                    hideCreateToast('createSuccessToast');
+                }, 5000);
+            }
+            
+            if (createErrorToast) {
+                setTimeout(() => {
+                    hideCreateToast('createErrorToast');
+                }, 7000); // Longer for error messages
+            }
+            
+            if (createValidationToast) {
+                setTimeout(() => {
+                    hideCreateToast('createValidationToast');
+                }, 8000); // Longest for validation errors
+            }
         });
     </script>
 </body>

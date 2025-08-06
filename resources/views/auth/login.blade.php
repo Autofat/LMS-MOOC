@@ -109,7 +109,7 @@
     <!-- Success/Error Messages - Toast Style -->
     <div id="toastContainer" class="fixed top-8 right-4 z-50 space-y-3">
         @if(session('success'))
-            <div id="loginSuccessToast" class="bg-green-500 text-white px-8 py-5 rounded-lg shadow-xl max-w-md transform translate-x-full opacity-0 transition-all duration-500 ease-in-out">
+            <div id="loginSuccessToast" class="bg-green-500 text-white px-8 py-5 rounded-lg shadow-xl max-w-md">
                 <div class="flex items-center">
                     <div class="flex-shrink-0">
                         <i class="fas fa-check-circle text-2xl"></i>
@@ -125,7 +125,7 @@
         @endif
 
         @if(session('error') || $errors->any())
-            <div id="loginErrorToast" class="bg-red-500 text-white px-8 py-5 rounded-lg shadow-xl max-w-md transform translate-x-full opacity-0 transition-all duration-500 ease-in-out">
+            <div id="loginErrorToast" class="bg-red-500 text-white px-8 py-5 rounded-lg shadow-xl max-w-md">
                 <div class="flex items-center">
                     <div class="flex-shrink-0">
                         <i class="fas fa-exclamation-circle text-2xl"></i>
@@ -148,39 +148,32 @@
 
     <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Login page specific toast functionality
-        function showLoginToast(toastId) {
-            const toast = document.getElementById(toastId);
-            if (toast) {
-                // Show toast with animation
-                setTimeout(() => {
-                    toast.classList.remove('translate-x-full', 'opacity-0');
-                    toast.classList.add('translate-x-0', 'opacity-100');
-                }, 100);
-                
-                // Auto hide after 5 seconds
-                setTimeout(() => {
-                    hideLoginToast(toastId);
-                }, 5000);
-            }
-        }
-        
+        // Login page specific toast functionality - simplified approach like admin
         window.hideLoginToast = function(toastId) {
             const toast = document.getElementById(toastId);
             if (toast) {
-                toast.classList.remove('translate-x-0', 'opacity-100');
-                toast.classList.add('translate-x-full', 'opacity-0');
-                
-                // Remove from DOM after animation completes
+                toast.style.transform = 'translateX(100%)';
                 setTimeout(() => {
                     toast.remove();
-                }, 500);
+                }, 300);
             }
         }
         
-        // Show all existing toasts
-        showLoginToast('loginSuccessToast');
-        showLoginToast('loginErrorToast');
+        // Auto hide toasts after 5 seconds - only run once
+        const loginSuccessToast = document.getElementById('loginSuccessToast');
+        const loginErrorToast = document.getElementById('loginErrorToast');
+        
+        if (loginSuccessToast) {
+            setTimeout(() => {
+                hideLoginToast('loginSuccessToast');
+            }, 5000);
+        }
+        
+        if (loginErrorToast) {
+            setTimeout(() => {
+                hideLoginToast('loginErrorToast');
+            }, 5000);
+        }
     });
 
     // Toggle password visibility

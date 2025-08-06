@@ -17,12 +17,69 @@
         .subtle-pattern {
             background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='rgba(28,88,113,0.03)' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
         }
+
+        /* Toast Animation Styles */
+        .toast-enter {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        
+        .toast-show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        
+        .toast-hide {
+            transform: translateX(100%);
+            opacity: 0;
+        }
     </style>
 </head>
 
 <body class="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 min-h-screen subtle-pattern">
     <!-- Include Navbar Component -->
     @include('components.navbar')
+
+    <!-- Toast Messages -->
+    @if(session('success'))
+        <div id="questionsSuccessToast" class="fixed top-8 right-4 z-50 backdrop-blur-md rounded-2xl shadow-2xl max-w-md"
+            style="background: linear-gradient(135deg, rgba(34,197,94,0.95) 0%, rgba(21,128,61,0.95) 100%); border: 1px solid rgba(255,255,255,0.2);">
+            <div class="flex items-center p-6">
+                <div class="flex-shrink-0">
+                    <div class="w-10 h-10 rounded-full flex items-center justify-center"
+                        style="background: rgba(255,255,255,0.2);">
+                        <i class="fas fa-check-circle text-white text-lg"></i>
+                    </div>
+                </div>
+                <div class="ml-4 flex-1">
+                    <p class="text-white font-semibold text-base">{{ session('success') }}</p>
+                </div>
+                <button onclick="hideQuestionsToast('questionsSuccessToast')" class="ml-4 p-2 rounded-lg transition-all duration-200 hover:bg-white/20">
+                    <i class="fas fa-times text-white"></i>
+                </button>
+            </div>
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div id="questionsErrorToast" class="fixed top-8 right-4 z-50 backdrop-blur-md rounded-2xl shadow-2xl max-w-md"
+            style="background: linear-gradient(135deg, rgba(239,68,68,0.95) 0%, rgba(220,38,38,0.95) 100%); border: 1px solid rgba(255,255,255,0.2);">
+            <div class="flex items-center p-6">
+                <div class="flex-shrink-0">
+                    <div class="w-10 h-10 rounded-full flex items-center justify-center"
+                        style="background: rgba(255,255,255,0.2);">
+                        <i class="fas fa-exclamation-circle text-white text-lg"></i>
+                    </div>
+                </div>
+                <div class="ml-4 flex-1">
+                    <p class="text-white font-semibold text-base">{{ session('error') }}</p>
+                </div>
+                <button onclick="hideQuestionsToast('questionsErrorToast')" class="ml-4 p-2 rounded-lg transition-all duration-200 hover:bg-white/20">
+                    <i class="fas fa-times text-white"></i>
+                </button>
+            </div>
+        </div>
+    @endif
 
     <div class="container mx-auto px-4 py-8">
         <div class="flex justify-between items-center mb-8">
@@ -254,7 +311,7 @@
                 </div>
                 <h3 class="text-2xl font-bold mb-3" style="color: rgba(28,88,113,0.8);">Belum ada soal</h3>
                 <p class="mb-8 text-lg" style="color: rgba(28,88,113,0.55);">
-                    Mulai dengan menambahkan soal baru atau gunakan API untuk import dari n8n.
+                    Mulai dengan menambahkan soal baru atau gunakan soal generate AI.
                 </p>
 
                 <div class="space-y-4">
@@ -273,6 +330,38 @@
 
     <!-- Include Delete Confirmation Modal -->
     @include('components.delete-confirmation-modal')
+
+    <!-- Toast JavaScript -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Questions manage page toast functionality - simplified like admin
+        window.hideQuestionsToast = function(toastId) {
+            const toast = document.getElementById(toastId);
+            if (toast) {
+                toast.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    toast.remove();
+                }, 300);
+            }
+        }
+        
+        // Auto hide toasts after 5 seconds
+        const questionsSuccessToast = document.getElementById('questionsSuccessToast');
+        const questionsErrorToast = document.getElementById('questionsErrorToast');
+        
+        if (questionsSuccessToast) {
+            setTimeout(() => {
+                hideQuestionsToast('questionsSuccessToast');
+            }, 5000);
+        }
+        
+        if (questionsErrorToast) {
+            setTimeout(() => {
+                hideQuestionsToast('questionsErrorToast');
+            }, 5000);
+        }
+    });
+    </script>
 </body>
 
 </html>
