@@ -57,10 +57,9 @@
                                                     'B' => $question->option_b,
                                                     'C' => $question->option_c,
                                                     'D' => $question->option_d,
-                                                    'E' => $question->option_e
+                                                    'E' => $question->option_e,
                                                 ];
-                                                // Filter out empty options
-                                                $options = array_filter($options, function($value) {
+                                                $options = array_filter($options, function ($value) {
                                                     return !empty($value);
                                                 });
                                             @endphp

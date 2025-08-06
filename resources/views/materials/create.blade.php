@@ -163,11 +163,11 @@
                 </div>
                 <div class="flex items-center space-x-2" id="step2">
                     <div class="w-2 h-2 bg-gray-300 rounded-full"></div>
-                    <span class="text-sm text-gray-400">Memproses dengan AI...</span>
+                    <span class="text-sm text-gray-400">Memvalidasi file...</span>
                 </div>
                 <div class="flex items-center space-x-2" id="step3">
                     <div class="w-2 h-2 bg-gray-300 rounded-full"></div>
-                    <span class="text-sm text-gray-400">Menggenerate soal...</span>
+                    <span class="text-sm text-gray-400">Memproses materi...</span>
                 </div>
                 <div class="flex items-center space-x-2" id="step4">
                     <div class="w-2 h-2 bg-gray-300 rounded-full"></div>
@@ -178,9 +178,6 @@
     </div>
 
     <script>
-        let materialId = null;
-        let completionCheckInterval = null;
-
         function updateFileName(input) {
             const fileNameElement = document.getElementById('file-name');
             if (input.files && input.files[0]) {
@@ -209,28 +206,6 @@
                     text.className = 'text-sm text-gray-400';
                 }
             }
-        }
-
-        function checkN8nCompletion() {
-            if (!materialId) return;
-
-            fetch(`/api/n8n/completion/${materialId}`)
-                .then(response => response.json())
-                .then(data => {
-                    console.log('N8N completion check:', data);
-
-                    if (data.completed) {
-                        clearInterval(completionCheckInterval);
-                        updateProgress(4, 'Proses selesai! Mengalihkan halaman...', 100);
-
-                        setTimeout(() => {
-                            window.location.href = `/materials/${materialId}`;
-                        }, 2000);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error checking n8n completion:', error);
-                });
         }
 
         document.getElementById('materialForm').addEventListener('submit', function(e) {
@@ -289,7 +264,7 @@
                         } else {
                             throw new Error(
                                 `Server returned HTML instead of JSON (Status: ${response.status}). Please refresh and try again.`
-                                );
+                            );
                         }
                     }
                 })
@@ -297,25 +272,22 @@
                     console.log('Processing JSON data:', data);
 
                     if (data.success && data.material && data.material.id) {
-                        materialId = data.material.id;
-                        updateProgress(2, 'File berhasil diupload! Memproses dengan AI...', 50);
+                        // Simulate progress through steps
+                        updateProgress(2, 'File berhasil diupload!', 50);
 
-                        // Start checking for n8n completion
-                        updateProgress(3, 'AI sedang menggenerate soal...', 75);
-
-                        // Poll for completion every 2 seconds
-                        completionCheckInterval = setInterval(checkN8nCompletion, 2000);
-
-                        // Timeout after 10 minutes
                         setTimeout(() => {
-                            if (completionCheckInterval) {
-                                clearInterval(completionCheckInterval);
-                                updateProgress(4, 'Timeout - mengalihkan ke halaman materi...', 100);
+                            updateProgress(3, 'Memproses materi...', 75);
+
+                            setTimeout(() => {
+                                updateProgress(4, 'Proses selesai! Mengalihkan halaman...',
+                                100);
+
                                 setTimeout(() => {
-                                    window.location.href = `/materials/${materialId}`;
-                                }, 2000);
-                            }
-                        }, 600000); // 10 minutes
+                                    window.location.href =
+                                        `/materials/${data.material.id}`;
+                                }, 1500);
+                            }, 500);
+                        }, 500);
 
                     } else {
                         throw new Error(data.message || 'Upload failed');
