@@ -29,24 +29,28 @@
     @include('components.navbar')
 
     <!-- Toast Messages -->
-    @if(session('success'))
-        <div id="materialShowSuccessToast" class="fixed top-8 right-4 z-50 bg-green-500 text-white px-8 py-5 rounded-lg shadow-xl max-w-md">
+    @if (session('success'))
+        <div id="materialShowSuccessToast"
+            class="fixed top-8 right-4 z-50 bg-green-500 text-white px-8 py-5 rounded-lg shadow-xl max-w-md">
             <div class="flex items-center">
                 <i class="fas fa-check-circle text-2xl mr-4"></i>
                 <p class="text-base font-medium">{{ session('success') }}</p>
-                <button onclick="hideMaterialShowToast('materialShowSuccessToast')" class="ml-4 text-white hover:text-gray-200">
+                <button onclick="hideMaterialShowToast('materialShowSuccessToast')"
+                    class="ml-4 text-white hover:text-gray-200">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
         </div>
     @endif
 
-    @if(session('error'))
-        <div id="materialShowErrorToast" class="fixed top-8 right-4 z-50 bg-red-500 text-white px-8 py-5 rounded-lg shadow-xl max-w-md">
+    @if (session('error'))
+        <div id="materialShowErrorToast"
+            class="fixed top-8 right-4 z-50 bg-red-500 text-white px-8 py-5 rounded-lg shadow-xl max-w-md">
             <div class="flex items-center">
                 <i class="fas fa-exclamation-circle text-2xl mr-4"></i>
                 <p class="text-base font-medium">{{ session('error') }}</p>
-                <button onclick="hideMaterialShowToast('materialShowErrorToast')" class="ml-4 text-white hover:text-gray-200">
+                <button onclick="hideMaterialShowToast('materialShowErrorToast')"
+                    class="ml-4 text-white hover:text-gray-200">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -361,9 +365,9 @@
         document.addEventListener('visibilitychange', function() {
             isPageVisible = !document.hidden;
             if (isPageVisible && pollInterval) {
-                console.log('Page became visible, resuming normal polling');
+                // console.log('Page became visible, resuming normal polling');
             } else if (!isPageVisible && pollInterval) {
-                console.log('Page became hidden, polling continues but with less logging');
+                // console.log('Page became hidden, polling continues but with less logging');
             }
         });
 
@@ -491,7 +495,7 @@
                     difficulty: difficulty,
                     auto_generate: true
                 };
-                console.log('Request Data:', requestData);
+                // console.log('Request Data:', requestData);
 
                 // Trigger the AI workflow using async method
                 const response = await fetch(`/materials/${materialId}/generate-questions-async`, {
@@ -504,23 +508,23 @@
                     body: JSON.stringify(requestData)
                 });
 
-                console.log('Response status:', response.status);
-                console.log('Response headers:', Object.fromEntries(response.headers));
+                // console.log('Response status:', response.status);
+                // console.log('Response headers:', Object.fromEntries(response.headers));
 
                 // Check if response is JSON or HTML
                 const contentType = response.headers.get('content-type');
-                console.log('Content-Type:', contentType);
+                // console.log('Content-Type:', contentType);
 
                 if (contentType && contentType.includes('application/json')) {
                     const result = await response.json();
-                    console.log('JSON Response:', result);
+                    // console.log('JSON Response:', result);
 
                     if (!response.ok) {
                         throw new Error(result.message ||
                             `HTTP ${response.status}: ${result.error || 'Unknown error'}`);
                     }
 
-                    console.log('AI triggered successfully:', result);
+                    // console.log('AI triggered successfully:', result);
 
                     // Start polling the completion endpoint
                     startPollingAutoSave();
@@ -550,7 +554,7 @@
             let pollAttempts = 0;
             let startTime = Date.now();
 
-            console.log('Starting polling - waiting for AI status updates (completion/error/progress)');
+            // console.log('Starting polling - waiting for AI status updates (completion/error/progress)');
 
             // Start polling immediately - no delay
             progressText.textContent = 'Sistem sedang menganalisis materi dan membuat soal...';
@@ -559,7 +563,7 @@
                 pollAttempts++;
                 const elapsedMinutes = Math.floor((Date.now() - startTime) / 60000);
 
-                console.log(`Polling attempt ${pollAttempts} (${elapsedMinutes} minutes elapsed)`);
+                // console.log(`Polling attempt ${pollAttempts} (${elapsedMinutes} minutes elapsed)`);
 
                 try {
                     // Check single unified endpoint for all status updates (completion, error, progress)
@@ -574,7 +578,7 @@
 
                     if (statusResponse.ok) {
                         const statusData = await statusResponse.json();
-                        console.log('Status check response:', statusData);
+                        // console.log('Status check response:', statusData);
 
                         if (statusData.success) {
                             // Handle different status types
@@ -582,29 +586,29 @@
                                 // Success completion
                                 clearInterval(pollInterval);
                                 pollInterval = null;
-                                console.log('AI completion detected!');
+                                // console.log('AI completion detected!');
                                 completeProgress('Berhasil! Pembuatan soal telah selesai.');
                                 return;
                             } else if (statusData.status === 'error' && statusData.error) {
                                 // Error occurred
                                 clearInterval(pollInterval);
                                 pollInterval = null;
-                                console.log('AI error detected:', statusData.data);
+                                // console.log('AI error detected:', statusData.data);
                                 const errorMessage = statusData.data?.error_details || statusData.data
                                     ?.message || 'Terjadi kesalahan saat memproses';
                                 showError(errorMessage);
                                 return;
                             } else if (statusData.status === 'processing' || statusData.progress) {
                                 // Still processing - continue polling
-                                console.log('AI still processing...');
+                                // console.log('AI still processing...');
                             }
                         }
                     } else {
-                        console.log('Status check failed:', statusResponse.status);
+                        // console.log('Status check failed:', statusResponse.status);
                         // Don't treat HTTP errors as fatal - continue polling
                     }
                 } catch (error) {
-                    console.log('Status check error:', error);
+                    // console.log('Status check error:', error);
                     // Don't treat network errors as fatal - continue polling
                 }
 
@@ -647,15 +651,15 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        console.log('Cache cleared successfully:', data);
+                        // console.log('Cache cleared successfully:', data);
                         alert('Completion cache cleared successfully!');
                     } else {
-                        console.error('Failed to clear cache:', data);
+                        // console.error('Failed to clear cache:', data);
                         alert('Failed to clear cache: ' + data.message);
                     }
                 })
                 .catch(error => {
-                    console.error('Error clearing cache:', error);
+                    // console.error('Error clearing cache:', error);
                     alert('Error clearing cache: ' + error.message);
                 });
         }
@@ -670,18 +674,18 @@
                 }, 300);
             }
         }
-        
+
         // Auto hide toasts after 5 seconds
         document.addEventListener('DOMContentLoaded', function() {
             const materialShowSuccessToast = document.getElementById('materialShowSuccessToast');
             const materialShowErrorToast = document.getElementById('materialShowErrorToast');
-            
+
             if (materialShowSuccessToast) {
                 setTimeout(() => {
                     hideMaterialShowToast('materialShowSuccessToast');
                 }, 5000);
             }
-            
+
             if (materialShowErrorToast) {
                 setTimeout(() => {
                     hideMaterialShowToast('materialShowErrorToast');

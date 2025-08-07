@@ -204,8 +204,28 @@ class QuestionApiController extends Controller
             // Log incoming webhook data
             \Log::info('N8N webhook received:', $request->all());
             
-            // Get the JSON data
+            // Get the raw input to handle potential markdown code blocks
+            $rawInput = $request->getContent();
             $data = $request->all();
+            
+            // Check if the input is wrapped in markdown code blocks
+            if (is_string($rawInput) && preg_match('/```json\s*(.*?)\s*```/s', $rawInput, $matches)) {
+                \Log::info('Detected JSON code block format, extracting JSON...');
+                try {
+                    $extractedJson = trim($matches[1]);
+                    $data = json_decode($extractedJson, true);
+                    if (json_last_error() !== JSON_ERROR_NONE) {
+                        throw new \Exception('Invalid JSON in code block: ' . json_last_error_msg());
+                    }
+                    \Log::info('Successfully extracted JSON from code block', ['data' => $data]);
+                } catch (\Exception $e) {
+                    \Log::error('Failed to parse JSON from code block: ' . $e->getMessage());
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Invalid JSON format in code block: ' . $e->getMessage()
+                    ], 400);
+                }
+            }
             
             // Check if we have the expected format
             if (!isset($data['material_id']) || !isset($data['questions'])) {
@@ -259,40 +279,35 @@ class QuestionApiController extends Controller
                         continue;
                     }
                     
-                    // Normalize difficulty - Auto-translate Indonesian to English
-                    $difficulty = 'medium'; // default (changed to English)
+                    // Normalize difficulty - Handle both Indonesian and English inputs
+                    $difficulty = 'medium'; // default
                     if (isset($questionData['difficulty'])) {
-                        // Primary mapping: Indonesian to English (for n8n generated questions)
-                        $indonesianToEnglishMap = [
+                        // Comprehensive mapping for all difficulty formats
+                        $difficultyMap = [
+                            // Indonesian to English
                             'mudah' => 'easy',
-                            'menengah' => 'medium',
-                            'sulit' => 'hard'
-                        ];
-                        
-                        // Secondary mapping: English to English (for consistency)
-                        $englishMap = [
+                            'menengah' => 'medium', 
+                            'sulit' => 'hard',
+                            // English (lowercase)
                             'easy' => 'easy',
                             'medium' => 'medium',
-                            'hard' => 'hard'
+                            'hard' => 'hard',
+                            // English (capitalized) - for backwards compatibility
+                            'Easy' => 'easy',
+                            'Medium' => 'medium',
+                            'Hard' => 'hard'
                         ];
                         
-                        $inputDifficulty = strtolower(trim($questionData['difficulty']));
+                        $inputDifficulty = trim($questionData['difficulty']);
+                        $normalizedInput = strtolower($inputDifficulty);
                         
-                        // First try Indonesian to English translation
-                        if (isset($indonesianToEnglishMap[$inputDifficulty])) {
-                            $difficulty = $indonesianToEnglishMap[$inputDifficulty];
-                            \Log::info('Translated difficulty from Indonesian to English', [
-                                'original' => $questionData['difficulty'],
-                                'translated' => $difficulty
-                            ]);
+                        // Try exact match first (case-sensitive)
+                        if (isset($difficultyMap[$inputDifficulty])) {
+                            $difficulty = $difficultyMap[$inputDifficulty];
                         }
-                        // Then try direct English mapping
-                        elseif (isset($englishMap[$inputDifficulty])) {
-                            $difficulty = $englishMap[$inputDifficulty];
-                        }
-                        // Fallback to original value if already in English format
-                        elseif (in_array($inputDifficulty, ['easy', 'medium', 'hard'])) {
-                            $difficulty = $inputDifficulty;
+                        // Then try case-insensitive match
+                        elseif (isset($difficultyMap[$normalizedInput])) {
+                            $difficulty = $difficultyMap[$normalizedInput];
                         }
                         // Default fallback
                         else {
@@ -302,6 +317,11 @@ class QuestionApiController extends Controller
                                 'defaulted_to' => $difficulty
                             ]);
                         }
+                        
+                        \Log::debug('Difficulty processing', [
+                            'original' => $questionData['difficulty'],
+                            'processed' => $difficulty
+                        ]);
                     }
                     
                     // Create the question
