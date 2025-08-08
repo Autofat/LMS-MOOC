@@ -34,15 +34,10 @@ class AuthController extends Controller
         if (Auth::attempt($credentials, $remember)) {
             $user = Auth::user();
             
-            // Check if user is admin
-            if (!$user->is_admin) {
-                Auth::logout();
-                return back()->with('error', 'Akses ditolak. Hanya admin yang dapat mengakses sistem ini.')
-                           ->onlyInput('email');
-            }
-            
             $request->session()->regenerate();
             
+            // All users (admin and regular) go to materials page
+            // The difference is admin can access user management, regular users cannot
             return redirect()->intended('/materials')->with('success', 'Login berhasil! Selamat datang, ' . $user->name . '.');
         }
 
@@ -75,6 +70,7 @@ class AuthController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'is_admin' => false, // Regular users are not admin
         ]);
 
         return redirect()->route('login')->with('success', 'Akun berhasil dibuat! Silakan login dengan akun Anda.');

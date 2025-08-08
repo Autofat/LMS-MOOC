@@ -7,10 +7,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
-class AdminMiddleware
+class SuperAdminMiddleware
 {
     /**
      * Handle an incoming request.
+     * This middleware is for user management functions only
      *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
@@ -21,8 +22,11 @@ class AdminMiddleware
             return redirect()->route('login')->with('error', 'Anda harus login terlebih dahulu.');
         }
 
-        // All authenticated users can access the system
-        // Admin middleware is now just for ensuring authentication
+        // Check if user is admin (only admin can manage users)
+        if (!Auth::user()->is_admin) {
+            return redirect()->route('materials.index')->with('error', 'Akses ditolak. Hanya admin yang dapat mengelola pengguna.');
+        }
+
         return $next($request);
     }
 }

@@ -35,11 +35,15 @@ Route::get('/clear-session', function () {
     return redirect()->route('login')->with('success', 'Session cleared. Please login again.');
 });
 
+// User Routes (for regular users - read only access)
+Route::middleware(['auth'])->group(function () {
+    Route::get('/user/dashboard', [MaterialController::class, 'userDashboard'])->name('user.dashboard');
+    Route::get('/user/materials', [MaterialController::class, 'userIndex'])->name('user.materials.index');
+    Route::get('/user/materials/{id}', [MaterialController::class, 'userShow'])->name('user.materials.show');
+});
 
-// Protected Routes (require authentication and admin access)
-Route::middleware(['auth', 'admin'])->group(function () {
-    
-
+// Protected Routes (require authentication - accessible by both admin and regular users)
+Route::middleware(['auth'])->group(function () {
     // Material Routes
     Route::get('/materials', [MaterialController::class, 'index'])->name('materials.index');
     Route::get('/materials/create', [MaterialController::class, 'create'])->name('materials.create');
@@ -73,7 +77,10 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/questions/{id}/edit', [QuestionController::class, 'edit'])->name('questions.edit');
     Route::put('/questions/{id}', [QuestionController::class, 'update'])->name('questions.update');
     Route::delete('/questions/{id}', [QuestionController::class, 'destroy'])->name('questions.destroy');
+});
 
+// Admin Only Routes (user management - only accessible by admin)
+Route::middleware(['auth', 'superadmin'])->group(function () {
     // Admin Management Routes
     Route::get('/admin/create', [AuthController::class, 'showCreateAdminForm'])->name('admin.create');
     Route::post('/admin/create', [AuthController::class, 'createAdmin'])->name('admin.store');

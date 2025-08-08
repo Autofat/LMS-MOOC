@@ -26,11 +26,13 @@
                     <i class="fas fa-question-circle"></i>
                     <span>Soal</span>
                 </a>
+                @if(Auth::user()->is_admin)
                 <a href="{{ route('admin.manage') }}"
                     class="flex items-center space-x-2 text-blue-100 hover:text-white transition-colors {{ request()->routeIs('admin.*') ? 'text-white font-semibold bg-white/20 px-3 py-2 rounded-lg backdrop-blur-sm' : '' }}">
                     <i class="fas fa-users-cog"></i>
                     <span>User</span>
                 </a>
+                @endif
             </div>
 
             <!-- User Menu - Far Right -->
@@ -98,10 +100,12 @@
                     class="block py-2 text-teal-100 hover:text-white transition-colors {{ request()->routeIs('questions.*') ? 'text-white font-semibold' : '' }}">
                     <i class="fas fa-question-circle mr-2"></i>Soal
                 </a>
+                @if(Auth::user()->is_admin)
                 <a href="{{ route('admin.manage') }}"
                     class="block py-2 text-teal-100 hover:text-white transition-colors {{ request()->routeIs('admin.*') ? 'text-white font-semibold' : '' }}">
                     <i class="fas fa-users-cog mr-2"></i>User
                 </a>
+                @endif
                 <div class="border-t border-teal-500 pt-2 mt-2">
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
