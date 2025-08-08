@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Material;
 use App\Models\Question;
+use App\Models\Category;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -17,8 +18,16 @@ class MaterialController extends Controller
      */
     public function index()
     {
-        $materials = Material::withCount('questions')->orderBy('created_at', 'desc')->paginate(10);
-        return view('materials.index', compact('materials'));
+        // Get actual materials
+        $materials = Material::where('is_active', true)
+                            ->withCount('questions')
+                            ->orderBy('created_at', 'desc')
+                            ->paginate(10);
+        
+        // Get all categories
+        $categories = Category::where('is_active', true)->orderBy('name')->get();
+        
+        return view('materials.index', compact('materials', 'categories'));
     }
 
     /**
@@ -74,9 +83,12 @@ class MaterialController extends Controller
             $request->validate([
                 'title' => 'required|string|max:255',
                 'description' => 'nullable|string',
+                'category' => 'required|string|max:100|not_in:-- Pilih Kategori --',
                 'pdf_file' => 'required|file|max:10240', // Max 10MB
             ], [
                 'title.required' => 'Judul materi harus diisi.',
+                'category.required' => 'Kategori/Topik harus dipilih.',
+                'category.not_in' => 'Silakan pilih kategori yang valid.',
                 'pdf_file.required' => 'File PDF harus diupload.',
                 'pdf_file.file' => 'Yang diupload harus berupa file.',
                 'pdf_file.max' => 'Ukuran file maksimal 10MB.',
@@ -148,6 +160,7 @@ class MaterialController extends Controller
             $material = Material::create([
                 'title' => $request->title,
                 'description' => $request->description,
+                'category' => $request->category === 'Tanpa kategori spesifik' ? null : $request->category,
                 'file_path' => $filePath,
                 'file_name' => $file->getClientOriginalName(),
                 'file_size' => $file->getSize(),
@@ -230,7 +243,8 @@ class MaterialController extends Controller
     public function edit($id)
     {
         $material = Material::findOrFail($id);
-        return view('materials.edit', compact('material'));
+        $categories = Category::where('is_active', true)->orderBy('name')->get();
+        return view('materials.edit', compact('material', 'categories'));
     }
 
     /**
@@ -243,8 +257,14 @@ class MaterialController extends Controller
             $request->validate([
                 'title' => 'required|string|max:255',
                 'description' => 'nullable|string',
-                'category' => 'nullable|string|max:100',
+                'category' => 'required|string|max:100|not_in:-- Pilih Kategori --',
                 'pdf_file' => 'nullable|file|mimes:pdf|max:10240', // Max 10MB
+            ], [
+                'title.required' => 'Judul materi harus diisi.',
+                'category.required' => 'Kategori/Topik harus dipilih.',
+                'category.not_in' => 'Silakan pilih kategori yang valid.',
+                'pdf_file.mimes' => 'File yang diupload harus berformat PDF.',
+                'pdf_file.max' => 'Ukuran file maksimal 10MB.',
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             Log::error('Validation failed for material update', [
@@ -303,10 +323,13 @@ class MaterialController extends Controller
             return redirect()->back()->withErrors(['pdf_file' => $errorMessage]);
         }
 
+        // Handle "Tanpa kategori spesifik" conversion to null
+        $category = $request->category === 'Tanpa kategori spesifik' ? null : $request->category;
+        
         $material->update([
             'title' => $request->title,
             'description' => $request->description,
-            'category' => $request->category,
+            'category' => $category,
         ]);
 
         $successMessage = $fileUpdated ? 
@@ -1157,6 +1180,412 @@ class MaterialController extends Controller
                 'success' => false,
                 'message' => 'Error clearing generation state: ' . $e->getMessage()
             ], 500);
+        }
+    }
+
+    /**
+     * Download questions from all materials in a specific category as Excel.
+     */
+    public function downloadCategoryQuestionsExcel($category)
+    {
+        try {
+            // Get all materials in the category with their questions
+            $materials = Material::where('category', $category)->get();
+            
+            if ($materials->isEmpty()) {
+                return redirect()->route('materials.index')
+                               ->with('error', 'Tidak ada materi ditemukan untuk kategori: ' . $category);
+            }
+
+            // Get all questions from materials in this category
+            $allQuestions = Question::whereHas('material', function($query) use ($category) {
+                $query->where('category', $category);
+            })->with('material')->get();
+
+            if ($allQuestions->isEmpty()) {
+                return redirect()->route('materials.index')
+                               ->with('error', 'Tidak ada soal ditemukan untuk kategori: ' . $category);
+            }
+
+            // Generate filename
+            $filename = 'soal_kategori_' . Str::slug($category) . '_' . date('Y-m-d_H-i-s') . '.xls';
+            
+            // Create proper CSV content
+            $output = fopen('php://temp', 'r+');
+            
+            // Add BOM for UTF-8 encoding
+            fwrite($output, "\xEF\xBB\xBF");
+            
+            // Add headers
+            $headers = [
+                'Teks Soal',
+                'Tipe Soal', 
+                'Jawaban',
+                'Opsi A',
+                'Opsi B',
+                'Opsi C',
+                'Opsi D',
+                'Opsi E',
+                'Tingkat Kesulitan'
+            ];
+            
+            fputcsv($output, $headers);
+            
+            // Add data rows
+            foreach ($allQuestions as $question) {
+                // Get options safely
+                $options = $question->options ?? [];
+                
+                // Determine question type (default to multiple choice if not specified)
+                $questionType = $question->type ?? 'pilihan_ganda';
+                
+                // Format answer based on question type
+                $answer = '';
+                if ($questionType === 'pilihan_ganda' || $questionType === 'multiple_choice') {
+                    $answer = strtoupper($question->answer ?? '');
+                } else {
+                    $answer = $question->answer ?? '';
+                }
+                
+                // Prepare row data
+                $rowData = [
+                    $question->question ?? '',
+                    $questionType,
+                    $answer,
+                    $options['A'] ?? '',
+                    $options['B'] ?? '',
+                    $options['C'] ?? '',
+                    $options['D'] ?? '',
+                    $options['E'] ?? '',
+                    $question->difficulty ?? ''
+                ];
+                
+                fputcsv($output, $rowData);
+            }
+            
+            // Get the content
+            rewind($output);
+            $csvContent = stream_get_contents($output);
+            fclose($output);
+            
+            // Return as downloadable file
+            return response($csvContent)
+                ->header('Content-Type', 'application/vnd.ms-excel; charset=UTF-8')
+                ->header('Content-Disposition', 'attachment; filename="' . $filename . '"')
+                ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
+                ->header('Pragma', 'no-cache')
+                ->header('Expires', '0');
+
+        } catch (\Exception $e) {
+            Log::error('Error downloading category questions Excel', [
+                'category' => $category,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return redirect()->route('materials.index')
+                           ->with('error', 'Terjadi kesalahan saat mengunduh soal kategori: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Show category detail with all questions from materials in that category.
+     */
+    public function categoryDetail($category)
+    {
+        try {
+            // Get all materials in the category
+            $materials = Material::where('category', $category)
+                              ->with(['questions' => function($query) {
+                                  $query->orderBy('created_at', 'desc');
+                              }])
+                              ->orderBy('created_at', 'desc')
+                              ->get();
+            
+            if ($materials->isEmpty()) {
+                return redirect()->route('materials.index')
+                               ->with('error', 'Tidak ada materi ditemukan untuk kategori: ' . $category);
+            }
+
+            // Get all questions with pagination
+            $questions = Question::whereHas('material', function($query) use ($category) {
+                $query->where('category', $category);
+            })
+            ->with('material')
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
+
+            // Calculate statistics
+            $totalMaterials = $materials->count();
+            $totalQuestions = $materials->sum(function($material) {
+                return $material->questions->count();
+            });
+
+            return view('materials.category-detail', compact(
+                'category', 
+                'materials', 
+                'questions', 
+                'totalMaterials', 
+                'totalQuestions'
+            ));
+
+        } catch (\Exception $e) {
+            Log::error('Error loading category detail', [
+                'category' => $category,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return redirect()->route('materials.index')
+                           ->with('error', 'Terjadi kesalahan saat memuat detail kategori: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Delete all materials and questions in a specific category.
+     */
+    public function destroyCategory($category)
+    {
+        try {
+            // Get all materials in the category
+            $materials = Material::where('category', $category)->get();
+            
+            if ($materials->isEmpty()) {
+                return redirect()->route('materials.index')
+                               ->with('error', 'Tidak ada materi ditemukan untuk kategori: ' . $category);
+            }
+
+            $deletedMaterialsCount = $materials->count();
+            $deletedQuestionsCount = 0;
+
+            // Delete all materials and their questions
+            foreach ($materials as $material) {
+                // Count questions before deletion
+                $deletedQuestionsCount += $material->questions()->count();
+                
+                // Delete questions first
+                $material->questions()->delete();
+                
+                // Delete the PDF file if it exists
+                if ($material->file_path && Storage::exists($material->file_path)) {
+                    Storage::delete($material->file_path);
+                }
+                
+                // Delete the material
+                $material->delete();
+            }
+
+            return redirect()->route('materials.index')
+                           ->with('success', "Kategori '{$category}' berhasil dihapus! {$deletedMaterialsCount} materi dan {$deletedQuestionsCount} soal telah dihapus.");
+
+        } catch (\Exception $e) {
+            Log::error('Error deleting category', [
+                'category' => $category,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return redirect()->route('materials.index')
+                           ->with('error', 'Terjadi kesalahan saat menghapus kategori: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Store a new category.
+     */
+    public function storeCategory(Request $request)
+    {
+        try {
+            $request->validate([
+                'categoryName' => 'required|string|max:100',
+                'categoryDescription' => 'nullable|string|max:255',
+            ]);
+
+            $categoryName = trim($request->categoryName);
+            $categoryDescription = trim($request->categoryDescription);
+
+            // Check if category already exists
+            $existingCategory = Category::where('name', $categoryName)->first();
+            if ($existingCategory) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Kategori "' . $categoryName . '" sudah ada!'
+                ], 409);
+            }
+
+            // Create new category
+            Category::create([
+                'name' => $categoryName,
+                'description' => $categoryDescription,
+                'is_active' => true
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Kategori "' . $categoryName . '" berhasil dibuat!'
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validasi gagal: ' . implode(', ', $e->validator->errors()->all())
+            ], 422);
+        } catch (\Exception $e) {
+            Log::error('Error creating category', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat membuat kategori: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Show the form for editing a category.
+     */
+    public function editCategory($id)
+    {
+        try {
+            $category = Category::findOrFail($id);
+            return response()->json([
+                'success' => true,
+                'category' => [
+                    'id' => $category->id,
+                    'name' => $category->name,
+                    'description' => $category->description
+                ]
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error loading category for edit', [
+                'category_id' => $id,
+                'error' => $e->getMessage()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Kategori tidak ditemukan'
+            ], 404);
+        }
+    }
+
+    /**
+     * Update a category.
+     */
+    public function updateCategory(Request $request, $id)
+    {
+        try {
+            $request->validate([
+                'categoryName' => 'required|string|max:100',
+                'categoryDescription' => 'nullable|string|max:255',
+            ]);
+
+            $category = Category::findOrFail($id);
+            $categoryName = trim($request->categoryName);
+            $categoryDescription = trim($request->categoryDescription);
+
+            // Check if category name already exists (excluding current category)
+            $existingCategory = Category::where('name', $categoryName)
+                                      ->where('id', '!=', $id)
+                                      ->first();
+            if ($existingCategory) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Kategori dengan nama "' . $categoryName . '" sudah ada!'
+                ], 422);
+            }
+
+            // If category name is changed, update all materials with the old category name
+            if ($category->name !== $categoryName) {
+                Material::where('category', $category->name)
+                        ->update(['category' => $categoryName]);
+            }
+
+            // Update category
+            $category->update([
+                'name' => $categoryName,
+                'description' => $categoryDescription,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Kategori berhasil diperbarui!',
+                'category' => [
+                    'id' => $category->id,
+                    'name' => $category->name,
+                    'description' => $category->description
+                ]
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Data tidak valid',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            Log::error('Error updating category', [
+                'category_id' => $id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat memperbarui kategori: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Delete a category by ID and all associated materials and questions.
+     */
+    public function destroyCategoryById($id)
+    {
+        try {
+            $category = Category::findOrFail($id);
+            $categoryName = $category->name;
+            
+            // Get all materials in the category
+            $materials = Material::where('category', $categoryName)->get();
+            
+            $deletedMaterialsCount = $materials->count();
+            $deletedQuestionsCount = 0;
+
+            // Delete all materials and their questions
+            foreach ($materials as $material) {
+                // Count questions before deletion
+                $deletedQuestionsCount += $material->questions()->count();
+                
+                // Delete questions first
+                $material->questions()->delete();
+                
+                // Delete the PDF file if it exists
+                if ($material->file_path && Storage::exists($material->file_path)) {
+                    Storage::delete($material->file_path);
+                }
+                
+                // Delete the material
+                $material->delete();
+            }
+
+            // Delete the category itself
+            $category->delete();
+
+            return redirect()->route('materials.index')
+                           ->with('success', "Kategori '{$categoryName}' berhasil dihapus! {$deletedMaterialsCount} materi dan {$deletedQuestionsCount} soal telah dihapus.");
+
+        } catch (\Exception $e) {
+            Log::error('Error deleting category by ID', [
+                'category_id' => $id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return redirect()->route('materials.index')
+                           ->with('error', 'Terjadi kesalahan saat menghapus kategori: ' . $e->getMessage());
         }
     }
 }

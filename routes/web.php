@@ -50,6 +50,13 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::delete('/materials/{id}', [MaterialController::class, 'destroy'])->name('materials.destroy');
     Route::get('/materials/{id}/download', [MaterialController::class, 'download'])->name('materials.download');
     Route::get('/materials/{id}/download-questions-excel', [MaterialController::class, 'downloadQuestionsExcel'])->name('materials.download.questions.excel');
+    Route::get('/materials/category/{category}/download-questions-excel', [MaterialController::class, 'downloadCategoryQuestionsExcel'])->name('materials.download.category.excel');
+    Route::get('/materials/category/{category}/detail', [MaterialController::class, 'categoryDetail'])->name('materials.category.detail');
+    Route::delete('/materials/category/{category}', [MaterialController::class, 'destroyCategory'])->name('materials.category.destroy');
+    Route::delete('/categories/{id}', [MaterialController::class, 'destroyCategoryById'])->name('categories.destroy');
+    Route::get('/categories/{id}/edit', [MaterialController::class, 'editCategory'])->name('categories.edit');
+    Route::put('/categories/{id}', [MaterialController::class, 'updateCategory'])->name('categories.update');
+    Route::post('/materials/categories', [MaterialController::class, 'storeCategory'])->name('materials.categories.store');
     Route::get('/materials/{id}/questions', [MaterialController::class, 'questions'])->name('materials.questions');
 
     // Generate Questions with n8n

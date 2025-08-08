@@ -32,7 +32,8 @@
 <script>
     let currentForm = null;
 
-    function showDeleteConfirmation(form, message = 'Yakin ingin menghapus soal ini? Aksi ini tidak dapat dibatalkan.') {
+    // Make the function globally accessible
+    window.showDeleteConfirmation = function(form, message = 'Yakin ingin menghapus soal ini? Aksi ini tidak dapat dibatalkan.') {
         currentForm = form;
         document.getElementById('deleteModalMessage').textContent = message;
         document.getElementById('deleteModal').classList.remove('hidden');
@@ -47,30 +48,32 @@
     }
 
     // Event listeners
-    document.getElementById('confirmDelete').addEventListener('click', function() {
-        if (currentForm) {
-            // Remove the onsubmit handler to prevent double confirmation
-            currentForm.onsubmit = null;
-            currentForm.submit();
-        }
-        hideDeleteModal();
-    });
-
-    document.getElementById('cancelDelete').addEventListener('click', function() {
-        hideDeleteModal();
-    });
-
-    // Close modal when clicking outside
-    document.getElementById('deleteModal').addEventListener('click', function(e) {
-        if (e.target === this) {
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('confirmDelete').addEventListener('click', function() {
+            if (currentForm) {
+                // Remove the onsubmit handler to prevent double confirmation
+                currentForm.onsubmit = null;
+                currentForm.submit();
+            }
             hideDeleteModal();
-        }
-    });
+        });
 
-    // Close modal with Escape key
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && !document.getElementById('deleteModal').classList.contains('hidden')) {
+        document.getElementById('cancelDelete').addEventListener('click', function() {
             hideDeleteModal();
-        }
+        });
+
+        // Close modal when clicking outside
+        document.getElementById('deleteModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                hideDeleteModal();
+            }
+        });
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && !document.getElementById('deleteModal').classList.contains('hidden')) {
+                hideDeleteModal();
+            }
+        });
     });
 </script>

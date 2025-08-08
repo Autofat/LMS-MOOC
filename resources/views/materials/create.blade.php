@@ -129,6 +129,46 @@
                             placeholder="Masukkan deskripsi materi...">{{ old('description') }}</textarea>
                     </div>
 
+                    <!-- Category -->
+                    <div>
+                        <label for="category" class="block text-sm font-semibold mb-3 flex items-center space-x-2"
+                            style="color: rgba(28,88,113,0.9);">
+                            <i class="fas fa-tags text-purple-500"></i>
+                            <span>Kategori/Topik *</span>
+                        </label>
+                        <select id="category" name="category" required
+                            class="w-full rounded-xl px-4 py-3 focus:outline-none focus:ring-2 transition-all border-2"
+                            style="border-color: rgba(28,88,113,0.2); background: linear-gradient(135deg, rgba(245,158,11,0.05) 0%, rgba(251,191,36,0.05) 100%);">
+                            <option value="">-- Pilih Kategori --</option>
+                            <option value="Tanpa kategori spesifik" {{ old('category', request('category')) == 'Tanpa kategori spesifik' ? 'selected' : '' }}>
+                                Tanpa kategori spesifik
+                            </option>
+                            @php
+                                $existingCategories = \App\Models\Category::where('is_active', true)->orderBy('name')->get();
+                            @endphp
+                            @foreach($existingCategories as $cat)
+                                <option value="{{ $cat->name }}" 
+                                        {{ old('category', request('category')) == $cat->name ? 'selected' : '' }}
+                                        title="{{ $cat->description }}">
+                                    {{ $cat->name }}{{ $cat->description ? ' - ' . $cat->description : '' }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <div class="flex items-center justify-between mt-2">
+                            <p class="text-xs" style="color: rgba(28,88,113,0.6);">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                Pilih kategori yang sudah ada atau "Tanpa kategori spesifik"
+                            </p>
+                            <a href="{{ route('materials.index') }}" 
+                               class="text-xs text-emerald-600 hover:text-emerald-700 font-medium transition-colors">
+                                <i class="fas fa-plus mr-1"></i>Tambah Kategori Baru
+                            </a>
+                        </div>
+                        <p class="text-xs mt-1 text-gray-500">
+                            Kategori membantu mengelompokkan materi serupa untuk download massal soal
+                        </p>
+                    </div>
+
                     <!-- PDF File -->
                     <div>
                         <label for="pdf_file" class="block text-sm font-semibold mb-3 flex items-center space-x-2"
@@ -473,6 +513,13 @@
                 setTimeout(() => {
                     hideCreateToast('createValidationToast');
                 }, 8000); // Longest for validation errors
+            }
+
+            // Fill description from URL parameter if exists
+            const urlParams = new URLSearchParams(window.location.search);
+            const categoryDescription = urlParams.get('description');
+            if (categoryDescription && !document.getElementById('description').value) {
+                document.getElementById('description').value = categoryDescription;
             }
         });
     </script>

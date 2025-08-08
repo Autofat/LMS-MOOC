@@ -102,6 +102,33 @@
                             placeholder="Masukkan deskripsi materi...">{{ old('description', $material->description) }}</textarea>
                     </div>
 
+                    <!-- Category -->
+                    <div>
+                        <label for="category" class="block text-sm font-semibold mb-3 flex items-center space-x-2"
+                            style="color: rgba(28,88,113,0.9);">
+                            <i class="fas fa-tags text-purple-500"></i>
+                            <span>Kategori/Topik *</span>
+                        </label>
+                        <select id="category" name="category" required
+                            class="w-full rounded-xl px-4 py-3 focus:outline-none focus:ring-2 transition-all border-2"
+                            style="border-color: rgba(28,88,113,0.2); background: linear-gradient(135deg, rgba(245,158,11,0.05) 0%, rgba(251,191,36,0.05) 100%);">
+                            <option value="" disabled>-- Pilih Kategori --</option>
+                            <option value="Tanpa kategori spesifik" {{ old('category', $material->category) === null ? 'selected' : '' }}>
+                                Tanpa kategori spesifik
+                            </option>
+                            @foreach($categories as $cat)
+                                <option value="{{ $cat->name }}" {{ old('category', $material->category) === $cat->name ? 'selected' : '' }}>
+                                    {{ $cat->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <p class="text-xs mt-2" style="color: rgba(28,88,113,0.6);">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Pilih kategori yang sudah ada atau "Tanpa kategori spesifik". 
+                            <a href="{{ route('materials.index') }}" class="text-blue-600 hover:text-blue-800 underline">Tambah kategori baru</a>
+                        </p>
+                    </div>
+
                     <!-- Replace PDF File -->
                     <div>
                         <label for="pdf_file" class="block text-sm font-semibold mb-3 flex items-center space-x-2" style="color: rgba(28,88,113,0.9);">
