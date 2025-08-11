@@ -37,6 +37,31 @@ class QuestionApiController extends Controller
     public function store(Request $request)
     {
         try {
+            // Get the raw input to handle potential markdown code blocks
+            $rawInput = $request->getContent();
+            $data = $request->all();
+            
+            // Check if the input is wrapped in markdown code blocks
+            if (is_string($rawInput) && preg_match('/```json\s*(.*?)\s*```/s', $rawInput, $matches)) {
+                \Log::info('Detected JSON code block format in store method, extracting JSON...');
+                try {
+                    $extractedJson = trim($matches[1]);
+                    $decodedData = json_decode($extractedJson, true);
+                    if (json_last_error() !== JSON_ERROR_NONE) {
+                        throw new \Exception('Invalid JSON in code block: ' . json_last_error_msg());
+                    }
+                    // Merge the decoded data with the request
+                    $request->merge($decodedData);
+                    \Log::info('Successfully extracted JSON from code block in store method', ['data' => $decodedData]);
+                } catch (\Exception $e) {
+                    \Log::error('Failed to parse JSON from code block in store method: ' . $e->getMessage());
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Invalid JSON format in code block: ' . $e->getMessage()
+                    ], 400);
+                }
+            }
+            
             // Log incoming request data
             \Log::info('Question API Store - Received data:', $request->all());
             \Log::info('Material ID received:', ['material_id' => $request->material_id, 'type' => gettype($request->material_id)]);
