@@ -24,3 +24,7 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+cookies.txt
+/storage/framework/views/*
+*.bak
+*.tmp

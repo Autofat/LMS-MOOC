@@ -30,31 +30,11 @@
 
     <!-- Toast Messages -->
     @if (session('success'))
-        <div id="materialShowSuccessToast"
-            class="fixed top-8 right-4 z-50 bg-green-500 text-white px-8 py-5 rounded-lg shadow-xl max-w-md">
-            <div class="flex items-center">
-                <i class="fas fa-check-circle text-2xl mr-4"></i>
-                <p class="text-base font-medium">{{ session('success') }}</p>
-                <button onclick="hideMaterialShowToast('materialShowSuccessToast')"
-                    class="ml-4 text-white hover:text-gray-200">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-        </div>
+        @include('components.toast', ['id' => 'materialShowSuccessToast', 'type' => 'success', 'message' => session('success')])
     @endif
 
     @if (session('error'))
-        <div id="materialShowErrorToast"
-            class="fixed top-8 right-4 z-50 bg-red-500 text-white px-8 py-5 rounded-lg shadow-xl max-w-md">
-            <div class="flex items-center">
-                <i class="fas fa-exclamation-circle text-2xl mr-4"></i>
-                <p class="text-base font-medium">{{ session('error') }}</p>
-                <button onclick="hideMaterialShowToast('materialShowErrorToast')"
-                    class="ml-4 text-white hover:text-gray-200">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-        </div>
+        @include('components.toast', ['id' => 'materialShowErrorToast', 'type' => 'error', 'message' => session('error')])
     @endif
 
     <div class="container mx-auto px-4 py-8">
@@ -663,35 +643,6 @@
                     alert('Error clearing cache: ' + error.message);
                 });
         }
-
-        // Toast functionality for materials show page
-        window.hideMaterialShowToast = function(toastId) {
-            const toast = document.getElementById(toastId);
-            if (toast) {
-                toast.style.transform = 'translateX(100%)';
-                setTimeout(() => {
-                    toast.remove();
-                }, 300);
-            }
-        }
-
-        // Auto hide toasts after 5 seconds
-        document.addEventListener('DOMContentLoaded', function() {
-            const materialShowSuccessToast = document.getElementById('materialShowSuccessToast');
-            const materialShowErrorToast = document.getElementById('materialShowErrorToast');
-
-            if (materialShowSuccessToast) {
-                setTimeout(() => {
-                    hideMaterialShowToast('materialShowSuccessToast');
-                }, 5000);
-            }
-
-            if (materialShowErrorToast) {
-                setTimeout(() => {
-                    hideMaterialShowToast('materialShowErrorToast');
-                }, 5000);
-            }
-        });
     </script>
 
     <!-- Include Delete Confirmation Modal -->
