@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class MaterialController extends Controller
 {
@@ -441,7 +443,8 @@ class MaterialController extends Controller
     }
 
     /**
-     * Download questions for specific material as Excel (.xls format)
+     * Download questions for specific material as Excel (.xlsx format)
+     * Fallback to CSV if Excel causes issues
      */
     public function downloadQuestionsExcel($id)
     {
@@ -452,74 +455,138 @@ class MaterialController extends Controller
             return redirect()->back()->with('error', 'Tidak ada soal untuk materi ini!');
         }
 
-        // Generate filename
-        $filename = 'soal_' . Str::slug($material->title) . '_' . date('Y-m-d_H-i-s') . '.xls';
+        // Try Excel first, fallback to CSV if it fails
+        try {
+            return $this->generateExcelFile($material, $questions);
+        } catch (\Exception $e) {
+            Log::warning('Excel generation failed, falling back to CSV: ' . $e->getMessage());
+            return $this->generateCsvFile($material, $questions);
+        }
+    }
+
+    /**
+     * Generate Excel file
+     */
+    private function generateExcelFile($material, $questions)
+    {
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
         
-        // Create proper CSV content
-        $output = fopen('php://temp', 'r+');
+        // Set headers
+        $headers = ['Teks Soal', 'Tipe Soal', 'Jawaban', 'Opsi A', 'Opsi B', 'Opsi C', 'Opsi D', 'Opsi E', 'Tingkat Kesulitan'];
         
-        // Add BOM for UTF-8 encoding
-        fwrite($output, "\xEF\xBB\xBF");
+        $col = 1;
+        foreach ($headers as $header) {
+            $sheet->setCellValueByColumnAndRow($col, 1, $header);
+            $col++;
+        }
         
-        // Add headers
-        $headers = [
-            'Teks Soal',
-            'Tipe Soal', 
-            'Jawaban',
-            'Opsi A',
-            'Opsi B',
-            'Opsi C',
-            'Opsi D',
-            'Opsi E',
-            'Tingkat Kesulitan'
-        ];
+        $sheet->getStyle('1:1')->getFont()->setBold(true);
         
-        fputcsv($output, $headers);
-        
-        // Add data rows
+        // Add data
+        $row = 2;
         foreach ($questions as $question) {
-            // Get options safely
-            $options = $question->options ?? [];
-            
-            // Determine question type (default to multiple choice if not specified)
-            $questionType = $question->type ?? 'pilihan_ganda';
-            
-            // Format answer based on question type
-            $answer = '';
-            if ($questionType === 'pilihan_ganda' || $questionType === 'multiple_choice') {
-                $answer = strtoupper($question->answer ?? '');
-            } else {
-                $answer = $question->answer ?? '';
-            }
-            
-            // Prepare row data
-            $rowData = [
-                $question->question ?? '',
-                $questionType,
-                $answer,
-                $options['A'] ?? '',
-                $options['B'] ?? '',
-                $options['C'] ?? '',
-                $options['D'] ?? '',
-                $options['E'] ?? '',
+            $data = [
+                $this->sanitizeText($question->question ?? ''),
+                $question->tipe_soal ?? 'pilihan_ganda',
+                strtoupper($question->answer ?? 'A'),
+                $this->sanitizeText($question->option_a ?? ''),
+                $this->sanitizeText($question->option_b ?? ''),
+                $this->sanitizeText($question->option_c ?? ''),
+                $this->sanitizeText($question->option_d ?? ''),
+                $this->sanitizeText($question->option_e ?? ''),
                 $question->difficulty ?? ''
             ];
             
-            fputcsv($output, $rowData);
+            $col = 1;
+            foreach ($data as $value) {
+                $sheet->setCellValueByColumnAndRow($col, $row, $value);
+                $col++;
+            }
+            $row++;
         }
         
-        // Get the content
-        rewind($output);
-        $csvContent = stream_get_contents($output);
-        fclose($output);
+        $filename = 'soal_' . $this->sanitizeFilename($material->title) . '_' . date('Ymd_His') . '.xlsx';
+        $tempFile = tempnam(sys_get_temp_dir(), 'excel_');
         
-        // Return as downloadable file
-        return response($csvContent)
-            ->header('Content-Type', 'application/vnd.ms-excel; charset=UTF-8')
-            ->header('Content-Disposition', 'attachment; filename="' . $filename . '"')
-            ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
-            ->header('Pragma', 'no-cache')
-            ->header('Expires', '0');
+        $writer = new Xlsx($spreadsheet);
+        $writer->save($tempFile);
+        
+        return response()->download($tempFile, $filename, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        ])->deleteFileAfterSend(true);
+    }
+
+    /**
+     * Generate CSV file as fallback
+     */
+    private function generateCsvFile($material, $questions)
+    {
+        $filename = 'soal_' . $this->sanitizeFilename($material->title) . '_' . date('Ymd_His') . '.csv';
+        
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ];
+        
+        $callback = function() use ($questions) {
+            $file = fopen('php://output', 'w');
+            
+            // Add BOM for UTF-8
+            fwrite($file, "\xEF\xBB\xBF");
+            
+            // Add headers
+            fputcsv($file, ['Teks Soal', 'Tipe Soal', 'Jawaban', 'Opsi A', 'Opsi B', 'Opsi C', 'Opsi D', 'Opsi E', 'Tingkat Kesulitan']);
+            
+            // Add data
+            foreach ($questions as $question) {
+                fputcsv($file, [
+                    $this->sanitizeText($question->question ?? ''),
+                    $question->tipe_soal ?? 'pilihan_ganda',
+                    strtoupper($question->answer ?? 'A'),
+                    $this->sanitizeText($question->option_a ?? ''),
+                    $this->sanitizeText($question->option_b ?? ''),
+                    $this->sanitizeText($question->option_c ?? ''),
+                    $this->sanitizeText($question->option_d ?? ''),
+                    $this->sanitizeText($question->option_e ?? ''),
+                    $question->difficulty ?? ''
+                ]);
+            }
+            
+            fclose($file);
+        };
+        
+        return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * Sanitize text for export
+     */
+    private function sanitizeText($text)
+    {
+        if (empty($text)) return '';
+        
+        // Remove HTML tags
+        $text = strip_tags($text);
+        
+        // Remove control characters but keep basic punctuation
+        $text = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/', '', $text);
+        
+        // Replace line breaks with spaces
+        $text = str_replace(["\r\n", "\r", "\n"], ' ', $text);
+        
+        // Clean up multiple spaces
+        $text = preg_replace('/\s+/', ' ', $text);
+        
+        return trim($text);
+    }
+
+    /**
+     * Sanitize filename
+     */
+    private function sanitizeFilename($filename)
+    {
+        return preg_replace('/[^a-zA-Z0-9_-]/', '_', $filename);
     }
     /**
      * Show questions for specific material
