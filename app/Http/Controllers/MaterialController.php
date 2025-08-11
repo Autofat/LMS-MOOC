@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Cell\DataType;
 
 class MaterialController extends Controller
 {
@@ -366,7 +367,23 @@ class MaterialController extends Controller
         $material = Material::findOrFail($id);
         
         if (Storage::disk('public')->exists($material->file_path)) {
-            return response()->download(storage_path('app/public/' . $material->file_path), $material->file_name);
+            $headers = [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'attachment; filename="' . $material->file_name . '"',
+                'Content-Security-Policy' => 'default-src \'self\'',
+                'X-Content-Type-Options' => 'nosniff',
+                'X-Frame-Options' => 'DENY',
+                'X-XSS-Protection' => '1; mode=block',
+                'Cache-Control' => 'private, no-cache, no-store, must-revalidate',
+                'Pragma' => 'no-cache',
+                'Expires' => '0'
+            ];
+            
+            return response()->download(
+                storage_path('app/public/' . $material->file_path), 
+                $material->file_name,
+                $headers
+            );
         }
         
         return redirect()->back()->with('error', 'File tidak ditemukan!');
@@ -444,7 +461,7 @@ class MaterialController extends Controller
 
     /**
      * Download questions for specific material as Excel (.xlsx format)
-     * Fallback to CSV if Excel causes issues
+     * Minimal Excel format for maximum compatibility
      */
     public function downloadQuestionsExcel($id)
     {
@@ -455,139 +472,92 @@ class MaterialController extends Controller
             return redirect()->back()->with('error', 'Tidak ada soal untuk materi ini!');
         }
 
-        // Try Excel first, fallback to CSV if it fails
         try {
-            return $this->generateExcelFile($material, $questions);
-        } catch (\Exception $e) {
-            Log::warning('Excel generation failed, falling back to CSV: ' . $e->getMessage());
-            return $this->generateCsvFile($material, $questions);
-        }
-    }
-
-    /**
-     * Generate Excel file
-     */
-    private function generateExcelFile($material, $questions)
-    {
-        $spreadsheet = new Spreadsheet();
-        $sheet = $spreadsheet->getActiveSheet();
-        
-        // Set headers
-        $headers = ['Teks Soal', 'Tipe Soal', 'Jawaban', 'Opsi A', 'Opsi B', 'Opsi C', 'Opsi D', 'Opsi E', 'Tingkat Kesulitan'];
-        
-        $col = 1;
-        foreach ($headers as $header) {
-            $sheet->setCellValueByColumnAndRow($col, 1, $header);
-            $col++;
-        }
-        
-        $sheet->getStyle('1:1')->getFont()->setBold(true);
-        
-        // Add data
-        $row = 2;
-        foreach ($questions as $question) {
-            $data = [
-                $this->sanitizeText($question->question ?? ''),
-                $question->tipe_soal ?? 'pilihan_ganda',
-                strtoupper($question->answer ?? 'A'),
-                $this->sanitizeText($question->option_a ?? ''),
-                $this->sanitizeText($question->option_b ?? ''),
-                $this->sanitizeText($question->option_c ?? ''),
-                $this->sanitizeText($question->option_d ?? ''),
-                $this->sanitizeText($question->option_e ?? ''),
-                $question->difficulty ?? ''
-            ];
+            // Create minimal Excel without any extra properties
+            $spreadsheet = new Spreadsheet();
+            $sheet = $spreadsheet->getActiveSheet();
             
-            $col = 1;
-            foreach ($data as $value) {
-                $sheet->setCellValueByColumnAndRow($col, $row, $value);
-                $col++;
-            }
-            $row++;
-        }
-        
-        $filename = 'soal_' . $this->sanitizeFilename($material->title) . '_' . date('Ymd_His') . '.xlsx';
-        $tempFile = tempnam(sys_get_temp_dir(), 'excel_');
-        
-        $writer = new Xlsx($spreadsheet);
-        $writer->save($tempFile);
-        
-        return response()->download($tempFile, $filename, [
-            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-        ])->deleteFileAfterSend(true);
-    }
-
-    /**
-     * Generate CSV file as fallback
-     */
-    private function generateCsvFile($material, $questions)
-    {
-        $filename = 'soal_' . $this->sanitizeFilename($material->title) . '_' . date('Ymd_His') . '.csv';
-        
-        $headers = [
-            'Content-Type' => 'text/csv; charset=UTF-8',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
-        ];
-        
-        $callback = function() use ($questions) {
-            $file = fopen('php://output', 'w');
+            // Remove default properties
+            $spreadsheet->getProperties()->setCreator('');
+            $spreadsheet->getProperties()->setTitle('');
+            $spreadsheet->getProperties()->setDescription('');
+            $spreadsheet->getProperties()->setSubject('');
+            $spreadsheet->getProperties()->setKeywords('');
+            $spreadsheet->getProperties()->setCategory('');
             
-            // Add BOM for UTF-8
-            fwrite($file, "\xEF\xBB\xBF");
+            // Set headers with bold formatting
+            $sheet->getCell('A1')->setValueExplicit('Teks Soal', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->getCell('B1')->setValueExplicit('Tipe Soal', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->getCell('C1')->setValueExplicit('Jawaban', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->getCell('D1')->setValueExplicit('Opsi A', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->getCell('E1')->setValueExplicit('Opsi B', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->getCell('F1')->setValueExplicit('Opsi C', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->getCell('G1')->setValueExplicit('Opsi D', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->getCell('H1')->setValueExplicit('Opsi E', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->getCell('I1')->setValueExplicit('Tingkat kesulitan', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
             
-            // Add headers
-            fputcsv($file, ['Teks Soal', 'Tipe Soal', 'Jawaban', 'Opsi A', 'Opsi B', 'Opsi C', 'Opsi D', 'Opsi E', 'Tingkat Kesulitan']);
+            // Apply bold formatting to header row
+            $sheet->getStyle('A1:I1')->getFont()->setBold(true);
             
-            // Add data
+            // Add data rows
+            $row = 2;
             foreach ($questions as $question) {
-                fputcsv($file, [
-                    $this->sanitizeText($question->question ?? ''),
-                    $question->tipe_soal ?? 'pilihan_ganda',
-                    strtoupper($question->answer ?? 'A'),
-                    $this->sanitizeText($question->option_a ?? ''),
-                    $this->sanitizeText($question->option_b ?? ''),
-                    $this->sanitizeText($question->option_c ?? ''),
-                    $this->sanitizeText($question->option_d ?? ''),
-                    $this->sanitizeText($question->option_e ?? ''),
-                    $question->difficulty ?? ''
-                ]);
+                // Get raw data without any processing
+                $questionText = $question->question ?? '';
+                $questionType = $question->tipe_soal ?? 'pilihan_ganda';
+                $answer = $question->answer ?? 'A';
+                $optionA = $question->option_a ?? '';
+                $optionB = $question->option_b ?? '';
+                $optionC = $question->option_c ?? '';
+                $optionD = $question->option_d ?? '';
+                $optionE = $question->option_e ?? '';
+                $difficulty = $question->difficulty ?? '';
+                
+                // Set as strings explicitly
+                $sheet->getCell('A' . $row)->setValueExplicit($questionText, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                $sheet->getCell('B' . $row)->setValueExplicit($questionType, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                $sheet->getCell('C' . $row)->setValueExplicit($answer, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                $sheet->getCell('D' . $row)->setValueExplicit($optionA, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                $sheet->getCell('E' . $row)->setValueExplicit($optionB, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                $sheet->getCell('F' . $row)->setValueExplicit($optionC, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                $sheet->getCell('G' . $row)->setValueExplicit($optionD, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                $sheet->getCell('H' . $row)->setValueExplicit($optionE, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                $sheet->getCell('I' . $row)->setValueExplicit($difficulty, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                
+                $row++;
             }
             
-            fclose($file);
-        };
-        
-        return response()->stream($callback, 200, $headers);
+            // Generate filename with material name and category
+            $materialName = Str::slug($material->title);
+            $categoryName = Str::slug($material->category);
+            $filename = $materialName . '_' . $categoryName . '.xlsx';
+            
+            // Save with minimal writer settings
+            $tempFile = tempnam(sys_get_temp_dir(), 'excel_minimal_');
+            
+            $writer = new Xlsx($spreadsheet);
+            // Remove any extra features
+            $writer->setPreCalculateFormulas(false);
+            $writer->save($tempFile);
+            
+            // Verify file
+            if (!file_exists($tempFile) || filesize($tempFile) === 0) {
+                throw new \Exception('Excel file was not created properly');
+            }
+            
+            // Return with minimal headers
+            return response()->download($tempFile, $filename, [
+                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'Content-Disposition' => 'attachment; filename="' . $filename . '"'
+            ])->deleteFileAfterSend(true);
+            
+        } catch (\Exception $e) {
+            Log::error('Excel export error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Tidak dapat membuat file Excel: ' . $e->getMessage());
+        }
     }
 
-    /**
-     * Sanitize text for export
-     */
-    private function sanitizeText($text)
-    {
-        if (empty($text)) return '';
-        
-        // Remove HTML tags
-        $text = strip_tags($text);
-        
-        // Remove control characters but keep basic punctuation
-        $text = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/', '', $text);
-        
-        // Replace line breaks with spaces
-        $text = str_replace(["\r\n", "\r", "\n"], ' ', $text);
-        
-        // Clean up multiple spaces
-        $text = preg_replace('/\s+/', ' ', $text);
-        
-        return trim($text);
-    }
 
-    /**
-     * Sanitize filename
-     */
-    private function sanitizeFilename($filename)
-    {
-        return preg_replace('/[^a-zA-Z0-9_-]/', '_', $filename);
-    }
     /**
      * Show questions for specific material
      */
@@ -1274,74 +1244,79 @@ class MaterialController extends Controller
                                ->with('error', 'Tidak ada soal ditemukan untuk kategori: ' . $category);
             }
 
-            // Generate filename
-            $filename = 'soal_kategori_' . Str::slug($category) . '_' . date('Y-m-d_H-i-s') . '.xls';
+            // Create Excel using PhpSpreadsheet
+            $spreadsheet = new Spreadsheet();
+            $sheet = $spreadsheet->getActiveSheet();
             
-            // Create proper CSV content
-            $output = fopen('php://temp', 'r+');
+            // Remove default properties
+            $spreadsheet->getProperties()->setCreator('');
+            $spreadsheet->getProperties()->setTitle('');
+            $spreadsheet->getProperties()->setDescription('');
+            $spreadsheet->getProperties()->setSubject('');
+            $spreadsheet->getProperties()->setKeywords('');
+            $spreadsheet->getProperties()->setCategory('');
             
-            // Add BOM for UTF-8 encoding
-            fwrite($output, "\xEF\xBB\xBF");
+            // Set headers with bold formatting
+            $sheet->getCell('A1')->setValueExplicit('Teks Soal', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->getCell('B1')->setValueExplicit('Tipe Soal', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->getCell('C1')->setValueExplicit('Jawaban', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->getCell('D1')->setValueExplicit('Opsi A', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->getCell('E1')->setValueExplicit('Opsi B', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->getCell('F1')->setValueExplicit('Opsi C', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->getCell('G1')->setValueExplicit('Opsi D', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->getCell('H1')->setValueExplicit('Opsi E', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->getCell('I1')->setValueExplicit('Tingkat kesulitan', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
             
-            // Add headers
-            $headers = [
-                'Teks Soal',
-                'Tipe Soal', 
-                'Jawaban',
-                'Opsi A',
-                'Opsi B',
-                'Opsi C',
-                'Opsi D',
-                'Opsi E',
-                'Tingkat Kesulitan'
-            ];
-            
-            fputcsv($output, $headers);
+            // Apply bold formatting to header row
+            $sheet->getStyle('A1:I1')->getFont()->setBold(true);
             
             // Add data rows
+            $row = 2;
             foreach ($allQuestions as $question) {
-                // Get options safely
-                $options = $question->options ?? [];
+                $questionText = $question->question ?? '';
+                $questionType = $question->tipe_soal ?? 'pilihan_ganda';
+                $answer = $question->answer ?? 'A';
+                $optionA = $question->option_a ?? '';
+                $optionB = $question->option_b ?? '';
+                $optionC = $question->option_c ?? '';
+                $optionD = $question->option_d ?? '';
+                $optionE = $question->option_e ?? '';
+                $difficulty = $question->difficulty ?? '';
                 
-                // Determine question type (default to multiple choice if not specified)
-                $questionType = $question->type ?? 'pilihan_ganda';
+                $sheet->getCell('A' . $row)->setValueExplicit($questionText, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                $sheet->getCell('B' . $row)->setValueExplicit($questionType, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                $sheet->getCell('C' . $row)->setValueExplicit($answer, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                $sheet->getCell('D' . $row)->setValueExplicit($optionA, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                $sheet->getCell('E' . $row)->setValueExplicit($optionB, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                $sheet->getCell('F' . $row)->setValueExplicit($optionC, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                $sheet->getCell('G' . $row)->setValueExplicit($optionD, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                $sheet->getCell('H' . $row)->setValueExplicit($optionE, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                $sheet->getCell('I' . $row)->setValueExplicit($difficulty, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
                 
-                // Format answer based on question type
-                $answer = '';
-                if ($questionType === 'pilihan_ganda' || $questionType === 'multiple_choice') {
-                    $answer = strtoupper($question->answer ?? '');
-                } else {
-                    $answer = $question->answer ?? '';
-                }
-                
-                // Prepare row data
-                $rowData = [
-                    $question->question ?? '',
-                    $questionType,
-                    $answer,
-                    $options['A'] ?? '',
-                    $options['B'] ?? '',
-                    $options['C'] ?? '',
-                    $options['D'] ?? '',
-                    $options['E'] ?? '',
-                    $question->difficulty ?? ''
-                ];
-                
-                fputcsv($output, $rowData);
+                $row++;
             }
             
-            // Get the content
-            rewind($output);
-            $csvContent = stream_get_contents($output);
-            fclose($output);
+            // Generate filename for category download
+            $categoryName = Str::slug($category);
+            $filename = 'kategori_' . $categoryName . '.xlsx';
             
-            // Return as downloadable file
-            return response($csvContent)
-                ->header('Content-Type', 'application/vnd.ms-excel; charset=UTF-8')
-                ->header('Content-Disposition', 'attachment; filename="' . $filename . '"')
-                ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
-                ->header('Pragma', 'no-cache')
-                ->header('Expires', '0');
+            // Save to temp file
+            $tempFile = tempnam(sys_get_temp_dir(), 'excel_category_');
+            
+            $writer = new Xlsx($spreadsheet);
+            $writer->setPreCalculateFormulas(false);
+            $writer->save($tempFile);
+            
+            // Verify file
+            if (!file_exists($tempFile) || filesize($tempFile) === 0) {
+                throw new \Exception('Excel file was not created properly');
+            }
+            
+            // Return download response
+            return response()->download($tempFile, $filename, [
+                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'Content-Disposition' => 'attachment; filename="' . $filename . '"'
+            ])->deleteFileAfterSend(true);
 
         } catch (\Exception $e) {
             Log::error('Error downloading category questions Excel', [
