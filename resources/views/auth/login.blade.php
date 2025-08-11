@@ -18,7 +18,7 @@
 </head>
 
 <body class="bg-white min-h-screen flex items-center justify-center py-8">
-    <div class="max-w-md w-full mx-auto px-4">
+    <div class="max-w-lg w-full mx-auto px-4">
         <div class="bg-white rounded-2xl shadow-xl border" style="border-color: rgba(28,88,113,0.1);">
             <!-- Header -->
             <div class="professional-gradient p-8 rounded-t-2xl text-center">

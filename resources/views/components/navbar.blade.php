@@ -5,12 +5,13 @@
         <div class="flex items-center py-4">
             <!-- Logo/Brand - Far Left -->
             <div class="flex items-center space-x-3 mr-8">
-                <div class="bg-white/20 backdrop-blur-sm p-2 rounded-xl shadow-lg border border-white/30">
+                <div class="bg-white rounded-full p-2 shadow-lg">
                     <img src="{{ asset('images/kemenlh-logo.png') }}" alt="KemenLH/BPLH Logo"
                         class="w-8 h-8 object-contain">
                 </div>
-                <div>
-                    <h1 class="text-xl font-bold text-white">KemenLH/BPLH E-Learning Platform</h1>
+                <div class="flex flex-col">
+                    <span class="text-sm font-bold tracking-wide text-white">KemenLH / BPLH</span>
+                    <span class="text-2xl text-white font-bold tracking-wide">E-Learning</span>
                 </div>
             </div>
 

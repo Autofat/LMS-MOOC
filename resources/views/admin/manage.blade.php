@@ -89,7 +89,7 @@
                     <h4 class="font-semibold mb-2"><i class="fas fa-info-circle mr-2"></i>Informasi User</h4>
                     <ul class="space-y-1 ml-6">
                         <li>• Setiap user memiliki akses penuh ke sistem</li>
-                        <li>• User dapat mengelola materi, soal, dan user lainnya</li>
+                        <li>• User dapat mengelola materi dan soal</li>
                         <li>• User tidak dapat menghapus akun mereka sendiri</li>
                     </ul>
                 </div>
