@@ -58,27 +58,11 @@
 
         <!-- Toast Messages -->
         @if(session('success'))
-            <div id="manageSuccessToast" class="fixed top-8 right-4 z-50 bg-green-500 text-white px-8 py-5 rounded-lg shadow-xl max-w-md">
-                <div class="flex items-center">
-                    <i class="fas fa-check-circle text-2xl mr-4"></i>
-                    <p class="text-base font-medium">{{ session('success') }}</p>
-                    <button onclick="hideManageToast('manageSuccessToast')" class="ml-4 text-white hover:text-gray-200">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-            </div>
+            @include('components.toast', ['id' => 'manageSuccessToast', 'type' => 'success', 'message' => session('success')])
         @endif
 
         @if(session('error'))
-            <div id="manageErrorToast" class="fixed top-8 right-4 z-50 bg-red-500 text-white px-8 py-5 rounded-lg shadow-xl max-w-md">
-                <div class="flex items-center">
-                    <i class="fas fa-exclamation-circle text-2xl mr-4"></i>
-                    <p class="text-base font-medium">{{ session('error') }}</p>
-                    <button onclick="hideManageToast('manageErrorToast')" class="ml-4 text-white hover:text-gray-200">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-            </div>
+            @include('components.toast', ['id' => 'manageErrorToast', 'type' => 'error', 'message' => session('error')])
         @endif
 
         <!-- User List -->
@@ -243,35 +227,8 @@
     <script>
     let currentDeleteForm = null;
 
-    function hideManageToast(toastId) {
-        const toast = document.getElementById(toastId);
-        if (toast) {
-            toast.style.opacity = '0';
-            toast.style.transform = 'translateX(100%)';
-            setTimeout(() => {
-                toast.remove();
-            }, 300);
-        }
-    }
-
     // Delete modal functionality
     document.addEventListener('DOMContentLoaded', function() {
-        // Auto hide toasts after 5 seconds - only run once
-        const manageSuccessToast = document.getElementById('manageSuccessToast');
-        const manageErrorToast = document.getElementById('manageErrorToast');
-        
-        if (manageSuccessToast) {
-            setTimeout(() => {
-                hideManageToast('manageSuccessToast');
-            }, 5000);
-        }
-        
-        if (manageErrorToast) {
-            setTimeout(() => {
-                hideManageToast('manageErrorToast');
-            }, 5000);
-        }
-
         const deleteModal = document.getElementById('deleteModal');
         const deleteButtons = document.querySelectorAll('.delete-btn');
         const cancelButton = document.getElementById('cancelDelete');

@@ -42,43 +42,11 @@
 
     <!-- Toast Messages -->
     @if(session('success'))
-        <div id="questionsSuccessToast" class="fixed top-8 right-4 z-50 backdrop-blur-md rounded-2xl shadow-2xl max-w-md"
-            style="background: linear-gradient(135deg, rgba(34,197,94,0.95) 0%, rgba(21,128,61,0.95) 100%); border: 1px solid rgba(255,255,255,0.2);">
-            <div class="flex items-center p-6">
-                <div class="flex-shrink-0">
-                    <div class="w-10 h-10 rounded-full flex items-center justify-center"
-                        style="background: rgba(255,255,255,0.2);">
-                        <i class="fas fa-check-circle text-white text-lg"></i>
-                    </div>
-                </div>
-                <div class="ml-4 flex-1">
-                    <p class="text-white font-semibold text-base">{{ session('success') }}</p>
-                </div>
-                <button onclick="hideQuestionsToast('questionsSuccessToast')" class="ml-4 p-2 rounded-lg transition-all duration-200 hover:bg-white/20">
-                    <i class="fas fa-times text-white"></i>
-                </button>
-            </div>
-        </div>
+        @include('components.toast', ['id' => 'questionsSuccessToast', 'type' => 'success', 'message' => session('success')])
     @endif
 
     @if(session('error'))
-        <div id="questionsErrorToast" class="fixed top-8 right-4 z-50 backdrop-blur-md rounded-2xl shadow-2xl max-w-md"
-            style="background: linear-gradient(135deg, rgba(239,68,68,0.95) 0%, rgba(220,38,38,0.95) 100%); border: 1px solid rgba(255,255,255,0.2);">
-            <div class="flex items-center p-6">
-                <div class="flex-shrink-0">
-                    <div class="w-10 h-10 rounded-full flex items-center justify-center"
-                        style="background: rgba(255,255,255,0.2);">
-                        <i class="fas fa-exclamation-circle text-white text-lg"></i>
-                    </div>
-                </div>
-                <div class="ml-4 flex-1">
-                    <p class="text-white font-semibold text-base">{{ session('error') }}</p>
-                </div>
-                <button onclick="hideQuestionsToast('questionsErrorToast')" class="ml-4 p-2 rounded-lg transition-all duration-200 hover:bg-white/20">
-                    <i class="fas fa-times text-white"></i>
-                </button>
-            </div>
-        </div>
+        @include('components.toast', ['id' => 'questionsErrorToast', 'type' => 'error', 'message' => session('error')])
     @endif
 
     <div class="container mx-auto px-4 py-8">
@@ -330,38 +298,6 @@
 
     <!-- Include Delete Confirmation Modal -->
     @include('components.delete-confirmation-modal')
-
-    <!-- Toast JavaScript -->
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Questions manage page toast functionality - simplified like admin
-        window.hideQuestionsToast = function(toastId) {
-            const toast = document.getElementById(toastId);
-            if (toast) {
-                toast.style.transform = 'translateX(100%)';
-                setTimeout(() => {
-                    toast.remove();
-                }, 300);
-            }
-        }
-        
-        // Auto hide toasts after 5 seconds
-        const questionsSuccessToast = document.getElementById('questionsSuccessToast');
-        const questionsErrorToast = document.getElementById('questionsErrorToast');
-        
-        if (questionsSuccessToast) {
-            setTimeout(() => {
-                hideQuestionsToast('questionsSuccessToast');
-            }, 5000);
-        }
-        
-        if (questionsErrorToast) {
-            setTimeout(() => {
-                hideQuestionsToast('questionsErrorToast');
-            }, 5000);
-        }
-    });
-    </script>
 </body>
 
 </html>

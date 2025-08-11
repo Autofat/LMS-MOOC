@@ -107,75 +107,19 @@
     </div>
 
     <!-- Success/Error Messages - Toast Style -->
-    <div id="toastContainer" class="fixed top-8 right-4 z-50 space-y-3">
-        @if(session('success'))
-            <div id="loginSuccessToast" class="bg-green-500 text-white px-8 py-5 rounded-lg shadow-xl max-w-md">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <i class="fas fa-check-circle text-2xl"></i>
-                    </div>
-                    <div class="ml-4 flex-1">
-                        <p class="text-base font-medium">{{ session('success') }}</p>
-                    </div>
-                    <button onclick="hideLoginToast('loginSuccessToast')" class="ml-4 text-white hover:text-gray-200 transition-colors">
-                        <i class="fas fa-times text-lg"></i>
-                    </button>
-                </div>
-            </div>
-        @endif
+    <!-- Toast Messages -->
+    @if(session('success'))
+        @include('components.toast', ['id' => 'loginSuccessToast', 'type' => 'success', 'message' => session('success')])
+    @endif
 
-        @if(session('error') || $errors->any())
-            <div id="loginErrorToast" class="bg-red-500 text-white px-8 py-5 rounded-lg shadow-xl max-w-md">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <i class="fas fa-exclamation-circle text-2xl"></i>
-                    </div>
-                    <div class="ml-4 flex-1">
-                        @if(session('error'))
-                            <p class="text-base font-medium">{{ session('error') }}</p>
-                        @endif
-                        @foreach($errors->all() as $error)
-                            <p class="text-base font-medium">{{ $error }}</p>
-                        @endforeach
-                    </div>
-                    <button onclick="hideLoginToast('loginErrorToast')" class="ml-4 text-white hover:text-gray-200 transition-colors">
-                        <i class="fas fa-times text-lg"></i>
-                    </button>
-                </div>
-            </div>
-        @endif
-    </div>
+    @if(session('error') || $errors->any())
+        @php
+            $errorMessage = session('error') ?: $errors->first();
+        @endphp
+        @include('components.toast', ['id' => 'loginErrorToast', 'type' => 'error', 'message' => $errorMessage])
+    @endif
 
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Login page specific toast functionality - simplified approach like admin
-        window.hideLoginToast = function(toastId) {
-            const toast = document.getElementById(toastId);
-            if (toast) {
-                toast.style.transform = 'translateX(100%)';
-                setTimeout(() => {
-                    toast.remove();
-                }, 300);
-            }
-        }
-        
-        // Auto hide toasts after 5 seconds - only run once
-        const loginSuccessToast = document.getElementById('loginSuccessToast');
-        const loginErrorToast = document.getElementById('loginErrorToast');
-        
-        if (loginSuccessToast) {
-            setTimeout(() => {
-                hideLoginToast('loginSuccessToast');
-            }, 5000);
-        }
-        
-        if (loginErrorToast) {
-            setTimeout(() => {
-                hideLoginToast('loginErrorToast');
-            }, 5000);
-        }
-    });
-
     // Toggle password visibility
     function togglePasswordVisibility() {
         const passwordInput = document.getElementById('password');

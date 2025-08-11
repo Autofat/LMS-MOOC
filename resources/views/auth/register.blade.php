@@ -158,78 +158,16 @@
         </div>
     </div>
 
-    <!-- Success/Error Messages - Toast Style -->
-    <div id="toastContainer" class="fixed top-8 right-4 z-50 space-y-3">
-        @if(session('success'))
-            <div id="successToast" class="bg-green-500 text-white px-8 py-5 rounded-lg shadow-xl max-w-md transform translate-x-full opacity-0 transition-all duration-500 ease-in-out">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <i class="fas fa-check-circle text-2xl"></i>
-                    </div>
-                    <div class="ml-4 flex-1">
-                        <p class="text-base font-medium">{{ session('success') }}</p>
-                    </div>
-                    <button onclick="hideToast('successToast')" class="ml-4 text-white hover:text-gray-200 transition-colors">
-                        <i class="fas fa-times text-lg"></i>
-                    </button>
-                </div>
-            </div>
-        @endif
+    <!-- Toast Messages -->
+    @if(session('success'))
+        @include('components.toast', ['id' => 'successToast', 'type' => 'success', 'message' => session('success')])
+    @endif
 
-        @if(session('error'))
-            <div id="errorToast" class="bg-red-500 text-white px-8 py-5 rounded-lg shadow-xl max-w-md transform translate-x-full opacity-0 transition-all duration-500 ease-in-out">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <i class="fas fa-exclamation-circle text-2xl"></i>
-                    </div>
-                    <div class="ml-4 flex-1">
-                        <p class="text-base font-medium">{{ session('error') }}</p>
-                    </div>
-                    <button onclick="hideToast('errorToast')" class="ml-4 text-white hover:text-gray-200 transition-colors">
-                        <i class="fas fa-times text-lg"></i>
-                    </button>
-                </div>
-            </div>
-        @endif
-    </div>
+    @if(session('error'))
+        @include('components.toast', ['id' => 'errorToast', 'type' => 'error', 'message' => session('error')])
+    @endif
 
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Toast functionality
-        function showToast(toastId) {
-            const toast = document.getElementById(toastId);
-            if (toast) {
-                // Show toast with animation
-                setTimeout(() => {
-                    toast.classList.remove('translate-x-full', 'opacity-0');
-                    toast.classList.add('translate-x-0', 'opacity-100');
-                }, 100);
-                
-                // Auto hide after 5 seconds
-                setTimeout(() => {
-                    hideToast(toastId);
-                }, 5000);
-            }
-        }
-        
-        window.hideToast = function(toastId) {
-            const toast = document.getElementById(toastId);
-            if (toast) {
-                toast.classList.remove('translate-x-0', 'opacity-100');
-                toast.classList.add('translate-x-full', 'opacity-0');
-                
-                // Remove from DOM after animation completes
-                setTimeout(() => {
-                    toast.remove();
-                }, 500);
-            }
-        }
-        
-        // Show all existing toasts
-        showToast('successToast');
-        showToast('errorToast');
-    });
-
     // Toggle password visibility
     function togglePasswordVisibility(inputId, iconId) {
         const passwordInput = document.getElementById(inputId);
