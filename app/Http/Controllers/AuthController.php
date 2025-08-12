@@ -89,8 +89,8 @@ class AuthController extends Controller
     public function showCreateAdminForm()
     {
         // Only allow root admin to create new users
-        if (Auth::user()->email !== 'admin@kemenlh.go.id') {
-            return redirect()->route('admin.manage')->with('error', 'Hanya Root Admin yang dapat menambah user baru.');
+        if (Auth::user()->email !== 'superadmin@elearning.kemenlh.go.id') {
+            return redirect()->route('admin.manage')->with('error', 'Hanya Super Admin yang dapat menambah user baru.');
         }
         
         return view('admin.create');
@@ -99,8 +99,8 @@ class AuthController extends Controller
     public function createAdmin(Request $request)
     {
         // Only allow root admin to create new users
-        if (Auth::user()->email !== 'admin@kemenlh.go.id') {
-            return redirect()->route('admin.manage')->with('error', 'Hanya Root Admin yang dapat menambah user baru.');
+        if (Auth::user()->email !== 'superadmin@elearning.kemenlh.go.id') {
+            return redirect()->route('admin.manage')->with('error', 'Hanya Super Admin yang dapat menambah user baru.');
         }
         
         $validator = Validator::make($request->all(), [
@@ -133,15 +133,15 @@ class AuthController extends Controller
     public function deleteAdmin($id)
     {
         // Only allow root admin to delete users
-        if (Auth::user()->email !== 'admin@kemenlh.go.id') {
-            return back()->with('error', 'Hanya Root Admin yang dapat menghapus user.');
+        if (Auth::user()->email !== 'superadmin@elearning.kemenlh.go.id') {
+            return back()->with('error', 'Hanya Super Admin yang dapat menghapus user.');
         }
         
         $user = User::findOrFail($id);
         
-        // Prevent deleting root admin
-        if ($user->email === 'admin@kemenlh.go.id') {
-            return back()->with('error', 'Akun Root Admin tidak dapat dihapus. Akun ini adalah akun sistem yang dilindungi.');
+        // Prevent deleting super admin
+        if ($user->email === 'superadmin@elearning.kemenlh.go.id') {
+            return back()->with('error', 'Akun Super Admin tidak dapat dihapus. Akun ini adalah akun sistem yang dilindungi.');
         }
 
         $user->delete();
