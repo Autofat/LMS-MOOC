@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\QuestionController;
 use App\Http\Controllers\MaterialController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\HelpController;
 
 // Root redirect to login
 Route::get('/', function () {
@@ -37,9 +38,9 @@ Route::get('/clear-session', function () {
 
 // User Routes (for regular users - read only access)
 Route::middleware(['auth'])->group(function () {
-    Route::get('/user/dashboard', [MaterialController::class, 'userDashboard'])->name('user.dashboard');
-    Route::get('/user/materials', [MaterialController::class, 'userIndex'])->name('user.materials.index');
-    Route::get('/user/materials/{id}', [MaterialController::class, 'userShow'])->name('user.materials.show');
+    Route::get('/user/dashboard', [MaterialController::class, 'index'])->name('user.dashboard');
+    Route::get('/user/materials', [MaterialController::class, 'index'])->name('user.materials.index');
+    Route::get('/user/materials/{id}', [MaterialController::class, 'show'])->name('user.materials.show');
 });
 
 // Protected Routes (require authentication - accessible by both admin and regular users)
@@ -77,6 +78,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/questions/{id}/edit', [QuestionController::class, 'edit'])->name('questions.edit');
     Route::put('/questions/{id}', [QuestionController::class, 'update'])->name('questions.update');
     Route::delete('/questions/{id}', [QuestionController::class, 'destroy'])->name('questions.destroy');
+
+    // Help Routes
+    Route::get('/help', [HelpController::class, 'index'])->name('help.index');
+    Route::get('/help/contextual/{page}', [HelpController::class, 'contextualHelp'])->name('help.contextual');
 });
 
 // Admin Only Routes (user management - only accessible by admin)

@@ -237,9 +237,9 @@
                     <label for="difficulty" class="block text-sm font-semibold mb-3 flex items-center space-x-2"
                         style="color: rgba(28,88,113,0.9);">
                         <i class="fas fa-layer-group" style="color: rgba(28,88,113,1);"></i>
-                        <span>Tingkat Kesulitan (Opsional)</span>
+                        <span>Tingkat Kesulitan <span class="text-red-500">*</span></span>
                     </label>
-                    <select id="difficulty" name="difficulty"
+                    <select id="difficulty" name="difficulty" required
                         class="w-full px-4 py-3 rounded-xl shadow-sm focus:outline-none focus:ring-2 transition-all border-2"
                         style="border-color: rgba(28,88,113,0.2); background: linear-gradient(135deg, rgba(251,146,60,0.05) 0%, rgba(239,68,68,0.05) 100%);">
                         <option value="">Pilih tingkat kesulitan...</option>
@@ -253,6 +253,9 @@
                             {{ old('difficulty', $autoFillData['difficulty'] ?? '') == 'hard' ? 'selected' : '' }}>
                             Hard</option>
                     </select>
+                    @error('difficulty')
+                        <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                    @enderror
                 </div>
 
                 <!-- Submit Button -->

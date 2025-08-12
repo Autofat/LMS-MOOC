@@ -39,7 +39,10 @@ public function store(Request $request)
         'option_e' => 'nullable|string',
         'answer' => 'required|in:A,B,C,D,E',
         'explanation' => 'nullable|string',
-        'difficulty' => 'nullable|string',
+        'difficulty' => 'required|string|in:easy,medium,hard',
+    ], [
+        'difficulty.required' => 'Tingkat kesulitan harus dipilih.',
+        'difficulty.in' => 'Tingkat kesulitan harus berupa easy, medium, atau hard.',
     ]);
 
     // Simpan data soal ke dalam database using individual columns
@@ -133,7 +136,10 @@ public function store(Request $request)
             'options.E' => 'nullable|string',
             'answer' => 'required|in:A,B,C,D,E',
             'explanation' => 'nullable|string',
-            'difficulty' => 'nullable|string',
+            'difficulty' => 'required|string|in:easy,medium,hard',
+        ], [
+            'difficulty.required' => 'Tingkat kesulitan harus dipilih.',
+            'difficulty.in' => 'Tingkat kesulitan harus berupa easy, medium, atau hard.',
         ]);
 
         $options = $request->options;
@@ -184,7 +190,10 @@ public function store(Request $request)
                     'options.E' => 'nullable|string',
                     'answer' => 'required|in:A,B,C,D,E',
                     'explanation' => 'nullable|string',
-                    'difficulty' => 'nullable|string',
+                    'difficulty' => 'required|string|in:easy,medium,hard',
+                ], [
+                    'difficulty.required' => 'Tingkat kesulitan harus dipilih.',
+                    'difficulty.in' => 'Tingkat kesulitan harus berupa easy, medium, atau hard.',
                 ]);
                 
                 if ($validator->fails()) {
@@ -773,7 +782,10 @@ public function store(Request $request)
             'option_e' => 'nullable|string',
             'answer' => 'required|in:A,B,C,D,E',
             'explanation' => 'nullable|string',
-            'difficulty' => 'nullable|string',
+            'difficulty' => 'required|string|in:easy,medium,hard',
+        ], [
+            'difficulty.required' => 'Tingkat kesulitan harus dipilih.',
+            'difficulty.in' => 'Tingkat kesulitan harus berupa easy, medium, atau hard.',
         ]);
 
         $question = Question::findOrFail($id);
@@ -781,16 +793,24 @@ public function store(Request $request)
         $question->update([
             'material_id' => $request->material_id,
             'question' => $request->question,
-            'option_A' => $request->option_a,
-            'option_B' => $request->option_b,
-            'option_C' => $request->option_c,
-            'option_D' => $request->option_d,
-            'option_E' => $request->option_e,
+            'option_a' => $request->option_a,
+            'option_b' => $request->option_b,
+            'option_c' => $request->option_c,
+            'option_d' => $request->option_d,
+            'option_e' => $request->option_e,
             'answer' => $request->answer,
             'explanation' => $request->explanation,
             'difficulty' => $request->difficulty,
         ]);
 
+        // Redirect logic based on referrer or material
+        $referrer = url()->previous();
+        
+        // Check if came from category detail page
+        if (str_contains($referrer, '/materials/category/') && str_contains($referrer, '/detail')) {
+            return redirect($referrer)->with('success', 'Soal berhasil diupdate!');
+        }
+        
         // Redirect to material detail page if material_id exists, otherwise to questions.manage
         if ($request->material_id) {
             return redirect()->route('materials.show', $request->material_id)->with('success', 'Soal berhasil diupdate!');

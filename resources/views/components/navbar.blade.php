@@ -34,6 +34,11 @@
                     <span>User</span>
                 </a>
                 @endif
+                <a href="{{ route('help.index') }}"
+                    class="flex items-center space-x-2 text-blue-100 hover:text-white transition-colors {{ request()->routeIs('help.*') ? 'text-white font-semibold bg-white/20 px-3 py-2 rounded-lg backdrop-blur-sm' : '' }}">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Bantuan</span>
+                </a>
             </div>
 
             <!-- User Menu - Far Right -->
@@ -107,6 +112,10 @@
                     <i class="fas fa-users-cog mr-2"></i>User
                 </a>
                 @endif
+                <a href="{{ route('help.index') }}"
+                    class="block py-2 text-teal-100 hover:text-white transition-colors {{ request()->routeIs('help.*') ? 'text-white font-semibold' : '' }}">
+                    <i class="fas fa-info-circle mr-2"></i>Bantuan
+                </a>
                 <div class="border-t border-teal-500 pt-2 mt-2">
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf

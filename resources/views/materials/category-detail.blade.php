@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Detail Kategori: {{ $category }} - KemenLH/BPLH E-Learning Platform</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -164,17 +165,30 @@
                         <div class="border-l-4 border-blue-500 bg-gradient-to-r from-blue-50 to-transparent p-6 rounded-r-xl hover:shadow-md transition-all duration-300">
                             <div class="flex items-start justify-between mb-4">
                                 <div class="flex-1">
-                                    <div class="flex items-center mb-2">
+                                    <div class="flex items-center mb-3">
                                         <span class="bg-blue-500 text-white text-xs font-bold px-2 py-1 rounded-full mr-3">
                                             #{{ ($questions->currentPage() - 1) * $questions->perPage() + $index + 1 }}
                                         </span>
-                                        <span class="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded">
+                                        <div class="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-3 py-1 rounded-lg font-semibold text-sm shadow-md">
+                                            <i class="fas fa-file-alt mr-1"></i>
                                             {{ $question->material->title }}
-                                        </span>
+                                        </div>
                                     </div>
                                     <h3 class="text-lg font-semibold text-gray-800 mb-3">
                                         {!! nl2br(e($question->question ?? 'Tidak ada teks soal')) !!}
                                     </h3>
+                                </div>
+                                <div class="flex items-center space-x-2 ml-4">
+                                    <a href="{{ route('questions.edit', $question->id) }}" 
+                                       class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded-lg text-xs font-medium transition-all duration-200 transform hover:scale-105"
+                                       title="Edit Soal">
+                                        <i class="fas fa-edit mr-1"></i>Edit
+                                    </a>
+                                    <button onclick="confirmDeleteQuestion({{ $question->id }})"
+                                            class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-xs font-medium transition-all duration-200 transform hover:scale-105"
+                                            title="Hapus Soal">
+                                        <i class="fas fa-trash mr-1"></i>Hapus
+                                    </button>
                                 </div>
                             </div>
                             
@@ -252,6 +266,33 @@
         @endif
     </div>
 
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div class="mt-3 text-center">
+                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                    <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
+                </div>
+                <h3 class="text-lg font-medium text-gray-900 mt-4">Hapus Soal</h3>
+                <div class="mt-2 px-7 py-3">
+                    <p class="text-sm text-gray-500">
+                        Apakah Anda yakin ingin menghapus soal ini? Tindakan ini tidak dapat dibatalkan.
+                    </p>
+                </div>
+                <div class="items-center px-4 py-3">
+                    <button id="deleteConfirmBtn" 
+                            class="px-4 py-2 bg-red-500 text-white text-base font-medium rounded-md w-24 mr-2 hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300">
+                        Hapus
+                    </button>
+                    <button id="deleteCancelBtn" 
+                            class="px-4 py-2 bg-gray-500 text-white text-base font-medium rounded-md w-24 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300">
+                        Batal
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Toast functionality for category detail page
         window.hideCategoryDetailToast = function(toastId) {
@@ -264,8 +305,62 @@
             }
         }
         
-        // Auto hide toasts after 5 seconds
+        // Delete question confirmation with modal
+        let questionIdToDelete = null;
+        
+        window.confirmDeleteQuestion = function(questionId) {
+            questionIdToDelete = questionId;
+            document.getElementById('deleteModal').classList.remove('hidden');
+        }
+        
+        // Modal event handlers
         document.addEventListener('DOMContentLoaded', function() {
+            const deleteModal = document.getElementById('deleteModal');
+            const deleteConfirmBtn = document.getElementById('deleteConfirmBtn');
+            const deleteCancelBtn = document.getElementById('deleteCancelBtn');
+            
+            // Confirm delete
+            deleteConfirmBtn.addEventListener('click', function() {
+                if (questionIdToDelete) {
+                    // Create a form and submit it
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = `/questions/${questionIdToDelete}`;
+                    
+                    // Add CSRF token
+                    const csrfToken = document.createElement('input');
+                    csrfToken.type = 'hidden';
+                    csrfToken.name = '_token';
+                    csrfToken.value = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+                    form.appendChild(csrfToken);
+                    
+                    // Add method override for DELETE
+                    const methodInput = document.createElement('input');
+                    methodInput.type = 'hidden';
+                    methodInput.name = '_method';
+                    methodInput.value = 'DELETE';
+                    form.appendChild(methodInput);
+                    
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            });
+            
+            // Cancel delete
+            deleteCancelBtn.addEventListener('click', function() {
+                deleteModal.classList.add('hidden');
+                questionIdToDelete = null;
+            });
+            
+            // Close modal when clicking outside
+            deleteModal.addEventListener('click', function(e) {
+                if (e.target === deleteModal) {
+                    deleteModal.classList.add('hidden');
+                    questionIdToDelete = null;
+                }
+            });
+            
+            // Auto hide toasts after 5 seconds
             const successToast = document.getElementById('categoryDetailSuccessToast');
             const errorToast = document.getElementById('categoryDetailErrorToast');
             

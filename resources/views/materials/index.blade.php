@@ -710,6 +710,12 @@
         });
     });
     </script>
+
+    <!-- Include Help Modal Component -->
+    @include('components.help-modal')
+
+    <!-- Include Tutorial Component -->
+    @include('components.tutorial')
 </body>
 
 </html>

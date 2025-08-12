@@ -209,9 +209,9 @@
                     <label for="difficulty" class="block text-sm font-semibold mb-3 flex items-center space-x-2"
                         style="color: rgba(28,88,113,0.9);">
                         <i class="fas fa-layer-group text-purple-500"></i>
-                        <span>Tingkat Kesulitan</span>
+                        <span>Tingkat Kesulitan <span class="text-red-500">*</span></span>
                     </label>
-                    <select id="difficulty" name="difficulty"
+                    <select id="difficulty" name="difficulty" required
                         class="w-full rounded-xl px-4 py-3 focus:outline-none focus:ring-2 transition-all border-2"
                         style="border-color: rgba(28,88,113,0.2); background: linear-gradient(135deg, rgba(245,158,11,0.05) 0%, rgba(251,191,36,0.05) 100%);">
                         <option value="">Pilih tingkat kesulitan</option>

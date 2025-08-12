@@ -45,7 +45,7 @@
             </div>
 
             <!-- Actions -->
-            @if(Auth::user()->email === 'admin@kemenlh.go.id')
+            @if(Auth::user()->email === 'superadmin@elearning.kemenlh.go.id')
                 <div class="flex justify-center mb-8">
                     <a href="{{ route('admin.create') }}" 
                        class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-6 rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center justify-center space-x-2">
@@ -109,17 +109,21 @@
                                 </div>
                                 
                                 <div class="flex items-center space-x-3">
-                                    @if($admin->email === 'admin@kemenlh.go.id')
+                                    @if($admin->email === 'superadmin@elearning.kemenlh.go.id')
                                         <span class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-medium">
-                                            <i class="fas fa-crown mr-1"></i>Root Admin
+                                            <i class="fas fa-crown mr-1"></i>Super Admin
+                                        </span>
+                                    @elseif($admin->is_admin)
+                                        <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
+                                            <i class="fas fa-shield-alt mr-1"></i>Admin
                                         </span>
                                     @else
                                         <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
-                                            <i class="fas fa-shield-alt mr-1"></i>User
+                                            <i class="fas fa-user mr-1"></i>User
                                         </span>
                                     @endif
                                     
-                                    @if(Auth::user()->email === 'admin@kemenlh.go.id' && $admin->email !== 'admin@kemenlh.go.id')
+                                    @if(Auth::user()->email === 'superadmin@elearning.kemenlh.go.id' && $admin->email !== Auth::user()->email)
                                         <form method="POST" action="{{ route('admin.delete', $admin->id) }}" class="inline delete-form">
                                             @csrf
                                             @method('DELETE')
@@ -141,7 +145,7 @@
                     <i class="fas fa-users text-6xl text-gray-300 mb-4"></i>
                     <h3 class="text-xl font-semibold text-gray-600 mb-2">Belum Ada User</h3>
                     <p class="text-gray-500 mb-6">Sistem belum memiliki user yang terdaftar.</p>
-                    @if(Auth::user()->email === 'admin@kemenlh.go.id')
+                    @if(Auth::user()->email === 'superadmin@elearning.kemenlh.go.id')
                         <a href="{{ route('admin.create') }}" 
                            class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-6 rounded-full transition-all duration-300">
                             <i class="fas fa-user-plus mr-2"></i>Tambah User Pertama
@@ -294,5 +298,11 @@
         });
     });
     </script>
+
+    <!-- Include Help Modal Component -->
+    @include('components.help-modal')
+
+    <!-- Include Tutorial Component -->
+    @include('components.tutorial')
 </body>
 </html>

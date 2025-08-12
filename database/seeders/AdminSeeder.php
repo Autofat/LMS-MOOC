@@ -15,9 +15,9 @@ class AdminSeeder extends Seeder
     {
         // Create default admin user
         User::create([
-            'name' => 'User KemenLH/BPLH',
-            'email' => 'admin@kemenlh.go.id',
-            'password' => Hash::make('admin123'),
+            'name' => 'AdminKemenLH/BPLH',
+            'email' => 'superadmin@elearning.kemenlh.go.id',
+            'password' => Hash::make('kemenlh.go.id'),
             'is_admin' => true,
             'email_verified_at' => now(),
         ]);
