@@ -141,6 +141,21 @@ LMS-MOOC/
 - **questions** - Bank soal multiple choice
 - **categories** - Kategori untuk mengorganisir materi
 
+### Relasi Database
+
+- Materials → Categories (Many-to-One)
+- Materials → Questions (One-to-Many)
+- Questions → Materials (Many-to-One)
+
+## 🔐 Fitur Keamanan
+
+- **Authentication** - Laravel's built-in authentication
+- **Authorization** - Role-based access control
+- **CSRF Protection** - Built-in CSRF protection
+- **File Upload Security** - Validated file types dan sizes
+- **Input Validation** - Comprehensive input validation
+- **SQL Injection Protection** - Eloquent ORM protection
+
 ## 📊 API Endpoints
 
 ### Materials API
@@ -156,42 +171,11 @@ DELETE /api/materials/{id}      # Delete material
 ### Questions API
 
 ```
-GET    /api/questions                    # List all questions
-POST   /api/questions                    # Create new question
-GET    /api/questions/{id}               # Get specific question
-PUT    /api/questions/{id}               # Update question
-DELETE /api/questions/{id}               # Delete question
-GET    /api/questions/material/{id}      # Get questions by material ID
-```
-
-### N8N Webhook Integration
-
-```
-POST   /api/questions/webhook            # Bulk create questions via n8n
-POST   /api/questions/clear-cache/{id}   # Clear completion cache for material
-```
-
-**Webhook Format:**
-
-```json
-{
-  "material_id": 38,
-  "questions": [
-    {
-      "question": "Pertanyaan soal?",
-      "options": {
-        "A": "Pilihan A",
-        "B": "Pilihan B",
-        "C": "Pilihan C",
-        "D": "Pilihan D",
-        "E": "Pilihan E (optional)"
-      },
-      "answer": "A",
-      "explanation": "Penjelasan jawaban (optional)",
-      "difficulty": "medium"
-    }
-  ]
-}
+GET    /api/questions           # List all questions
+POST   /api/questions           # Create new question
+GET    /api/questions/{id}      # Get specific question
+PUT    /api/questions/{id}      # Update question
+DELETE /api/questions/{id}      # Delete question
 ```
 
 Rate limiting: 60 requests per minute
@@ -292,3 +276,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - **Developed for**: PPSDM (Pusat Pengembangan Sumber Daya Manusia)
 - **Technology Stack**: Laravel, MySQL, TailwindCSS
+- **Support**: [Your support contact information]
+
+---
+
+<p align="center">
+Made with ❤️ for PPSDM Education Platform
+</p>
