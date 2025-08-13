@@ -168,7 +168,7 @@ APP_URL=https://your-domain.com
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
-DB_DATABASE=lms_mooc_db
+DB_DATABASE=generate_lms
 DB_USERNAME=your_db_user
 DB_PASSWORD=your_secure_password
 
@@ -197,7 +197,7 @@ MAIL_FROM_NAME="${APP_NAME}"
 
 #### Create Database
 ```sql
-CREATE DATABASE lms_mooc_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE lgenerate_lms CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
 
 #### Run Migrations
