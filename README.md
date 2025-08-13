@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![KemenLH Logo](public/images/kemenlh-logo.png)
+<img src="public/images/kemenlh-logo.png" alt="KemenLH Logo" width="100" height="auto">
 
 **Sistema Manajemen Pembelajaran untuk PPSDM (Pusat Pengembangan Sumber Daya Manusia)**
 
