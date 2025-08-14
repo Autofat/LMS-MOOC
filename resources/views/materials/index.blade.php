@@ -285,7 +285,7 @@
 
                             <!-- Action Buttons with Professional Theme -->
                             <div class="flex space-x-2">
-                                <a href="{{ route('materials.show', $material->id) }}"
+                                <a href="{{ route('materials.show', $material->id) }}?from=materials"
                                     class="flex-1 text-white text-center py-2 px-3 rounded-lg text-sm transition-all duration-300 transform hover:scale-105"
                                     style="background: linear-gradient(135deg, rgba(28,88,113,1) 0%, rgba(35,105,135,1) 100%); box-shadow: 0 4px 6px rgba(28,88,113,0.3);"
                                     onmouseover="this.style.background='linear-gradient(135deg, rgba(35,105,135,1) 0%, rgba(42,122,157,1) 100%)'"

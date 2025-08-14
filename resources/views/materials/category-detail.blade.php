@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -24,27 +24,33 @@
 
     <!-- Toast Messages -->
     @if(session('success'))
-        <div id="categoryDetailSuccessToast" class="fixed top-8 right-4 z-50 bg-green-500 text-white px-8 py-5 rounded-lg shadow-xl max-w-md">
+        <div id="successToast" class="fixed top-8 right-4 z-50 bg-green-500 text-white px-8 py-5 rounded-lg shadow-xl max-w-md" style="display: block !important;">
             <div class="flex items-center">
                 <i class="fas fa-check-circle text-2xl mr-4"></i>
                 <p class="text-base font-medium">{{ session('success') }}</p>
-                <button onclick="hideCategoryDetailToast('categoryDetailSuccessToast')" class="ml-4 text-white hover:text-gray-200">
+                <button onclick="hideToast('successToast')" class="ml-4 text-white hover:text-gray-200">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
         </div>
+        <script>console.log('Success toast rendered:', '{{ session('success') }}');</script>
     @endif
 
     @if(session('error'))
-        <div id="categoryDetailErrorToast" class="fixed top-8 right-4 z-50 bg-red-500 text-white px-8 py-5 rounded-lg shadow-xl max-w-md">
+        <div id="errorToast" class="fixed top-8 right-4 z-50 bg-red-500 text-white px-8 py-5 rounded-lg shadow-xl max-w-md" style="display: block !important;">
             <div class="flex items-center">
                 <i class="fas fa-exclamation-circle text-2xl mr-4"></i>
                 <p class="text-base font-medium">{{ session('error') }}</p>
-                <button onclick="hideCategoryDetailToast('categoryDetailErrorToast')" class="ml-4 text-white hover:text-gray-200">
+                <button onclick="hideToast('errorToast')" class="ml-4 text-white hover:text-gray-200">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
         </div>
+        <script>console.log('Error toast rendered:', '{{ session('error') }}');</script>
+    @endif
+
+    @if(!session('success') && !session('error'))
+        <script>console.log('No session messages found');</script>
     @endif
 
     <!-- Hero Section -->
@@ -60,7 +66,7 @@
                     Detail Kategori: {{ $category }}
                 </h1>
                 <p class="text-xl text-blue-100 mb-8 max-w-3xl mx-auto">
-                    Semua soal dari materi dalam kategori {{ $category }}
+                    Kelola sub kategori dan unduh semua soal dari kategori {{ $category }}
                 </p>
                 <div class="flex flex-col sm:flex-row gap-4 justify-center">
                     <a href="{{ route('materials.index') }}"
@@ -125,10 +131,10 @@
             @if(isset($subCategories) && $subCategories->count() > 0)
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     @foreach($subCategories as $subCategory)
-                        <div class="bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl p-4 border border-emerald-200 hover:shadow-lg transition-all duration-300">
+                        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-200 hover:shadow-lg transition-all duration-300">
                             <div class="flex items-center justify-between mb-3">
-                                <h3 class="font-semibold text-gray-800 text-base">{{ $subCategory->name }}</h3>
-                                <div class="bg-emerald-100 text-emerald-800 text-xs px-2 py-1 rounded-full">
+                                <h3 class="font-semibold text-gray-800 text-lg">{{ $subCategory->name }}</h3>
+                                <div class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
                                     {{ $subCategory->materials_count ?? 0 }} materi
                                 </div>
                             </div>
@@ -137,21 +143,53 @@
                                 <p class="text-sm text-gray-600 mb-3 line-clamp-2">{{ $subCategory->description }}</p>
                             @endif
                             
-                            <div class="text-xs text-gray-500 mb-3">
-                                <i class="fas fa-calendar mr-1"></i>
-                                {{ $subCategory->created_at->format('d M Y') }}
+                            <div class="flex items-center justify-between text-sm text-gray-600 mb-4">
+                                <span>
+                                    <i class="fas fa-question-circle mr-1"></i>
+                                    {{ $subCategory->questions_count ?? 0 }} soal
+                                </span>
                             </div>
                             
                             <div class="flex space-x-2">
-                                <a href="#" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-center py-2 px-3 rounded-lg text-xs transition-all">
-                                    <i class="fas fa-eye mr-1"></i>Lihat Materi
+                                <a href="{{ route('materials.sub-categories.detail', ['subCategory' => $subCategory->id]) }}" 
+                                   class="flex-1 text-white text-center py-2 px-3 rounded-lg text-sm transition-all duration-300 transform hover:scale-105"
+                                   style="background: linear-gradient(135deg, rgba(28,88,113,1) 0%, rgba(35,105,135,1) 100%); box-shadow: 0 4px 6px rgba(28,88,113,0.3);"
+                                   onmouseover="this.style.background='linear-gradient(135deg, rgba(35,105,135,1) 0%, rgba(42,122,157,1) 100%)'"
+                                   onmouseout="this.style.background='linear-gradient(135deg, rgba(28,88,113,1) 0%, rgba(35,105,135,1) 100%)'"
+                                   title="Lihat detail sub kategori {{ $subCategory->name }}">
+                                    <i class="fas fa-eye mr-1"></i>Detail
                                 </a>
+                                
+                                @if(($subCategory->questions_count ?? 0) > 0)
+                                <a href="{{ route('materials.download.subcategory.excel', $subCategory->id) }}" 
+                                   class="flex-1 text-white text-center py-2 px-3 rounded-lg text-sm transition-all duration-300 transform hover:scale-105"
+                                   style="background: linear-gradient(135deg, rgba(42,122,157,1) 0%, rgba(49,139,179,1) 100%); box-shadow: 0 4px 6px rgba(42,122,157,0.3);"
+                                   onmouseover="this.style.background='linear-gradient(135deg, rgba(49,139,179,1) 0%, rgba(56,156,201,1) 100%)'"
+                                   onmouseout="this.style.background='linear-gradient(135deg, rgba(42,122,157,1) 0%, rgba(49,139,179,1) 100%)'"
+                                   title="Download {{ $subCategory->questions_count }} soal dari sub kategori {{ $subCategory->name }}">
+                                    <i class="fas fa-file-excel mr-1"></i>Download Soal ({{ $subCategory->questions_count }})
+                                </a>
+                                @else
+                                <span class="flex-1 text-gray-500 text-center py-2 px-3 rounded-lg text-sm bg-gray-200"
+                                      title="Belum ada soal untuk sub kategori ini">
+                                    <i class="fas fa-file-excel mr-1"></i>Belum Ada Soal
+                                </span>
+                                @endif
+                                
+                                <button class="edit-subcategory-btn bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white py-2 px-3 rounded-lg text-sm transition-all duration-300 transform hover:scale-105"
+                                        data-subcategory-id="{{ $subCategory->id }}"
+                                        data-subcategory-name="{{ $subCategory->name }}"
+                                        data-subcategory-description="{{ $subCategory->description ?? '' }}"
+                                        title="Edit sub kategori {{ $subCategory->name }}">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                
                                 <form method="POST" action="{{ route('sub-categories.destroy', $subCategory->id) }}"
-                                      onsubmit="return confirm('Yakin ingin menghapus sub kategori {{ $subCategory->name }}?')" class="inline">
+                                      onsubmit="event.preventDefault(); showDeleteConfirmation(this, 'Yakin ingin menghapus sub kategori {{ $subCategory->name }}? Semua materi dalam sub kategori ini akan dihapus.'); return false;" class="inline">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit"
-                                            class="bg-red-600 hover:bg-red-700 text-white py-2 px-3 rounded-lg text-xs transition-all">
+                                            class="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white py-2 px-3 rounded-lg text-sm transition-all duration-300 transform hover:scale-105">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </form>
@@ -176,84 +214,163 @@
     </div>
 
     <script>
-        // Toast functionality for category detail page
-        window.hideCategoryDetailToast = function(toastId) {
+        // Simple Toast functionality
+        window.hideToast = function(toastId) {
             const toast = document.getElementById(toastId);
             if (toast) {
                 toast.style.transform = 'translateX(100%)';
                 setTimeout(() => {
-                    toast.remove();
+                    if (toast.parentNode) {
+                        toast.parentNode.removeChild(toast);
+                    }
                 }, 300);
             }
         }
 
-        // Auto-hide toasts after 5 seconds
-        document.addEventListener('DOMContentLoaded', function() {
-            const successToast = document.getElementById('categoryDetailSuccessToast');
-            const errorToast = document.getElementById('categoryDetailErrorToast');
-            
-            if (successToast) {
-                setTimeout(() => {
-                    hideCategoryDetailToast('categoryDetailSuccessToast');
-                }, 5000);
-            }
-            
-            if (errorToast) {
-                setTimeout(() => {
-                    hideCategoryDetailToast('categoryDetailErrorToast');
-                }, 5000);
-            }
-        });
-
-        // Sub Category Modal Functions
+        // Modal functions
         function showAddSubCategoryModal() {
             document.getElementById('addSubCategoryModal').classList.remove('hidden');
         }
 
-        function hideAddSubCategoryModal() {
+        function closeAddSubCategoryModal() {
             document.getElementById('addSubCategoryModal').classList.add('hidden');
             document.getElementById('addSubCategoryForm').reset();
         }
 
-        // Handle form submission for adding sub category
-        document.getElementById('addSubCategoryForm').addEventListener('submit', function(e) {
-            e.preventDefault();
+        function closeEditSubCategoryModal() {
+            document.getElementById('editSubCategoryModal').classList.add('hidden');
+        }
+
+        // Single DOMContentLoaded handler
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOMContentLoaded fired');
             
-            const formData = new FormData(this);
-            const submitButton = this.querySelector('button[type="submit"]');
-            const originalText = submitButton.innerHTML;
-            
-            // Disable submit button and show loading state
-            submitButton.disabled = true;
-            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Menambahkan...';
-            
-            fetch('{{ route("materials.sub-categories.store") }}', {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                    'Accept': 'application/json'
+            // Auto-hide toasts after 7 seconds
+            setTimeout(() => {
+                console.log('Checking for toasts to hide...');
+                const successToast = document.getElementById('successToast');
+                const errorToast = document.getElementById('errorToast');
+                
+                console.log('Success toast element:', successToast);
+                console.log('Error toast element:', errorToast);
+                
+                if (successToast) {
+                    console.log('Hiding success toast');
+                    hideToast('successToast');
                 }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Reload page to show new sub category
-                    location.reload();
-                } else {
-                    alert(data.message || 'Terjadi kesalahan saat menambahkan sub kategori.');
-                    // Re-enable submit button
-                    submitButton.disabled = false;
-                    submitButton.innerHTML = originalText;
+                if (errorToast) {
+                    console.log('Hiding error toast');
+                    hideToast('errorToast');
                 }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Terjadi kesalahan saat menambahkan sub kategori.');
-                // Re-enable submit button
-                submitButton.disabled = false;
-                submitButton.innerHTML = originalText;
+            }, 7000);
+
+            // Handle add subcategory form
+            const addForm = document.getElementById('addSubCategoryForm');
+            if (addForm) {
+                addForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const formData = new FormData(this);
+                    const submitButton = this.querySelector('button[type="submit"]');
+                    const originalText = submitButton.innerHTML;
+                    
+                    submitButton.disabled = true;
+                    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Menambahkan...';
+                    
+                    fetch('{{ route("materials.sub-categories.store") }}', {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                            'Accept': 'application/json'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success && data.redirect_url) {
+                            window.location.href = data.redirect_url;
+                        } else {
+                            alert(data.message || 'Terjadi kesalahan');
+                            submitButton.disabled = false;
+                            submitButton.innerHTML = originalText;
+                        }
+                    })
+                    .catch(error => {
+                        alert('Terjadi kesalahan: ' + error.message);
+                        submitButton.disabled = false;
+                        submitButton.innerHTML = originalText;
+                    });
+                });
+            }
+
+            // Handle edit buttons
+            const editButtons = document.querySelectorAll('.edit-subcategory-btn');
+            editButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const id = this.getAttribute('data-subcategory-id');
+                    const name = this.getAttribute('data-subcategory-name');
+                    const description = this.getAttribute('data-subcategory-description') || '';
+                    
+                    document.getElementById('editSubCategoryId').value = id;
+                    document.getElementById('editSubCategoryName').value = name;
+                    document.getElementById('editSubCategoryDescription').value = description;
+                    document.getElementById('editSubCategoryModal').classList.remove('hidden');
+                });
             });
+
+            // Handle edit form
+            const editForm = document.getElementById('editSubCategoryForm');
+            if (editForm) {
+                editForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const id = document.getElementById('editSubCategoryId').value;
+                    const formData = new FormData();
+                    formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
+                    formData.append('_method', 'PUT');
+                    formData.append('name', document.getElementById('editSubCategoryName').value);
+                    formData.append('description', document.getElementById('editSubCategoryDescription').value);
+                    
+                    const submitButton = this.querySelector('button[type="submit"]');
+                    const originalText = submitButton.innerHTML;
+                    
+                    submitButton.disabled = true;
+                    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Memperbarui...';
+                    
+                    fetch(`/sub-categories/${id}`, {
+                        method: 'POST',
+                        body: formData,
+                        headers: { 'Accept': 'application/json' }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success && data.redirect_url) {
+                            window.location.href = data.redirect_url;
+                        } else {
+                            alert(data.message || 'Terjadi kesalahan');
+                            submitButton.disabled = false;
+                            submitButton.innerHTML = originalText;
+                        }
+                    })
+                    .catch(error => {
+                        alert('Terjadi kesalahan: ' + error.message);
+                        submitButton.disabled = false;
+                        submitButton.innerHTML = originalText;
+                    });
+                });
+            }
+
+            // Delete confirmation fallback
+            setTimeout(function() {
+                if (typeof window.showDeleteConfirmation !== 'function') {
+                    window.showDeleteConfirmation = function(form, message) {
+                        if (confirm(message)) {
+                            form.onsubmit = null;
+                            form.submit();
+                        }
+                    };
+                }
+            }, 100);
         });
     </script>
 
@@ -299,7 +416,7 @@
 
                 <div class="flex space-x-4 pt-4">
                     <button type="button" 
-                            onclick="hideAddSubCategoryModal()"
+                            onclick="closeAddSubCategoryModal()"
                             class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 font-semibold py-3 px-6 rounded-xl transition-colors">
                         Batal
                     </button>
@@ -311,228 +428,67 @@
             </form>
         </div>
     </div>
-</body>
 
-</html>
-    </div>
-
-    <!-- Delete Confirmation Modal -->
-    <div id="deleteModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
-        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <div class="mt-3 text-center">
-                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
-                    <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
-                </div>
-                <h3 class="text-lg font-medium text-gray-900 mt-4">Hapus Soal</h3>
-                <div class="mt-2 px-7 py-3">
-                    <p class="text-sm text-gray-500">
-                        Apakah Anda yakin ingin menghapus soal ini? Tindakan ini tidak dapat dibatalkan.
-                    </p>
-                </div>
-                <div class="items-center px-4 py-3">
-                    <button id="deleteConfirmBtn" 
-                            class="px-4 py-2 bg-red-500 text-white text-base font-medium rounded-md w-24 mr-2 hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300">
-                        Hapus
-                    </button>
-                    <button id="deleteCancelBtn" 
-                            class="px-4 py-2 bg-gray-500 text-white text-base font-medium rounded-md w-24 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300">
-                        Batal
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // Toast functionality for category detail page
-        window.hideCategoryDetailToast = function(toastId) {
-            const toast = document.getElementById(toastId);
-            if (toast) {
-                toast.style.transform = 'translateX(100%)';
-                setTimeout(() => {
-                    toast.remove();
-                }, 300);
-            }
-        }
-        
-        // Delete question confirmation with modal
-        let questionIdToDelete = null;
-        
-        window.confirmDeleteQuestion = function(questionId) {
-            questionIdToDelete = questionId;
-            document.getElementById('deleteModal').classList.remove('hidden');
-        }
-        
-        // Modal event handlers
-        document.addEventListener('DOMContentLoaded', function() {
-            const deleteModal = document.getElementById('deleteModal');
-            const deleteConfirmBtn = document.getElementById('deleteConfirmBtn');
-            const deleteCancelBtn = document.getElementById('deleteCancelBtn');
-            
-            // Confirm delete
-            deleteConfirmBtn.addEventListener('click', function() {
-                if (questionIdToDelete) {
-                    // Create a form and submit it
-                    const form = document.createElement('form');
-                    form.method = 'POST';
-                    form.action = `/questions/${questionIdToDelete}`;
-                    
-                    // Add CSRF token
-                    const csrfToken = document.createElement('input');
-                    csrfToken.type = 'hidden';
-                    csrfToken.name = '_token';
-                    csrfToken.value = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
-                    form.appendChild(csrfToken);
-                    
-                    // Add method override for DELETE
-                    const methodInput = document.createElement('input');
-                    methodInput.type = 'hidden';
-                    methodInput.name = '_method';
-                    methodInput.value = 'DELETE';
-                    form.appendChild(methodInput);
-                    
-                    document.body.appendChild(form);
-                    form.submit();
-                }
-            });
-            
-            // Cancel delete
-            deleteCancelBtn.addEventListener('click', function() {
-                deleteModal.classList.add('hidden');
-                questionIdToDelete = null;
-            });
-            
-            // Close modal when clicking outside
-            deleteModal.addEventListener('click', function(e) {
-                if (e.target === deleteModal) {
-                    deleteModal.classList.add('hidden');
-                    questionIdToDelete = null;
-                }
-            });
-            
-            // Auto hide toasts after 5 seconds
-            const successToast = document.getElementById('categoryDetailSuccessToast');
-            const errorToast = document.getElementById('categoryDetailErrorToast');
-            
-            if (successToast) {
-                setTimeout(() => {
-                    hideCategoryDetailToast('categoryDetailSuccessToast');
-                }, 5000);
-            }
-            
-            if (errorToast) {
-                setTimeout(() => {
-                    hideCategoryDetailToast('categoryDetailErrorToast');
-                }, 5000);
-            }
-        });
-
-        // Sub Category Modal Functions
-        function showAddSubCategoryModal() {
-            document.getElementById('addSubCategoryModal').classList.remove('hidden');
-        }
-
-        function hideAddSubCategoryModal() {
-            document.getElementById('addSubCategoryModal').classList.add('hidden');
-            document.getElementById('addSubCategoryForm').reset();
-        }
-
-        // Handle form submission for adding sub category
-        document.getElementById('addSubCategoryForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const formData = new FormData(this);
-            const submitButton = this.querySelector('button[type="submit"]');
-            const originalText = submitButton.innerHTML;
-            
-            // Disable submit button and show loading state
-            submitButton.disabled = true;
-            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Menambahkan...';
-            
-            fetch('{{ route("materials.sub-categories.store") }}', {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                    'Accept': 'application/json'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Reload page to show new sub category
-                    location.reload();
-                } else {
-                    alert(data.message || 'Terjadi kesalahan saat menambahkan sub kategori.');
-                    // Re-enable submit button
-                    submitButton.disabled = false;
-                    submitButton.innerHTML = originalText;
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Terjadi kesalahan saat menambahkan sub kategori.');
-                // Re-enable submit button
-                submitButton.disabled = false;
-                submitButton.innerHTML = originalText;
-            });
-        });
-    </script>
-
-    <!-- Add Sub Category Modal -->
-    <div id="addSubCategoryModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <!-- Edit Sub Category Modal -->
+    <div id="editSubCategoryModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
         <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4">
             <div class="text-center mb-6">
-                <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <i class="fas fa-layer-group text-2xl text-green-500"></i>
+                <div class="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-edit text-2xl text-amber-500"></i>
                 </div>
-                <h3 class="text-xl font-semibold text-gray-800 mb-2">Tambah Sub Kategori</h3>
-                <p class="text-gray-600">Buat sub kategori baru untuk kategori "{{ $category }}"</p>
+                <h3 class="text-xl font-semibold text-gray-800 mb-2">Edit Sub Kategori</h3>
+                <p class="text-gray-600">Perbarui informasi sub kategori</p>
             </div>
 
-            <form id="addSubCategoryForm" class="space-y-4">
+            <form id="editSubCategoryForm" class="space-y-4">
                 @csrf
-                <input type="hidden" name="category_id" value="{{ $categoryModel->id ?? '' }}">
-                
+                @method('PUT')
+                <input type="hidden" id="editSubCategoryId" name="editSubCategoryId">
                 <div>
-                    <label for="subCategoryName" class="block text-sm font-semibold mb-2 text-gray-700">
+                    <label for="editSubCategoryName" class="block text-sm font-semibold mb-2 text-gray-700">
                         <i class="fas fa-tag mr-1"></i>Nama Sub Kategori
                     </label>
                     <input type="text" 
-                           id="subCategoryName" 
-                           name="name" 
+                           id="editSubCategoryName" 
+                           name="subCategoryName" 
                            required
-                           class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-green-500 focus:outline-none transition-colors"
-                           placeholder="Contoh: AMDAL, UKL-UPL, dll..."
-                           maxlength="255">
-                    <p class="text-xs text-gray-500 mt-1">Maksimal 255 karakter</p>
+                           class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-amber-500 focus:outline-none transition-colors"
+                           placeholder="Contoh: Pelatihan Dasar, Pelatihan Lanjutan, dll..."
+                           maxlength="100">
+                    <p class="text-xs text-gray-500 mt-1">Maksimal 100 karakter</p>
                 </div>
                 
                 <div>
-                    <label for="subCategoryDescription" class="block text-sm font-semibold mb-2 text-gray-700">
+                    <label for="editSubCategoryDescription" class="block text-sm font-semibold mb-2 text-gray-700">
                         <i class="fas fa-align-left mr-1"></i>Deskripsi (Opsional)
                     </label>
-                    <textarea id="subCategoryDescription" 
-                              name="description" 
+                    <textarea id="editSubCategoryDescription" 
+                              name="subCategoryDescription" 
                               rows="3"
-                              class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-green-500 focus:outline-none transition-colors resize-none"
-                              placeholder="Deskripsi singkat tentang sub kategori ini..."></textarea>
+                              class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-amber-500 focus:outline-none transition-colors resize-none"
+                              placeholder="Deskripsi singkat tentang sub kategori ini..."
+                              maxlength="255"></textarea>
+                    <p class="text-xs text-gray-500 mt-1">Maksimal 255 karakter</p>
                 </div>
 
-                <div class="flex space-x-4 pt-4">
+                <div class="flex justify-end space-x-3 pt-4">
                     <button type="button" 
-                            onclick="hideAddSubCategoryModal()"
-                            class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 font-semibold py-3 px-6 rounded-xl transition-colors">
-                        Batal
+                            onclick="closeEditSubCategoryModal()" 
+                            class="px-6 py-3 bg-gray-500 text-white rounded-xl hover:bg-gray-600 transition-colors">
+                        <i class="fas fa-times mr-2"></i>Batal
                     </button>
                     <button type="submit" 
-                            class="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-xl transition-colors">
-                        <i class="fas fa-plus mr-2"></i>Tambah
+                            class="px-6 py-3 bg-amber-500 text-white rounded-xl hover:bg-amber-600 transition-colors">
+                        <i class="fas fa-save mr-2"></i>Update Sub Kategori
                     </button>
                 </div>
             </form>
         </div>
     </div>
+
+
+    <!-- Include Delete Confirmation Modal -->
+    @include('components.delete-confirmation-modal')
 </body>
 
 </html>

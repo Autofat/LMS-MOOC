@@ -140,16 +140,14 @@
                             class="w-full rounded-xl px-4 py-3 focus:outline-none focus:ring-2 transition-all border-2"
                             style="border-color: rgba(28,88,113,0.2); background: linear-gradient(135deg, rgba(245,158,11,0.05) 0%, rgba(251,191,36,0.05) 100%);">
                             <option value="">-- Pilih Kategori --</option>
-                            <option value="Tanpa kategori spesifik" {{ old('category', request('category')) == 'Tanpa kategori spesifik' ? 'selected' : '' }}>
-                                Tanpa kategori spesifik
-                            </option>
                             @php
-                                $existingCategories = \App\Models\Category::where('is_active', true)->orderBy('name')->get();
+                                $existingCategories = isset($categories) ? $categories : \App\Models\Category::where('is_active', true)->with('subCategories')->orderBy('name')->get();
                             @endphp
                             @foreach($existingCategories as $cat)
                                 <option value="{{ $cat->name }}" 
-                                        {{ old('category', request('category')) == $cat->name ? 'selected' : '' }}
-                                        title="{{ $cat->description }}">
+                                        {{ old('category', request('category', $selectedCategoryName ?? '')) == $cat->name ? 'selected' : '' }}
+                                        title="{{ $cat->description }}"
+                                        data-category-id="{{ $cat->id }}">
                                     {{ $cat->name }}{{ $cat->description ? ' - ' . $cat->description : '' }}
                                 </option>
                             @endforeach
@@ -157,15 +155,32 @@
                         <div class="flex items-center justify-between mt-2">
                             <p class="text-xs" style="color: rgba(28,88,113,0.6);">
                                 <i class="fas fa-info-circle mr-1"></i>
-                                Pilih kategori yang sudah ada atau "Tanpa kategori spesifik"
+                                Pilih kategori yang sesuai dengan materi Anda
                             </p>
                             <a href="{{ route('materials.index') }}" 
                                class="text-xs text-emerald-600 hover:text-emerald-700 font-medium transition-colors">
                                 <i class="fas fa-plus mr-1"></i>Tambah Kategori Baru
                             </a>
                         </div>
-                        <p class="text-xs mt-1 text-gray-500">
-                            Kategori membantu mengelompokkan materi serupa untuk download massal soal
+                    </div>
+
+                    <!-- Sub Category -->
+                                        <!-- Sub Category -->
+                                        <!-- Sub Category -->
+                    <div id="subCategoryContainer" style="display: none;">
+                        <label for="sub_category_id" class="block text-sm font-semibold mb-3 flex items-center space-x-2"
+                            style="color: rgba(28,88,113,0.9);">
+                            <i class="fas fa-layer-group text-indigo-500"></i>
+                            <span>Sub Kategori <span id="subCategoryRequired" style="display: none;">*</span></span>
+                        </label>
+                        <select id="sub_category_id" name="sub_category_id"
+                            class="w-full rounded-xl px-4 py-3 focus:outline-none focus:ring-2 transition-all border-2"
+                            style="border-color: rgba(28,88,113,0.2); background: linear-gradient(135deg, rgba(245,158,11,0.05) 0%, rgba(251,191,36,0.05) 100%);">
+                            <option value="">-- Pilih Sub Kategori (Opsional) --</option>
+                        </select>
+                        <p class="text-xs mt-1" style="color: rgba(107, 114, 128, 1);">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            <span id="subCategoryHelpText">Sub Kategori membantu mengelompokkan materi serupa untuk download massal soal</span>
                         </p>
                     </div>
 
@@ -210,12 +225,21 @@
                     <!-- Submit Buttons -->
                     <div class="flex justify-between items-center pt-8 border-t"
                         style="border-color: rgba(28,88,113,0.1);">
-                        <a href="{{ route('materials.index') }}"
-                            class="inline-flex items-center px-6 py-3 rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
-                            style="background: linear-gradient(135deg, rgba(107,114,128,0.8) 0%, rgba(75,85,99,0.9) 100%); color: white;">
-                            <i class="fas fa-arrow-left mr-2"></i>
-                            Kembali
-                        </a>
+                        @if(request('sub_category_id'))
+                            <a href="{{ route('materials.sub-categories.detail', ['subCategory' => request('sub_category_id')]) }}"
+                                class="inline-flex items-center px-6 py-3 rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+                                style="background: linear-gradient(135deg, rgba(107,114,128,0.8) 0%, rgba(75,85,99,0.9) 100%); color: white;">
+                                <i class="fas fa-arrow-left mr-2"></i>
+                                Kembali ke Sub Kategori
+                            </a>
+                        @else
+                            <a href="{{ route('materials.index') }}"
+                                class="inline-flex items-center px-6 py-3 rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+                                style="background: linear-gradient(135deg, rgba(107,114,128,0.8) 0%, rgba(75,85,99,0.9) 100%); color: white;">
+                                <i class="fas fa-arrow-left mr-2"></i>
+                                Kembali
+                            </a>
+                        @endif
                         <button type="submit"
                             class="inline-flex items-center px-8 py-3 rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
                             style="background: linear-gradient(135deg, rgba(28,88,113,0.8) 0%, rgba(34,108,137,0.9) 100%); color: white;">
@@ -520,6 +544,123 @@
             const categoryDescription = urlParams.get('description');
             if (categoryDescription && !document.getElementById('description').value) {
                 document.getElementById('description').value = categoryDescription;
+            }
+
+            // Category and SubCategory data
+            const categoriesData = @json(isset($categories) ? $categories : []);
+            const selectedSubCategoryId = @json($selectedSubCategoryId ?? null);
+            const selectedCategoryName = @json($selectedCategoryName ?? null);
+            const isSubCategoryRequired = urlParams.get('sub_category_id') !== null;
+            
+            // Get DOM elements
+            const categorySelect = document.getElementById('category');
+            const subCategoryContainer = document.getElementById('subCategoryContainer');
+            const subCategorySelect = document.getElementById('sub_category_id');
+            const subCategoryRequired = document.getElementById('subCategoryRequired');
+            const subCategoryHelpText = document.getElementById('subCategoryHelpText');
+            
+            // Pre-select category if coming from subcategory page
+            if (selectedCategoryName) {
+                categorySelect.value = selectedCategoryName;
+            }
+            
+            // Debug: Log data
+            console.log('Categories Data:', categoriesData);
+            console.log('Selected SubCategory ID:', selectedSubCategoryId);
+            console.log('Selected Category Name:', selectedCategoryName);
+            console.log('Is SubCategory Required:', isSubCategoryRequired);
+            
+            function updateSubCategories() {
+                const selectedCategoryName = categorySelect.value;
+                
+                // Clear existing options first
+                const placeholder = isSubCategoryRequired ? '-- Pilih Sub Kategori *--' : '-- Pilih Sub Kategori (Opsional) --';
+                subCategorySelect.innerHTML = `<option value="">${placeholder}</option>`;
+                
+                // Hide container by default
+                subCategoryContainer.style.display = 'none';
+                subCategorySelect.required = false;
+                
+                // Don't show subcategories for empty selection
+                if (!selectedCategoryName) {
+                    return;
+                }
+                
+                // Find the selected category
+                const category = categoriesData.find(cat => cat.name === selectedCategoryName);
+                
+                if (category && category.sub_categories && category.sub_categories.length > 0) {
+                    // Filter only active subcategories for this specific category
+                    const activeSubCategories = category.sub_categories.filter(subCat => subCat.is_active);
+                    
+                    if (activeSubCategories.length > 0) {
+                        // Show subcategory container
+                        subCategoryContainer.style.display = 'block';
+                        
+                        // Update required status and styling
+                        if (isSubCategoryRequired) {
+                            subCategoryRequired.style.display = 'inline';
+                            subCategorySelect.required = true;
+                            subCategoryHelpText.textContent = 'Sub Kategori membantu mengelompokkan materi serupa untuk download massal soal';
+                            subCategoryHelpText.parentElement.style.color = 'rgba(28,88,113,0.6)';
+                        } else {
+                            subCategoryRequired.style.display = 'none';
+                            subCategorySelect.required = false;
+                            subCategoryHelpText.textContent = 'Sub Kategori membantu mengelompokkan materi serupa untuk download massal soal';
+                            subCategoryHelpText.parentElement.style.color = 'rgba(107, 114, 128, 1)';
+                        }
+                        
+                        // Add subcategory options ONLY for the selected category
+                        activeSubCategories.forEach(subCat => {
+                            const option = document.createElement('option');
+                            option.value = subCat.id;
+                            option.textContent = subCat.name + (subCat.description ? ' - ' + subCat.description : '');
+                            
+                            // Auto-select if this matches the URL parameter
+                            if (selectedSubCategoryId && selectedSubCategoryId == subCat.id) {
+                                option.selected = true;
+                            }
+                            
+                            subCategorySelect.appendChild(option);
+                        });
+                    }
+                } else if (isSubCategoryRequired) {
+                    // Show container with error message if subcategory is required but none available
+                    subCategoryContainer.style.display = 'block';
+                    subCategoryRequired.style.display = 'inline';
+                    subCategorySelect.required = true;
+                    subCategoryHelpText.textContent = 'Sub Kategori membantu mengelompokkan materi serupa untuk download massal soal';
+                    subCategoryHelpText.parentElement.style.color = 'rgba(28,88,113,0.6)';
+                }
+            }
+            
+            // Add event listener for category change
+            categorySelect.addEventListener('change', updateSubCategories);
+            
+            // Initialize subcategories on page load
+            updateSubCategories();
+            
+            // Handle special case when coming with selectedSubCategoryId
+            if (selectedSubCategoryId) {
+                console.log('Handling selectedSubCategoryId:', selectedSubCategoryId);
+                
+                // Find which category contains this subcategory
+                const parentCategory = categoriesData.find(cat => 
+                    cat.sub_categories && cat.sub_categories.some(subCat => subCat.id == selectedSubCategoryId)
+                );
+                
+                if (parentCategory) {
+                    console.log('Found parent category:', parentCategory.name);
+                    // Set category first, then update subcategories
+                    categorySelect.value = parentCategory.name;
+                    updateSubCategories();
+                    
+                    // Ensure subcategory is selected after DOM update
+                    setTimeout(() => {
+                        subCategorySelect.value = selectedSubCategoryId;
+                        console.log('Selected subcategory:', selectedSubCategoryId);
+                    }, 50);
+                }
             }
         });
     </script>

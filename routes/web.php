@@ -56,6 +56,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/materials/{id}/download', [MaterialController::class, 'download'])->name('materials.download');
     Route::get('/materials/{id}/download-questions-excel', [MaterialController::class, 'downloadQuestionsExcel'])->name('materials.download.questions.excel');
     Route::get('/materials/category/{category}/download-questions-excel', [MaterialController::class, 'downloadCategoryQuestionsExcel'])->name('materials.download.category.excel');
+    Route::get('/materials/sub-category/{subCategory}/download-questions-excel', [MaterialController::class, 'downloadSubCategoryQuestionsExcel'])->name('materials.download.subcategory.excel');
     Route::get('/materials/category/{category}/detail', [MaterialController::class, 'categoryDetail'])->name('materials.category.detail');
     Route::delete('/materials/category/{category}', [MaterialController::class, 'destroyCategory'])->name('materials.category.destroy');
     Route::delete('/categories/{id}', [MaterialController::class, 'destroyCategoryById'])->name('categories.destroy');
@@ -66,7 +67,9 @@ Route::middleware(['auth'])->group(function () {
 
     // Sub Category Routes
     Route::post('/materials/sub-categories', [MaterialController::class, 'storeSubCategory'])->name('materials.sub-categories.store');
+    Route::put('/sub-categories/{id}', [MaterialController::class, 'updateSubCategory'])->name('sub-categories.update');
     Route::delete('/sub-categories/{id}', [MaterialController::class, 'destroySubCategory'])->name('sub-categories.destroy');
+    Route::get('/materials/sub-categories/{subCategory}/detail', [MaterialController::class, 'subCategoryDetail'])->name('materials.sub-categories.detail');
 
     // Generate Questions with n8n
     Route::post('/materials/{id}/generate-questions', [MaterialController::class, 'generateQuestions'])->name('materials.generate-questions');

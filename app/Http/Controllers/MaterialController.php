@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Material;
 use App\Models\Question;
 use App\Models\Category;
+use App\Models\SubCategory;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -38,7 +39,25 @@ class MaterialController extends Controller
      */
     public function create()
     {
-        return view('materials.create');
+        // Get categories and subcategories for the form
+        $categories = Category::where('is_active', true)
+                             ->with(['subCategories' => function($query) {
+                                 $query->where('is_active', true);
+                             }])
+                             ->orderBy('name')
+                             ->get();
+        $selectedSubCategoryId = request('sub_category_id');
+        
+        // If subcategory is specified, get the category automatically
+        $selectedCategoryName = null;
+        if ($selectedSubCategoryId) {
+            $subCategory = SubCategory::with('category')->find($selectedSubCategoryId);
+            if ($subCategory) {
+                $selectedCategoryName = $subCategory->category->name;
+            }
+        }
+        
+        return view('materials.create', compact('categories', 'selectedSubCategoryId', 'selectedCategoryName'));
     }
 
     /**
@@ -83,19 +102,33 @@ class MaterialController extends Controller
             $fileSize = $file->getSize();
             
             // Validate basic requirements first
-            $request->validate([
+            $validationRules = [
                 'title' => 'required|string|max:255',
                 'description' => 'nullable|string',
                 'category' => 'required|string|max:100|not_in:-- Pilih Kategori --',
                 'pdf_file' => 'required|file|max:10240', // Max 10MB
-            ], [
+            ];
+
+            $validationMessages = [
                 'title.required' => 'Judul materi harus diisi.',
                 'category.required' => 'Kategori/Topik harus dipilih.',
                 'category.not_in' => 'Silakan pilih kategori yang valid.',
                 'pdf_file.required' => 'File PDF harus diupload.',
                 'pdf_file.file' => 'Yang diupload harus berupa file.',
                 'pdf_file.max' => 'Ukuran file maksimal 10MB.',
-            ]);
+            ];
+
+            // If sub_category_id is provided in request, make it required
+            if ($request->has('sub_category_id') && $request->sub_category_id) {
+                $validationRules['sub_category_id'] = 'required|exists:sub_categories,id';
+                $validationMessages['sub_category_id.required'] = 'Sub kategori harus dipilih.';
+                $validationMessages['sub_category_id.exists'] = 'Sub kategori yang dipilih tidak valid.';
+            } else {
+                $validationRules['sub_category_id'] = 'nullable|exists:sub_categories,id';
+                $validationMessages['sub_category_id.exists'] = 'Sub kategori yang dipilih tidak valid.';
+            }
+
+            $request->validate($validationRules, $validationMessages);
             
             // Custom PDF validation - check extension
             if (!in_array($extension, ['pdf'])) {
@@ -163,7 +196,8 @@ class MaterialController extends Controller
             $material = Material::create([
                 'title' => $request->title,
                 'description' => $request->description,
-                'category' => $request->category === 'Tanpa kategori spesifik' ? null : $request->category,
+                'category' => $request->category,
+                'sub_category_id' => $request->sub_category_id ?: null,
                 'file_path' => $filePath,
                 'file_name' => $file->getClientOriginalName(),
                 'file_size' => $file->getSize(),
@@ -177,6 +211,12 @@ class MaterialController extends Controller
                     'message' => 'Materi berhasil diupload!',
                     'material' => $material
                 ]);
+            }
+
+            // Check if material was created from sub category detail page
+            if ($request->sub_category_id) {
+                return redirect()->route('materials.sub-categories.detail', ['subCategory' => $request->sub_category_id])
+                    ->with('success', 'Materi berhasil diupload!');
             }
 
             return redirect()->route('materials.show', $material)
@@ -326,13 +366,10 @@ class MaterialController extends Controller
             return redirect()->back()->withErrors(['pdf_file' => $errorMessage]);
         }
 
-        // Handle "Tanpa kategori spesifik" conversion to null
-        $category = $request->category === 'Tanpa kategori spesifik' ? null : $request->category;
-        
         $material->update([
             'title' => $request->title,
             'description' => $request->description,
-            'category' => $category,
+            'category' => $request->category,
         ]);
 
         $successMessage = $fileUpdated ? 
@@ -1331,6 +1368,119 @@ class MaterialController extends Controller
     }
 
     /**
+     * Download questions from all materials in a specific sub category as Excel.
+     */
+    public function downloadSubCategoryQuestionsExcel($subCategoryId)
+    {
+        try {
+            // Get the sub category
+            $subCategory = SubCategory::findOrFail($subCategoryId);
+            
+            // Get all materials in the sub category with their questions
+            $materials = Material::where('sub_category_id', $subCategoryId)->get();
+            
+            if ($materials->isEmpty()) {
+                return redirect()->back()
+                               ->with('error', 'Tidak ada materi ditemukan untuk sub kategori: ' . $subCategory->name);
+            }
+
+            // Get all questions from materials in this sub category
+            $allQuestions = Question::whereHas('material', function($query) use ($subCategoryId) {
+                $query->where('sub_category_id', $subCategoryId);
+            })->with('material')->get();
+
+            if ($allQuestions->isEmpty()) {
+                return redirect()->back()
+                               ->with('error', 'Tidak ada soal ditemukan untuk sub kategori: ' . $subCategory->name);
+            }
+
+            // Create Excel using PhpSpreadsheet
+            $spreadsheet = new Spreadsheet();
+            $sheet = $spreadsheet->getActiveSheet();
+            
+            // Remove default properties
+            $spreadsheet->getProperties()->setCreator('');
+            $spreadsheet->getProperties()->setTitle('');
+            $spreadsheet->getProperties()->setDescription('');
+            $spreadsheet->getProperties()->setSubject('');
+            $spreadsheet->getProperties()->setKeywords('');
+            $spreadsheet->getProperties()->setCategory('');
+            
+            // Set headers with bold formatting
+            $sheet->getCell('A1')->setValueExplicit('Teks Soal', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->getCell('B1')->setValueExplicit('Tipe Soal', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->getCell('C1')->setValueExplicit('Jawaban', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->getCell('D1')->setValueExplicit('Opsi A', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->getCell('E1')->setValueExplicit('Opsi B', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->getCell('F1')->setValueExplicit('Opsi C', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->getCell('G1')->setValueExplicit('Opsi D', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->getCell('H1')->setValueExplicit('Opsi E', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->getCell('I1')->setValueExplicit('Tingkat kesulitan', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            
+            // Apply bold formatting to header row
+            $sheet->getStyle('A1:I1')->getFont()->setBold(true);
+            
+            // Add data rows
+            $row = 2;
+            foreach ($allQuestions as $question) {
+                $questionText = $question->question ?? '';
+                $questionType = $question->tipe_soal ?? 'pilihan_ganda';
+                $answer = $question->answer ?? 'A';
+                $optionA = $question->option_a ?? '';
+                $optionB = $question->option_b ?? '';
+                $optionC = $question->option_c ?? '';
+                $optionD = $question->option_d ?? '';
+                $optionE = $question->option_e ?? '';
+                $difficulty = $question->difficulty ?? '';
+                
+                $sheet->getCell('A' . $row)->setValueExplicit($questionText, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                $sheet->getCell('B' . $row)->setValueExplicit($questionType, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                $sheet->getCell('C' . $row)->setValueExplicit($answer, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                $sheet->getCell('D' . $row)->setValueExplicit($optionA, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                $sheet->getCell('E' . $row)->setValueExplicit($optionB, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                $sheet->getCell('F' . $row)->setValueExplicit($optionC, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                $sheet->getCell('G' . $row)->setValueExplicit($optionD, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                $sheet->getCell('H' . $row)->setValueExplicit($optionE, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                $sheet->getCell('I' . $row)->setValueExplicit($difficulty, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                
+                $row++;
+            }
+            
+            // Generate filename for sub category download
+            $subCategoryName = Str::slug($subCategory->name);
+            $filename = 'subkategori_' . $subCategoryName . '.xlsx';
+            
+            // Save to temp file
+            $tempFile = tempnam(sys_get_temp_dir(), 'excel_subcategory_');
+            
+            $writer = new Xlsx($spreadsheet);
+            $writer->setPreCalculateFormulas(false);
+            $writer->save($tempFile);
+            
+            // Verify file
+            if (!file_exists($tempFile) || filesize($tempFile) === 0) {
+                throw new \Exception('Excel file was not created properly');
+            }
+            
+            // Return download response
+            return response()->download($tempFile, $filename, [
+                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'Content-Disposition' => 'attachment; filename="' . $filename . '"'
+            ])->deleteFileAfterSend(true);
+
+        } catch (\Exception $e) {
+            Log::error('Error downloading sub category questions Excel', [
+                'sub_category_id' => $subCategoryId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return redirect()->back()
+                           ->with('error', 'Terjadi kesalahan saat mengunduh soal sub kategori: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Show category detail with all questions from materials in that category.
      */
     public function categoryDetail($category)
@@ -1341,9 +1491,22 @@ class MaterialController extends Controller
             
             // Get all sub categories for this category
             $subCategories = $categoryModel->subCategories()
-                                         ->withCount('materials')
-                                         ->orderBy('created_at', 'desc')
+                                         ->where('is_active', true)
+                                         ->withCount([
+                                             'materials' => function($query) {
+                                                 $query->where('is_active', true);
+                                             }
+                                         ])
+                                         ->latest()
                                          ->get();
+            
+            // Add questions count for each subcategory
+            foreach ($subCategories as $subCategory) {
+                $questionsCount = \App\Models\Question::whereHas('material', function($query) use ($subCategory) {
+                    $query->where('sub_category_id', $subCategory->id);
+                })->count();
+                $subCategory->questions_count = $questionsCount;
+            }
             
             // Get all materials in the category
             $materials = Material::where('category', $category)
@@ -1625,6 +1788,8 @@ class MaterialController extends Controller
      */
     public function storeSubCategory(Request $request)
     {
+        \Illuminate\Support\Facades\Log::info('StoreSubCategory called', ['request_data' => $request->all()]);
+        
         try {
             $request->validate([
                 'name' => 'required|string|max:255',
@@ -1636,6 +1801,8 @@ class MaterialController extends Controller
                 'category_id.required' => 'Kategori harus dipilih.',
                 'category_id.exists' => 'Kategori yang dipilih tidak valid.',
             ]);
+            
+            \Illuminate\Support\Facades\Log::info('Validation passed', ['validated_data' => $request->only(['name', 'description', 'category_id'])]);
 
             $subCategory = \App\Models\SubCategory::create([
                 'name' => $request->name,
@@ -1643,6 +1810,8 @@ class MaterialController extends Controller
                 'category_id' => $request->category_id,
                 'is_active' => true,
             ]);
+            
+            \Illuminate\Support\Facades\Log::info('SubCategory created successfully', ['sub_category_id' => $subCategory->id, 'name' => $subCategory->name]);
 
             $category = \App\Models\Category::findOrFail($request->category_id);
             
@@ -1687,6 +1856,74 @@ class MaterialController extends Controller
     }
 
     /**
+     * Update a sub category.
+     */
+    public function updateSubCategory(Request $request, $id)
+    {
+        try {
+            $subCategory = \App\Models\SubCategory::findOrFail($id);
+            
+            $request->validate([
+                'name' => 'required|string|max:255',
+                'description' => 'nullable|string',
+            ], [
+                'name.required' => 'Nama sub kategori harus diisi.',
+                'name.max' => 'Nama sub kategori maksimal 255 karakter.',
+            ]);
+
+            $subCategory->update([
+                'name' => $request->name,
+                'description' => $request->description,
+            ]);
+
+            $categoryName = $subCategory->category->name;
+            
+            // Handle AJAX request
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Sub kategori berhasil diperbarui!',
+                    'sub_category' => $subCategory,
+                    'redirect_url' => route('materials.category.detail', ['category' => $categoryName])
+                ]);
+            }
+            
+            \Illuminate\Support\Facades\Log::info('Setting session success message for subcategory update');
+            \Illuminate\Support\Facades\Log::info('Redirect URL: ' . route('materials.category.detail', ['category' => $categoryName]));
+            
+            return redirect()->route('materials.category.detail', ['category' => $categoryName])
+                           ->with('success', 'Sub kategori berhasil diperbarui!');
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validasi gagal: ' . implode(', ', $e->validator->errors()->all()),
+                    'errors' => $e->errors()
+                ], 422);
+            }
+            
+            return back()->withErrors($e->errors())->withInput();
+            
+        } catch (\Exception $e) {
+            Log::error('Error updating sub category', [
+                'sub_category_id' => $id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Terjadi kesalahan saat memperbarui sub kategori: ' . $e->getMessage()
+                ], 500);
+            }
+            
+            return back()->with('error', 'Terjadi kesalahan saat memperbarui sub kategori: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Delete a sub category.
      */
     public function destroySubCategory($id)
@@ -1722,6 +1959,46 @@ class MaterialController extends Controller
             ]);
             
             return back()->with('error', 'Terjadi kesalahan saat menghapus sub kategori: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Show subcategory detail with all materials in that subcategory.
+     */
+    public function subCategoryDetail(SubCategory $subCategory)
+    {
+        try {
+            // Load the subcategory with related data
+            $subCategory->load(['category', 'materials.questions']);
+            
+            // Get all materials in this subcategory with pagination
+            $materials = $subCategory->materials()
+                                   ->with(['questions' => function($query) {
+                                       $query->orderBy('created_at', 'desc');
+                                   }])
+                                   ->orderBy('created_at', 'desc')
+                                   ->paginate(12);
+            
+            // Calculate statistics
+            $totalMaterials = $subCategory->materials()->count();
+            $totalQuestions = $subCategory->materials()->withCount('questions')->get()->sum('questions_count');
+            
+            return view('materials.sub-category-detail', compact(
+                'subCategory',
+                'materials',
+                'totalMaterials',
+                'totalQuestions'
+            ));
+
+        } catch (\Exception $e) {
+            Log::error('Error loading subcategory detail', [
+                'subcategory_id' => $subCategory->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return redirect()->route('materials.index')
+                           ->with('error', 'Terjadi kesalahan saat memuat detail sub kategori: ' . $e->getMessage());
         }
     }
 }
