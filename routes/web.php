@@ -64,6 +64,10 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/materials/categories', [MaterialController::class, 'storeCategory'])->name('materials.categories.store');
     Route::get('/materials/{id}/questions', [MaterialController::class, 'questions'])->name('materials.questions');
 
+    // Sub Category Routes
+    Route::post('/materials/sub-categories', [MaterialController::class, 'storeSubCategory'])->name('materials.sub-categories.store');
+    Route::delete('/sub-categories/{id}', [MaterialController::class, 'destroySubCategory'])->name('sub-categories.destroy');
+
     // Generate Questions with n8n
     Route::post('/materials/{id}/generate-questions', [MaterialController::class, 'generateQuestions'])->name('materials.generate-questions');
     Route::post('/materials/{id}/generate-questions-async', [MaterialController::class, 'generateQuestionsAsync'])->name('materials.generate-questions-async');

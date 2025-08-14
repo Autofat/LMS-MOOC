@@ -13,12 +13,21 @@ class Material extends Model
         'file_name',
         'file_size',
         'category',
+        'sub_category_id',
         'is_active'
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
     ];
+
+    /**
+     * Get the sub category that owns this material.
+     */
+    public function subCategory()
+    {
+        return $this->belongsTo(SubCategory::class);
+    }
 
     /**
      * Get the questions for this material.

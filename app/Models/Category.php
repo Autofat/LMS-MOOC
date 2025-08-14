@@ -17,6 +17,14 @@ class Category extends Model
     ];
 
     /**
+     * Get the sub categories for this category.
+     */
+    public function subCategories()
+    {
+        return $this->hasMany(SubCategory::class);
+    }
+
+    /**
      * Get the materials for this category.
      */
     public function materials()
@@ -25,18 +33,22 @@ class Category extends Model
     }
 
     /**
-     * Get count of materials in this category.
+     * Get count of materials in this category (through sub categories).
      */
     public function getMaterialsCountAttribute()
     {
-        return $this->materials()->count();
+        return $this->subCategories()->withCount('materials')->get()->sum('materials_count');
     }
 
     /**
-     * Get count of questions in this category.
+     * Get count of questions in this category (through sub categories).
      */
     public function getQuestionsCountAttribute()
     {
-        return $this->materials()->withCount('questions')->get()->sum('questions_count');
+        $totalQuestions = 0;
+        foreach ($this->subCategories as $subCategory) {
+            $totalQuestions += $subCategory->questions_count;
+        }
+        return $totalQuestions;
     }
 }

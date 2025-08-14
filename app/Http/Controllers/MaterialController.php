@@ -1336,6 +1336,15 @@ class MaterialController extends Controller
     public function categoryDetail($category)
     {
         try {
+            // Get the category model
+            $categoryModel = \App\Models\Category::where('name', $category)->firstOrFail();
+            
+            // Get all sub categories for this category
+            $subCategories = $categoryModel->subCategories()
+                                         ->withCount('materials')
+                                         ->orderBy('created_at', 'desc')
+                                         ->get();
+            
             // Get all materials in the category
             $materials = Material::where('category', $category)
                               ->with(['questions' => function($query) {
@@ -1344,10 +1353,8 @@ class MaterialController extends Controller
                               ->orderBy('created_at', 'desc')
                               ->get();
             
-            if ($materials->isEmpty()) {
-                return redirect()->route('materials.index')
-                               ->with('error', 'Tidak ada materi ditemukan untuk kategori: ' . $category);
-            }
+            // Always allow access to category detail - even if empty
+            // User should be able to add sub categories and materials
 
             // Get all questions with pagination
             $questions = Question::whereHas('material', function($query) use ($category) {
@@ -1362,13 +1369,17 @@ class MaterialController extends Controller
             $totalQuestions = $materials->sum(function($material) {
                 return $material->questions->count();
             });
+            $totalSubCategories = $subCategories->count();
 
             return view('materials.category-detail', compact(
                 'category', 
+                'categoryModel',
                 'materials', 
                 'questions', 
+                'subCategories',
                 'totalMaterials', 
-                'totalQuestions'
+                'totalQuestions',
+                'totalSubCategories'
             ));
 
         } catch (\Exception $e) {
@@ -1384,7 +1395,7 @@ class MaterialController extends Controller
     }
 
     /**
-     * Delete all materials and questions in a specific category.
+     * Move all materials in a specific category to "Uncategorized".
      */
     public function destroyCategory($category)
     {
@@ -1397,28 +1408,15 @@ class MaterialController extends Controller
                                ->with('error', 'Tidak ada materi ditemukan untuk kategori: ' . $category);
             }
 
-            $deletedMaterialsCount = $materials->count();
-            $deletedQuestionsCount = 0;
+            $materialsCount = $materials->count();
 
-            // Delete all materials and their questions
+            // Move all materials to "Uncategorized" instead of deleting them
             foreach ($materials as $material) {
-                // Count questions before deletion
-                $deletedQuestionsCount += $material->questions()->count();
-                
-                // Delete questions first
-                $material->questions()->delete();
-                
-                // Delete the PDF file if it exists
-                if ($material->file_path && Storage::exists($material->file_path)) {
-                    Storage::delete($material->file_path);
-                }
-                
-                // Delete the material
-                $material->delete();
+                $material->update(['category' => null]); // or set to 'Uncategorized'
             }
 
             return redirect()->route('materials.index')
-                           ->with('success', "Kategori '{$category}' berhasil dihapus! {$deletedMaterialsCount} materi dan {$deletedQuestionsCount} soal telah dihapus.");
+                           ->with('success', "Kategori '{$category}' berhasil dihapus! {$materialsCount} materi telah dipindahkan ke kategori 'Tidak Berkategori'.");
 
         } catch (\Exception $e) {
             Log::error('Error deleting category', [
@@ -1582,7 +1580,7 @@ class MaterialController extends Controller
     }
 
     /**
-     * Delete a category by ID and all associated materials and questions.
+     * Delete a category by ID and move associated materials to "Uncategorized".
      */
     public function destroyCategoryById($id)
     {
@@ -1593,32 +1591,23 @@ class MaterialController extends Controller
             // Get all materials in the category
             $materials = Material::where('category', $categoryName)->get();
             
-            $deletedMaterialsCount = $materials->count();
-            $deletedQuestionsCount = 0;
+            $materialsCount = $materials->count();
 
-            // Delete all materials and their questions
+            // Move all materials to "Uncategorized" instead of deleting them
             foreach ($materials as $material) {
-                // Count questions before deletion
-                $deletedQuestionsCount += $material->questions()->count();
-                
-                // Delete questions first
-                $material->questions()->delete();
-                
-                // Delete the PDF file if it exists
-                if ($material->file_path && Storage::exists($material->file_path)) {
-                    Storage::delete($material->file_path);
-                }
-                
-                // Delete the material
-                $material->delete();
+                $material->update(['category' => null]); // or set to 'Uncategorized'
             }
 
             // Delete the category itself
             $category->delete();
 
-            return redirect()->route('materials.index')
-                           ->with('success', "Kategori '{$categoryName}' berhasil dihapus! {$deletedMaterialsCount} materi dan {$deletedQuestionsCount} soal telah dihapus.");
+            $message = "Kategori '{$categoryName}' berhasil dihapus!";
+            if ($materialsCount > 0) {
+                $message .= " {$materialsCount} materi telah dipindahkan ke kategori 'Tidak Berkategori'.";
+            }
 
+            return redirect()->route('materials.index')
+                           ->with('success', $message);
         } catch (\Exception $e) {
             Log::error('Error deleting category by ID', [
                 'category_id' => $id,
@@ -1628,6 +1617,111 @@ class MaterialController extends Controller
             
             return redirect()->route('materials.index')
                            ->with('error', 'Terjadi kesalahan saat menghapus kategori: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Store a new sub category.
+     */
+    public function storeSubCategory(Request $request)
+    {
+        try {
+            $request->validate([
+                'name' => 'required|string|max:255',
+                'description' => 'nullable|string',
+                'category_id' => 'required|exists:categories,id',
+            ], [
+                'name.required' => 'Nama sub kategori harus diisi.',
+                'name.max' => 'Nama sub kategori maksimal 255 karakter.',
+                'category_id.required' => 'Kategori harus dipilih.',
+                'category_id.exists' => 'Kategori yang dipilih tidak valid.',
+            ]);
+
+            $subCategory = \App\Models\SubCategory::create([
+                'name' => $request->name,
+                'description' => $request->description,
+                'category_id' => $request->category_id,
+                'is_active' => true,
+            ]);
+
+            $category = \App\Models\Category::findOrFail($request->category_id);
+            
+            // Handle AJAX request
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Sub kategori berhasil ditambahkan!',
+                    'sub_category' => $subCategory,
+                    'redirect_url' => route('materials.category.detail', ['category' => $category->name])
+                ]);
+            }
+            
+            return redirect()->route('materials.category.detail', ['category' => $category->name])
+                           ->with('success', 'Sub kategori berhasil ditambahkan!');
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validasi gagal: ' . implode(', ', $e->validator->errors()->all()),
+                    'errors' => $e->errors()
+                ], 422);
+            }
+            return back()->withErrors($e->errors())->withInput();
+        } catch (\Exception $e) {
+            Log::error('Error creating sub category', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Terjadi kesalahan saat menambahkan sub kategori: ' . $e->getMessage()
+                ], 500);
+            }
+            
+            return back()->withInput()
+                        ->with('error', 'Terjadi kesalahan saat menambahkan sub kategori: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Delete a sub category.
+     */
+    public function destroySubCategory($id)
+    {
+        try {
+            $subCategory = \App\Models\SubCategory::findOrFail($id);
+            $categoryName = $subCategory->category->name;
+            $subCategoryName = $subCategory->name;
+            
+            // Get materials count in this sub category
+            $materialsCount = $subCategory->materials()->count();
+            
+            // Set materials in this sub category to have no sub category
+            if ($materialsCount > 0) {
+                $subCategory->materials()->update(['sub_category_id' => null]);
+            }
+            
+            $subCategory->delete();
+
+            $message = "Sub kategori '{$subCategoryName}' berhasil dihapus!";
+            if ($materialsCount > 0) {
+                $message .= " {$materialsCount} materi yang ada di sub kategori ini telah dipindahkan ke kategori utama.";
+            }
+
+            return redirect()->route('materials.category.detail', ['category' => $categoryName])
+                           ->with('success', $message);
+
+        } catch (\Exception $e) {
+            Log::error('Error deleting sub category', [
+                'sub_category_id' => $id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return back()->with('error', 'Terjadi kesalahan saat menghapus sub kategori: ' . $e->getMessage());
         }
     }
 }

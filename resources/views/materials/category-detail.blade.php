@@ -100,170 +100,220 @@
             <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg p-6 border" style="border-color: rgba(28,88,113,0.2);">
                 <div class="flex items-center">
                     <div class="p-3 rounded-full" style="background-color: rgba(28,88,113,0.1);">
-                        <i class="fas fa-list-check text-xl" style="color: rgba(28,88,113,1);"></i>
+                        <i class="fas fa-tags text-xl" style="color: rgba(28,88,113,1);"></i>
                     </div>
                     <div class="ml-4">
-                        <p class="text-sm text-gray-600">Total Soal</p>
-                        <p class="text-2xl font-bold" style="color: rgba(28,88,113,1);">{{ $totalQuestions }}</p>
+                        <p class="text-sm text-gray-600">Sub Kategori</p>
+                        <p class="text-2xl font-bold" style="color: rgba(28,88,113,1);">{{ $totalSubCategories ?? 0 }}</p>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Materials List -->
+        <!-- Sub Categories Section -->
         <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg p-6 border mb-8" style="border-color: rgba(28,88,113,0.2);">
-            <h2 class="text-2xl font-bold mb-6 flex items-center" style="color: rgba(28,88,113,1);">
-                <i class="fas fa-folder-open mr-3"></i>Materi dalam Kategori
-            </h2>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                @foreach($materials as $material)
-                    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-200 hover:shadow-lg transition-all duration-300">
-                        <div class="flex items-center justify-between mb-3">
-                            <h3 class="font-semibold text-gray-800 text-base truncate">{{ $material->title }}</h3>
-                            <div class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
-                                {{ $material->questions->count() }} soal
-                            </div>
-                        </div>
-                        
-                        <div class="text-xs text-gray-500 mb-3">
-                            <i class="fas fa-calendar mr-1"></i>
-                            {{ $material->created_at->format('d M Y') }}
-                        </div>
-                        
-                        <div class="flex space-x-2">
-                            <a href="{{ route('materials.show', $material->id) }}"
-                               class="flex-1 bg-green-600 hover:bg-green-700 text-white text-center py-2 px-3 rounded-lg text-xs transition-all">
-                                <i class="fas fa-eye mr-1"></i>Detail
-                            </a>
-                            @if($material->questions->count() > 0)
-                                <a href="{{ route('materials.download.questions.excel', $material->id) }}"
-                                   class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-center py-2 px-3 rounded-lg text-xs transition-all">
-                                    <i class="fas fa-download mr-1"></i>Download
-                                </a>
-                            @endif
-                        </div>
-                    </div>
-                @endforeach
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold flex items-center" style="color: rgba(28,88,113,1);">
+                    <i class="fas fa-layer-group mr-3"></i>Sub Kategori
+                </h2>
+                <button onclick="showAddSubCategoryModal()" 
+                        class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-300 shadow-md">
+                    <i class="fas fa-plus mr-2"></i>Tambah Sub Kategori
+                </button>
             </div>
-        </div>
-
-        <!-- Questions List -->
-        @if($questions->count() > 0)
-            <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg p-6 border" style="border-color: rgba(28,88,113,0.2);">
-                <div class="flex items-center justify-between mb-6">
-                    <h2 class="text-2xl font-bold flex items-center" style="color: rgba(28,88,113,1);">
-                        <i class="fas fa-question-circle mr-3"></i>Daftar Soal
-                    </h2>
-                    <div class="text-sm text-gray-600">
-                        Menampilkan {{ $questions->firstItem() }} - {{ $questions->lastItem() }} dari {{ $questions->total() }} soal
-                    </div>
-                </div>
-                
-                <div class="space-y-6">
-                    @foreach($questions as $index => $question)
-                        <div class="border-l-4 border-blue-500 bg-gradient-to-r from-blue-50 to-transparent p-6 rounded-r-xl hover:shadow-md transition-all duration-300">
-                            <div class="flex items-start justify-between mb-4">
-                                <div class="flex-1">
-                                    <div class="flex items-center mb-3">
-                                        <span class="bg-blue-500 text-white text-xs font-bold px-2 py-1 rounded-full mr-3">
-                                            #{{ ($questions->currentPage() - 1) * $questions->perPage() + $index + 1 }}
-                                        </span>
-                                        <div class="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-3 py-1 rounded-lg font-semibold text-sm shadow-md">
-                                            <i class="fas fa-file-alt mr-1"></i>
-                                            {{ $question->material->title }}
-                                        </div>
-                                    </div>
-                                    <h3 class="text-lg font-semibold text-gray-800 mb-3">
-                                        {!! nl2br(e($question->question ?? 'Tidak ada teks soal')) !!}
-                                    </h3>
-                                </div>
-                                <div class="flex items-center space-x-2 ml-4">
-                                    <a href="{{ route('questions.edit', $question->id) }}" 
-                                       class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded-lg text-xs font-medium transition-all duration-200 transform hover:scale-105"
-                                       title="Edit Soal">
-                                        <i class="fas fa-edit mr-1"></i>Edit
-                                    </a>
-                                    <button onclick="confirmDeleteQuestion({{ $question->id }})"
-                                            class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-xs font-medium transition-all duration-200 transform hover:scale-105"
-                                            title="Hapus Soal">
-                                        <i class="fas fa-trash mr-1"></i>Hapus
-                                    </button>
+            
+            @if(isset($subCategories) && $subCategories->count() > 0)
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    @foreach($subCategories as $subCategory)
+                        <div class="bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl p-4 border border-emerald-200 hover:shadow-lg transition-all duration-300">
+                            <div class="flex items-center justify-between mb-3">
+                                <h3 class="font-semibold text-gray-800 text-base">{{ $subCategory->name }}</h3>
+                                <div class="bg-emerald-100 text-emerald-800 text-xs px-2 py-1 rounded-full">
+                                    {{ $subCategory->materials_count ?? 0 }} materi
                                 </div>
                             </div>
                             
-                            @php
-                                $options = $question->options ?? [];
-                            @endphp
-                            
-                            @if(!empty($options))
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
-                                    @foreach(['A', 'B', 'C', 'D'] as $optionKey)
-                                        @if(isset($options[$optionKey]) && !empty($options[$optionKey]))
-                                            <div class="flex items-start space-x-3 p-3 rounded-lg {{ strtoupper($question->answer ?? '') === $optionKey ? 'bg-green-100 border-2 border-green-500' : 'bg-gray-50' }}">
-                                                <span class="font-bold text-sm {{ strtoupper($question->answer ?? '') === $optionKey ? 'text-green-700' : 'text-gray-600' }}">
-                                                    {{ $optionKey }}.
-                                                </span>
-                                                <span class="text-sm {{ strtoupper($question->answer ?? '') === $optionKey ? 'text-green-800 font-semibold' : 'text-gray-700' }}">
-                                                    {{ $options[$optionKey] }}
-                                                </span>
-                                                @if(strtoupper($question->answer ?? '') === $optionKey)
-                                                    <i class="fas fa-check-circle text-green-500 ml-auto"></i>
-                                                @endif
-                                            </div>
-                                        @endif
-                                    @endforeach
-                                </div>
+                            @if($subCategory->description)
+                                <p class="text-sm text-gray-600 mb-3 line-clamp-2">{{ $subCategory->description }}</p>
                             @endif
                             
-                            <div class="flex items-center justify-between text-sm text-gray-500 pt-4 border-t border-gray-200">
-                                <div class="flex items-center space-x-4">
-                                    <span class="flex items-center">
-                                        <i class="fas fa-bullseye mr-1"></i>
-                                        Jawaban: <strong class="ml-1 text-green-600">{{ strtoupper($question->answer ?? 'N/A') }}</strong>
-                                    </span>
-                                    @if($question->difficulty)
-                                        <span class="flex items-center">
-                                            <i class="fas fa-chart-bar mr-1"></i>
-                                            {{ ucfirst($question->difficulty) }}
-                                        </span>
-                                    @endif
-                                </div>
-                                <span class="flex items-center">
-                                    <i class="fas fa-calendar mr-1"></i>
-                                    {{ $question->created_at->format('d M Y H:i') }}
-                                </span>
+                            <div class="text-xs text-gray-500 mb-3">
+                                <i class="fas fa-calendar mr-1"></i>
+                                {{ $subCategory->created_at->format('d M Y') }}
+                            </div>
+                            
+                            <div class="flex space-x-2">
+                                <a href="#" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-center py-2 px-3 rounded-lg text-xs transition-all">
+                                    <i class="fas fa-eye mr-1"></i>Lihat Materi
+                                </a>
+                                <form method="POST" action="{{ route('sub-categories.destroy', $subCategory->id) }}"
+                                      onsubmit="return confirm('Yakin ingin menghapus sub kategori {{ $subCategory->name }}?')" class="inline">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit"
+                                            class="bg-red-600 hover:bg-red-700 text-white py-2 px-3 rounded-lg text-xs transition-all">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
                             </div>
                         </div>
                     @endforeach
                 </div>
-                
-                <!-- Pagination -->
-                @if($questions->hasPages())
-                    <div class="mt-8 flex justify-center">
-                        {{ $questions->links() }}
+            @else
+                <div class="text-center py-8">
+                    <div class="bg-gray-100 rounded-full p-6 inline-block mb-4">
+                        <i class="fas fa-layer-group text-3xl text-gray-400"></i>
                     </div>
-                @endif
-            </div>
-        @else
-            <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg p-12 text-center border" style="border-color: rgba(28,88,113,0.2);">
-                <div class="max-w-md mx-auto">
-                    <div class="bg-gray-100 rounded-full w-24 h-24 flex items-center justify-center mx-auto mb-6">
-                        <i class="fas fa-question-circle text-4xl text-gray-400"></i>
-                    </div>
-                    <h3 class="text-xl font-semibold text-gray-800 mb-3">Belum Ada Soal</h3>
-                    <p class="text-gray-600 mb-6">
-                        Belum ada soal yang dibuat untuk kategori "{{ $category }}". 
-                        Silakan generate soal dari materi yang ada.
-                    </p>
-                    <a href="{{ route('materials.index') }}" 
-                       class="inline-flex items-center px-6 py-3 rounded-xl font-semibold text-white transition-all duration-300 transform hover:scale-105"
-                       style="background: linear-gradient(135deg, rgba(28,88,113,1) 0%, rgba(35,105,135,1) 100%);">
-                        <i class="fas fa-arrow-left mr-2"></i>Kembali ke Kelola Materi
-                    </a>
+                    <h3 class="text-lg font-semibold text-gray-600 mb-2">Belum Ada Sub Kategori</h3>
+                    <p class="text-gray-500 mb-4">Tambahkan sub kategori untuk mengelompokkan materi dengan lebih spesifik.</p>
+                    <button onclick="showAddSubCategoryModal()" 
+                            class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-300">
+                        <i class="fas fa-plus mr-2"></i>Tambah Sub Kategori Pertama
+                    </button>
                 </div>
+            @endif
+        </div>
+    </div>
+
+    <script>
+        // Toast functionality for category detail page
+        window.hideCategoryDetailToast = function(toastId) {
+            const toast = document.getElementById(toastId);
+            if (toast) {
+                toast.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    toast.remove();
+                }, 300);
+            }
+        }
+
+        // Auto-hide toasts after 5 seconds
+        document.addEventListener('DOMContentLoaded', function() {
+            const successToast = document.getElementById('categoryDetailSuccessToast');
+            const errorToast = document.getElementById('categoryDetailErrorToast');
+            
+            if (successToast) {
+                setTimeout(() => {
+                    hideCategoryDetailToast('categoryDetailSuccessToast');
+                }, 5000);
+            }
+            
+            if (errorToast) {
+                setTimeout(() => {
+                    hideCategoryDetailToast('categoryDetailErrorToast');
+                }, 5000);
+            }
+        });
+
+        // Sub Category Modal Functions
+        function showAddSubCategoryModal() {
+            document.getElementById('addSubCategoryModal').classList.remove('hidden');
+        }
+
+        function hideAddSubCategoryModal() {
+            document.getElementById('addSubCategoryModal').classList.add('hidden');
+            document.getElementById('addSubCategoryForm').reset();
+        }
+
+        // Handle form submission for adding sub category
+        document.getElementById('addSubCategoryForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const submitButton = this.querySelector('button[type="submit"]');
+            const originalText = submitButton.innerHTML;
+            
+            // Disable submit button and show loading state
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Menambahkan...';
+            
+            fetch('{{ route("materials.sub-categories.store") }}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Reload page to show new sub category
+                    location.reload();
+                } else {
+                    alert(data.message || 'Terjadi kesalahan saat menambahkan sub kategori.');
+                    // Re-enable submit button
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = originalText;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Terjadi kesalahan saat menambahkan sub kategori.');
+                // Re-enable submit button
+                submitButton.disabled = false;
+                submitButton.innerHTML = originalText;
+            });
+        });
+    </script>
+
+    <!-- Add Sub Category Modal -->
+    <div id="addSubCategoryModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4">
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-layer-group text-2xl text-green-500"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-800 mb-2">Tambah Sub Kategori</h3>
+                <p class="text-gray-600">Buat sub kategori baru untuk kategori "{{ $category }}"</p>
             </div>
-        @endif
+
+            <form id="addSubCategoryForm" class="space-y-4">
+                @csrf
+                <input type="hidden" name="category_id" value="{{ $categoryModel->id ?? '' }}">
+                
+                <div>
+                    <label for="subCategoryName" class="block text-sm font-semibold mb-2 text-gray-700">
+                        <i class="fas fa-tag mr-1"></i>Nama Sub Kategori
+                    </label>
+                    <input type="text" 
+                           id="subCategoryName" 
+                           name="name" 
+                           required
+                           class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-green-500 focus:outline-none transition-colors"
+                           placeholder="Contoh: AMDAL, UKL-UPL, dll..."
+                           maxlength="255">
+                    <p class="text-xs text-gray-500 mt-1">Maksimal 255 karakter</p>
+                </div>
+                
+                <div>
+                    <label for="subCategoryDescription" class="block text-sm font-semibold mb-2 text-gray-700">
+                        <i class="fas fa-align-left mr-1"></i>Deskripsi (Opsional)
+                    </label>
+                    <textarea id="subCategoryDescription" 
+                              name="description" 
+                              rows="3"
+                              class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-green-500 focus:outline-none transition-colors resize-none"
+                              placeholder="Deskripsi singkat tentang sub kategori ini..."></textarea>
+                </div>
+
+                <div class="flex space-x-4 pt-4">
+                    <button type="button" 
+                            onclick="hideAddSubCategoryModal()"
+                            class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 font-semibold py-3 px-6 rounded-xl transition-colors">
+                        Batal
+                    </button>
+                    <button type="submit" 
+                            class="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-xl transition-colors">
+                        <i class="fas fa-plus mr-2"></i>Tambah
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+
+</html>
     </div>
 
     <!-- Delete Confirmation Modal -->
@@ -376,7 +426,113 @@
                 }, 5000);
             }
         });
+
+        // Sub Category Modal Functions
+        function showAddSubCategoryModal() {
+            document.getElementById('addSubCategoryModal').classList.remove('hidden');
+        }
+
+        function hideAddSubCategoryModal() {
+            document.getElementById('addSubCategoryModal').classList.add('hidden');
+            document.getElementById('addSubCategoryForm').reset();
+        }
+
+        // Handle form submission for adding sub category
+        document.getElementById('addSubCategoryForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const submitButton = this.querySelector('button[type="submit"]');
+            const originalText = submitButton.innerHTML;
+            
+            // Disable submit button and show loading state
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Menambahkan...';
+            
+            fetch('{{ route("materials.sub-categories.store") }}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Reload page to show new sub category
+                    location.reload();
+                } else {
+                    alert(data.message || 'Terjadi kesalahan saat menambahkan sub kategori.');
+                    // Re-enable submit button
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = originalText;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Terjadi kesalahan saat menambahkan sub kategori.');
+                // Re-enable submit button
+                submitButton.disabled = false;
+                submitButton.innerHTML = originalText;
+            });
+        });
     </script>
+
+    <!-- Add Sub Category Modal -->
+    <div id="addSubCategoryModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4">
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-layer-group text-2xl text-green-500"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-800 mb-2">Tambah Sub Kategori</h3>
+                <p class="text-gray-600">Buat sub kategori baru untuk kategori "{{ $category }}"</p>
+            </div>
+
+            <form id="addSubCategoryForm" class="space-y-4">
+                @csrf
+                <input type="hidden" name="category_id" value="{{ $categoryModel->id ?? '' }}">
+                
+                <div>
+                    <label for="subCategoryName" class="block text-sm font-semibold mb-2 text-gray-700">
+                        <i class="fas fa-tag mr-1"></i>Nama Sub Kategori
+                    </label>
+                    <input type="text" 
+                           id="subCategoryName" 
+                           name="name" 
+                           required
+                           class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-green-500 focus:outline-none transition-colors"
+                           placeholder="Contoh: AMDAL, UKL-UPL, dll..."
+                           maxlength="255">
+                    <p class="text-xs text-gray-500 mt-1">Maksimal 255 karakter</p>
+                </div>
+                
+                <div>
+                    <label for="subCategoryDescription" class="block text-sm font-semibold mb-2 text-gray-700">
+                        <i class="fas fa-align-left mr-1"></i>Deskripsi (Opsional)
+                    </label>
+                    <textarea id="subCategoryDescription" 
+                              name="description" 
+                              rows="3"
+                              class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-green-500 focus:outline-none transition-colors resize-none"
+                              placeholder="Deskripsi singkat tentang sub kategori ini..."></textarea>
+                </div>
+
+                <div class="flex space-x-4 pt-4">
+                    <button type="button" 
+                            onclick="hideAddSubCategoryModal()"
+                            class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 font-semibold py-3 px-6 rounded-xl transition-colors">
+                        Batal
+                    </button>
+                    <button type="submit" 
+                            class="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-xl transition-colors">
+                        <i class="fas fa-plus mr-2"></i>Tambah
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 </body>
 
 </html>

@@ -13,6 +13,41 @@ class CategorySeeder extends Seeder
      */
     public function run(): void
     {
-        // No default categories - let users create their own
+        $categories = [
+            [
+                'name' => 'Pelatihan Teknis (LAT)',
+                'description' => null,
+                'is_active' => true
+            ],
+            [
+                'name' => 'Pelatihan Bagi Pelatih (TOT)',
+                'description' => null,
+                'is_active' => true
+            ],
+            [
+                'name' => 'Pelatihan Fungsional (FUNG)',
+                'description' => null,
+                'is_active' => true
+            ],
+            [
+                'name' => 'Pelatihan Manajemen (MAN)',
+                'description' => null,
+                'is_active' => true
+            ],
+            [
+                'name' => 'Pelatihan Kepemimpinan (PIM)',
+                'description' => null,
+                'is_active' => true
+            ],
+            [
+                'name' => 'Pelatihan Latsar / Orientasi (LATSAR/ORIEN)',
+                'description' => null,
+                'is_active' => true
+            ]
+        ];
+
+        foreach ($categories as $category) {
+            Category::create($category);
+        }
     }
 }
