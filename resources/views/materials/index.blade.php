@@ -70,11 +70,11 @@
                 <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg p-6 border" style="border-color: rgba(28,88,113,0.2);">
                     <div class="flex items-center">
                         <div class="p-3 rounded-full" style="background-color: rgba(28,88,113,0.1);">
-                            <i class="fas fa-list-check text-xl" style="color: rgba(28,88,113,1);"></i>
+                            <i class="fas fa-tags text-xl" style="color: rgba(28,88,113,1);"></i>
                         </div>
                         <div class="ml-4">
-                            <p class="text-sm text-gray-600">Total Soal</p>
-                            <p class="text-2xl font-bold" style="color: rgba(28,88,113,1);">{{ $materials->sum('questions_count') }}</p>
+                            <p class="text-sm text-gray-600">Total Kategori</p>
+                            <p class="text-2xl font-bold" style="color: rgba(28,88,113,1);">{{ $categories->count() }}</p>
                         </div>
                     </div>
                 </div>
@@ -82,12 +82,12 @@
                 <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg p-6 border" style="border-color: rgba(28,88,113,0.2);">
                     <div class="flex items-center">
                         <div class="p-3 rounded-full" style="background-color: rgba(28,88,113,0.1);">
-                            <i class="fas fa-tags text-xl" style="color: rgba(28,88,113,1);"></i>
+                            <i class="fas fa-layer-group text-xl" style="color: rgba(28,88,113,1);"></i>
                         </div>
                         <div class="ml-4">
-                            <p class="text-sm text-gray-600">Total Kategori</p>
+                            <p class="text-sm text-gray-600">Total Sub Kategori</p>
                             <p class="text-2xl font-bold" style="color: rgba(28,88,113,1);">
-                                {{ $categories->count() }}
+                                {{ $totalSubCategories ?? 0 }}
                             </p>
                         </div>
                     </div>

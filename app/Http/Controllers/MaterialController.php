@@ -45,7 +45,10 @@ class MaterialController extends Controller
             })->count();
         }
         
-        return view('materials.index', compact('materials', 'categories'));
+        // Get total sub categories count
+        $totalSubCategories = SubCategory::where('is_active', true)->count();
+        
+        return view('materials.index', compact('materials', 'categories', 'totalSubCategories'));
     }
 
     /**
