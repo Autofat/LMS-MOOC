@@ -40,8 +40,8 @@
     <div class="container mx-auto px-4 py-8">
         <!-- Back Button - Outside Container -->
         <div class="mb-4">
-            @if(request('from') === 'subcategory' && request('subcategory_id'))
-                <a href="{{ route('materials.sub-categories.detail', ['subCategory' => request('subcategory_id')]) }}"
+            @if((request('from') === 'subcategory' || (isset($from) && $from === 'subcategory')) && (request('subcategory_id') || (isset($subcategoryId) && $subcategoryId)))
+                <a href="{{ route('materials.sub-categories.detail', ['subCategory' => request('subcategory_id') ?: (isset($subcategoryId) ? $subcategoryId : '')]) }}"
                     class="inline-flex items-center px-4 py-2 rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
                     style="background: linear-gradient(135deg, rgba(28,88,113,1) 0%, rgba(35,105,135,1) 100%); color: white;">
                     <i class="fas fa-arrow-left mr-2"></i>

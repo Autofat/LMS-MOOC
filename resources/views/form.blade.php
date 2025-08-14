@@ -82,31 +82,66 @@
                 @csrf
 
                 <!-- Material Selection -->
-                <div>
-                    <label for="material_id" class="block text-sm font-semibold mb-3 flex items-center space-x-2"
-                        style="color: rgba(28,88,113,0.9);">
-                        <i class="fas fa-folder-open" style="color: rgba(28,88,113,1);"></i>
-                        <span>Pilih Materi (Opsional)</span>
-                    </label>
-                    <select id="material_id" name="material_id"
-                        class="w-full px-4 py-3 rounded-xl shadow-sm focus:outline-none focus:ring-2 transition-all border-2"
-                        style="border-color: rgba(28,88,113,0.2); background: linear-gradient(135deg, rgba(245,158,11,0.05) 0%, rgba(251,191,36,0.05) 100%);">
-                        <option value="">Tanpa materi spesifik</option>
-                        @foreach (\App\Models\Material::where('is_active', true)->orderBy('title')->get() as $material)
-                            <option value="{{ $material->id }}"
-                                {{ old('material_id', $autoFillData['material_id'] ?? '') == $material->id ? 'selected' : '' }}>
-                                {{ $material->title }}
-                                @if ($material->category)
-                                    ({{ $material->category }})
+                @php
+                    $materialId = request('material_id') ?? ($autoFillData['material_id'] ?? null);
+                    $selectedMaterial = null;
+                    if ($materialId) {
+                        $selectedMaterial = \App\Models\Material::with('subCategory')->find($materialId);
+                    }
+                @endphp
+                
+                @if($materialId && $selectedMaterial)
+                    <!-- Material sudah dipilih dari URL, tampilkan info saja -->
+                    <div>
+                        <label class="block text-sm font-semibold mb-3 flex items-center space-x-2"
+                            style="color: rgba(28,88,113,0.9);">
+                            <i class="fas fa-folder-open" style="color: rgba(28,88,113,1);"></i>
+                            <span>Materi Terpilih</span>
+                        </label>
+                        <div class="w-full px-4 py-3 rounded-xl border-2 bg-gray-50"
+                            style="border-color: rgba(28,88,113,0.2);">
+                            <div class="flex items-center space-x-2">
+                                <i class="fas fa-file-alt" style="color: rgba(28,88,113,1);"></i>
+                                <span class="font-medium">{{ $selectedMaterial->title }}</span>
+                                @if ($selectedMaterial->subCategory)
+                                    <span class="text-gray-600">({{ $selectedMaterial->subCategory->name }})</span>
                                 @endif
-                            </option>
-                        @endforeach
-                    </select>
-                    <p class="text-sm mt-2 flex items-center space-x-1" style="color: rgba(28,88,113,0.7);">
-                        <i class="fas fa-info-circle"></i>
-                        <span>Pilih materi untuk mengelompokkan soal berdasarkan materi yang sudah diupload.</span>
-                    </p>
-                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" name="material_id" value="{{ $materialId }}">
+                        <p class="text-sm mt-2 flex items-center space-x-1" style="color: rgba(28,88,113,0.7);">
+                            <i class="fas fa-info-circle"></i>
+                            <span>Soal akan dibuat untuk materi ini.</span>
+                        </p>
+                    </div>
+                @else
+                    <!-- Material belum dipilih, tampilkan dropdown -->
+                    <div>
+                        <label for="material_id" class="block text-sm font-semibold mb-3 flex items-center space-x-2"
+                            style="color: rgba(28,88,113,0.9);">
+                            <i class="fas fa-folder-open" style="color: rgba(28,88,113,1);"></i>
+                            <span>Pilih Materi (Opsional)</span>
+                        </label>
+                        <select id="material_id" name="material_id"
+                            class="w-full px-4 py-3 rounded-xl shadow-sm focus:outline-none focus:ring-2 transition-all border-2"
+                            style="border-color: rgba(28,88,113,0.2); background: linear-gradient(135deg, rgba(245,158,11,0.05) 0%, rgba(251,191,36,0.05) 100%);">
+                            <option value="">Tanpa materi spesifik</option>
+                            @foreach (\App\Models\Material::where('is_active', true)->with('subCategory')->orderBy('title')->get() as $material)
+                                <option value="{{ $material->id }}"
+                                    {{ old('material_id', $autoFillData['material_id'] ?? '') == $material->id ? 'selected' : '' }}>
+                                    {{ $material->title }}
+                                    @if ($material->subCategory)
+                                        ({{ $material->subCategory->name }})
+                                    @endif
+                                </option>
+                            @endforeach
+                        </select>
+                        <p class="text-sm mt-2 flex items-center space-x-1" style="color: rgba(28,88,113,0.7);">
+                            <i class="fas fa-info-circle"></i>
+                            <span>Pilih materi untuk mengelompokkan soal berdasarkan materi yang sudah diupload.</span>
+                        </p>
+                    </div>
+                @endif
 
                 <!-- Question -->
                 <div>

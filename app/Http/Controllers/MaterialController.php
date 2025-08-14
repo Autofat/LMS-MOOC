@@ -22,14 +22,28 @@ class MaterialController extends Controller
      */
     public function index()
     {
-        // Get actual materials
+        // Get materials count and total questions for statistics only (no pagination needed)
         $materials = Material::where('is_active', true)
                             ->withCount('questions')
-                            ->orderBy('created_at', 'desc')
-                            ->paginate(10);
+                            ->get();
         
-        // Get all categories
-        $categories = Category::where('is_active', true)->orderBy('name')->get();
+        // Get all categories with materials count and questions count
+        $categories = Category::where('is_active', true)
+                             ->orderBy('name')
+                             ->get();
+        
+        // Add materials_count and questions_count manually for each category
+        foreach ($categories as $category) {
+            // Count materials through sub categories
+            $category->materials_count = Material::whereHas('subCategory', function($query) use ($category) {
+                $query->where('category_id', $category->id);
+            })->where('is_active', true)->count();
+            
+            // Count questions through materials in sub categories
+            $category->questions_count = Question::whereHas('material.subCategory', function($query) use ($category) {
+                $query->where('category_id', $category->id);
+            })->count();
+        }
         
         return view('materials.index', compact('materials', 'categories'));
     }
@@ -276,8 +290,13 @@ class MaterialController extends Controller
      */
     public function show($id)
     {
-        $material = Material::with('questions')->findOrFail($id);
-        return view('materials.show', compact('material'));
+        $material = Material::with(['questions', 'subCategory'])->findOrFail($id);
+        
+        // If accessing directly (not from subcategory page), get subcategory info from material
+        $subcategoryId = request('subcategory_id') ?: ($material->subCategory ? $material->subCategory->id : null);
+        $from = request('from') ?: ($material->subCategory ? 'subcategory' : null);
+        
+        return view('materials.show', compact('material', 'subcategoryId', 'from'));
     }
 
     /**
@@ -386,12 +405,22 @@ class MaterialController extends Controller
     {
         $material = Material::findOrFail($id);
         
+        // Store sub_category_id for redirect
+        $subCategoryId = $material->sub_category_id;
+        
         // Delete file from storage
         if (Storage::disk('public')->exists($material->file_path)) {
             Storage::disk('public')->delete($material->file_path);
         }
         
         $material->delete();
+        
+        // Check if request came from subcategory detail page
+        $from = request('from');
+        if ($from === 'subcategory' && $subCategoryId) {
+            return redirect()->route('materials.sub-categories.detail', ['subCategory' => $subCategoryId])
+                           ->with('success', 'Materi berhasil dihapus!');
+        }
         
         return redirect()->route('materials.index')->with('success', 'Materi berhasil dihapus!');
     }

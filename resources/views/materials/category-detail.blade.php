@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Detail Kategori: {{ $category }} - KemenLH/BPLH E-Learning Platform</title>
+    <title>{{ $category }} - KemenLH/BPLH E-Learning Platform</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -63,7 +63,7 @@
                     </div>
                 </div>
                 <h1 class="text-4xl md:text-5xl font-bold mb-4">
-                    Detail Kategori: {{ $category }}
+                    {{ $category }}
                 </h1>
                 <p class="text-xl text-blue-100 mb-8 max-w-3xl mx-auto">
                     Kelola sub kategori dan unduh semua soal dari kategori {{ $category }}
@@ -94,11 +94,11 @@
             <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg p-6 border" style="border-color: rgba(28,88,113,0.2);">
                 <div class="flex items-center">
                     <div class="p-3 rounded-full" style="background-color: rgba(28,88,113,0.1);">
-                        <i class="fas fa-file-alt text-xl" style="color: rgba(28,88,113,1);"></i>
+                        <i class="fas fa-tags text-xl" style="color: rgba(28,88,113,1);"></i>
                     </div>
                     <div class="ml-4">
-                        <p class="text-sm text-gray-600">Total Materi</p>
-                        <p class="text-2xl font-bold" style="color: rgba(28,88,113,1);">{{ $totalMaterials }}</p>
+                        <p class="text-sm text-gray-600">Sub Kategori</p>
+                        <p class="text-2xl font-bold" style="color: rgba(28,88,113,1);">{{ $totalSubCategories ?? 0 }}</p>
                     </div>
                 </div>
             </div>
@@ -106,11 +106,11 @@
             <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg p-6 border" style="border-color: rgba(28,88,113,0.2);">
                 <div class="flex items-center">
                     <div class="p-3 rounded-full" style="background-color: rgba(28,88,113,0.1);">
-                        <i class="fas fa-tags text-xl" style="color: rgba(28,88,113,1);"></i>
+                        <i class="fas fa-file-alt text-xl" style="color: rgba(28,88,113,1);"></i>
                     </div>
                     <div class="ml-4">
-                        <p class="text-sm text-gray-600">Sub Kategori</p>
-                        <p class="text-2xl font-bold" style="color: rgba(28,88,113,1);">{{ $totalSubCategories ?? 0 }}</p>
+                        <p class="text-sm text-gray-600">Total Materi</p>
+                        <p class="text-2xl font-bold" style="color: rgba(28,88,113,1);">{{ $totalMaterials }}</p>
                     </div>
                 </div>
             </div>

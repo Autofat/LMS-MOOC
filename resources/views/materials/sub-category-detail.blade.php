@@ -206,6 +206,7 @@
                                             onsubmit="event.preventDefault(); showDeleteConfirmation(this, 'Yakin ingin menghapus materi ini? Semua soal yang terkait juga akan dihapus.'); return false;" class="inline">
                                             @csrf
                                             @method('DELETE')
+                                            <input type="hidden" name="from" value="subcategory">
                                             <button type="submit"
                                                 class="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white py-2 px-3 rounded-lg text-sm transition-all duration-300 transform hover:scale-105">
                                                 <i class="fas fa-trash"></i>
