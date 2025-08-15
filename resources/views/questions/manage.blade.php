@@ -23,12 +23,12 @@
             transform: translateX(100%);
             opacity: 0;
         }
-        
+
         .toast-show {
             transform: translateX(0);
             opacity: 1;
         }
-        
+
         .toast-hide {
             transform: translateX(100%);
             opacity: 0;
@@ -41,12 +41,20 @@
     @include('components.navbar')
 
     <!-- Toast Messages -->
-    @if(session('success'))
-        @include('components.toast', ['id' => 'questionsSuccessToast', 'type' => 'success', 'message' => session('success')])
+    @if (session('success'))
+        @include('components.toast', [
+            'id' => 'questionsSuccessToast',
+            'type' => 'success',
+            'message' => session('success'),
+        ])
     @endif
 
-    @if(session('error'))
-        @include('components.toast', ['id' => 'questionsErrorToast', 'type' => 'error', 'message' => session('error')])
+    @if (session('error'))
+        @include('components.toast', [
+            'id' => 'questionsErrorToast',
+            'type' => 'error',
+            'message' => session('error'),
+        ])
     @endif
 
     <div class="container mx-auto px-4 py-8">
@@ -304,6 +312,10 @@
 
     <!-- Include Tutorial Component -->
     @include('components.tutorial')
+
+    {{-- Include Footer Component --}}
+    @include('components.footer')
+
 </body>
 
 </html>

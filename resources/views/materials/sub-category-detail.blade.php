@@ -10,8 +10,9 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         .professional-gradient {
-            background: linear-gradient(135deg, rgba(28,88,113,1) 0%, rgba(35,105,135,1) 25%, rgba(42,122,157,1) 50%, rgba(49,139,179,1) 75%, rgba(56,156,201,1) 100%);
+            background: linear-gradient(135deg, rgba(28, 88, 113, 1) 0%, rgba(35, 105, 135, 1) 25%, rgba(42, 122, 157, 1) 50%, rgba(49, 139, 179, 1) 75%, rgba(56, 156, 201, 1) 100%);
         }
+
         .subtle-pattern {
             background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='rgba(28,88,113,0.03)' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
         }
@@ -23,24 +24,28 @@
     @include('components.navbar')
 
     <!-- Toast Messages -->
-    @if(session('success'))
-        <div id="subCategoryDetailSuccessToast" class="fixed top-8 right-4 z-50 bg-green-500 text-white px-8 py-5 rounded-lg shadow-xl max-w-md">
+    @if (session('success'))
+        <div id="subCategoryDetailSuccessToast"
+            class="fixed top-8 right-4 z-50 bg-green-500 text-white px-8 py-5 rounded-lg shadow-xl max-w-md">
             <div class="flex items-center">
                 <i class="fas fa-check-circle text-2xl mr-4"></i>
                 <p class="text-base font-medium">{{ session('success') }}</p>
-                <button onclick="hideSubCategoryDetailToast('subCategoryDetailSuccessToast')" class="ml-4 text-white hover:text-gray-200">
+                <button onclick="hideSubCategoryDetailToast('subCategoryDetailSuccessToast')"
+                    class="ml-4 text-white hover:text-gray-200">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
         </div>
     @endif
 
-    @if(session('error'))
-        <div id="subCategoryDetailErrorToast" class="fixed top-8 right-4 z-50 bg-red-500 text-white px-8 py-5 rounded-lg shadow-xl max-w-md">
+    @if (session('error'))
+        <div id="subCategoryDetailErrorToast"
+            class="fixed top-8 right-4 z-50 bg-red-500 text-white px-8 py-5 rounded-lg shadow-xl max-w-md">
             <div class="flex items-center">
                 <i class="fas fa-exclamation-circle text-2xl mr-4"></i>
                 <p class="text-base font-medium">{{ session('error') }}</p>
-                <button onclick="hideSubCategoryDetailToast('subCategoryDetailErrorToast')" class="ml-4 text-white hover:text-gray-200">
+                <button onclick="hideSubCategoryDetailToast('subCategoryDetailErrorToast')"
+                    class="ml-4 text-white hover:text-gray-200">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -62,7 +67,7 @@
                 <p class="text-xl text-blue-100 mb-2">
                     Sub Kategori dari {{ $subCategory->category->name }}
                 </p>
-                @if($subCategory->description)
+                @if ($subCategory->description)
                     <p class="text-lg text-blue-200 mb-8 max-w-3xl mx-auto">
                         {{ $subCategory->description }}
                     </p>
@@ -74,8 +79,7 @@
                     </a>
                     <a href="{{ route('materials.create') }}?sub_category_id={{ $subCategory->id }}"
                         class="text-white font-bold py-3 px-6 rounded-full transition-all duration-300 transform hover:scale-105"
-                        style="background: rgba(28,88,113,0.8);"
-                        onmouseover="this.style.background='rgba(28,88,113,1)'"
+                        style="background: rgba(28,88,113,0.8);" onmouseover="this.style.background='rgba(28,88,113,1)'"
                         onmouseout="this.style.background='rgba(28,88,113,0.8)'">
                         <i class="fas fa-plus mr-2"></i>Tambah Materi Baru
                     </a>
@@ -88,7 +92,8 @@
     <div class="container mx-auto px-4 pb-8">
         <!-- Statistics Cards -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg p-6 border" style="border-color: rgba(28,88,113,0.2);">
+            <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg p-6 border"
+                style="border-color: rgba(28,88,113,0.2);">
                 <div class="flex items-center">
                     <div class="p-3 rounded-full" style="background-color: rgba(28,88,113,0.1);">
                         <i class="fas fa-file-alt text-xl" style="color: rgba(28,88,113,1);"></i>
@@ -99,8 +104,9 @@
                     </div>
                 </div>
             </div>
-            
-            <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg p-6 border" style="border-color: rgba(28,88,113,0.2);">
+
+            <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg p-6 border"
+                style="border-color: rgba(28,88,113,0.2);">
                 <div class="flex items-center">
                     <div class="p-3 rounded-full" style="background-color: rgba(28,88,113,0.1);">
                         <i class="fas fa-question-circle text-xl" style="color: rgba(28,88,113,1);"></i>
@@ -114,7 +120,8 @@
         </div>
 
         <!-- Materials Section -->
-        <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border" style="border-color: rgba(28,88,113,0.2);">
+        <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border"
+            style="border-color: rgba(28,88,113,0.2);">
             <div class="p-6 border-b" style="border-color: rgba(28,88,113,0.1);">
                 <div class="flex justify-between items-center">
                     <h2 class="text-2xl font-bold" style="color: rgba(28,88,113,1);">
@@ -126,19 +133,22 @@
                     </a>
                 </div>
             </div>
-            
+
             <div class="p-6">
-                @if($materials->count() > 0)
+                @if ($materials->count() > 0)
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        @foreach($materials as $material)
-                            <div class="bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border" style="border-color: rgba(28,88,113,0.2);">
+                        @foreach ($materials as $material)
+                            <div class="bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border"
+                                style="border-color: rgba(28,88,113,0.2);">
                                 <!-- Card Header with Professional Theme -->
-                                <div class="p-4" style="background: linear-gradient(135deg, rgba(28,88,113,1) 0%, rgba(35,105,135,1) 100%);">
+                                <div class="p-4"
+                                    style="background: linear-gradient(135deg, rgba(28,88,113,1) 0%, rgba(35,105,135,1) 100%);">
                                     <div class="flex items-center justify-between">
                                         <div class="bg-white/20 backdrop-blur-sm rounded-full p-2">
                                             <i class="fas fa-file-text text-white text-lg"></i>
                                         </div>
-                                        <span class="bg-white/20 backdrop-blur-sm text-white text-xs px-3 py-1 rounded-full">
+                                        <span
+                                            class="bg-white/20 backdrop-blur-sm text-white text-xs px-3 py-1 rounded-full">
                                             {{ $material->questions->count() }} soal
                                         </span>
                                     </div>
@@ -157,7 +167,8 @@
                                     </div>
 
                                     <!-- File Info with Professional Icons -->
-                                    <div class="flex items-center text-sm text-gray-500 mb-4 p-3 rounded-lg" style="background-color: rgba(28,88,113,0.05);">
+                                    <div class="flex items-center text-sm text-gray-500 mb-4 p-3 rounded-lg"
+                                        style="background-color: rgba(28,88,113,0.05);">
                                         <i class="fas fa-file-pdf mr-2" style="color: rgba(28,88,113,1);"></i>
                                         <span class="truncate">{{ $material->file_name }}</span>
                                     </div>
@@ -168,7 +179,8 @@
                                             <span>{{ $material->file_size_human ?? 'N/A' }}</span>
                                         </div>
                                         <div class="flex items-center">
-                                            <i class="fas fa-question-circle mr-1" style="color: rgba(28,88,113,0.7);"></i>
+                                            <i class="fas fa-question-circle mr-1"
+                                                style="color: rgba(28,88,113,0.7);"></i>
                                             <span>{{ $material->questions->count() }} soal</span>
                                         </div>
                                     </div>
@@ -187,23 +199,26 @@
                                             onmouseout="this.style.background='linear-gradient(135deg, rgba(28,88,113,1) 0%, rgba(35,105,135,1) 100%)'">
                                             <i class="fas fa-eye mr-1"></i>Detail
                                         </a>
-                                        @if($material->questions->count() > 0)
+                                        @if ($material->questions->count() > 0)
                                             <a href="{{ route('materials.download.questions.excel', $material->id) }}"
                                                 class="flex-1 text-white text-center py-2 px-3 rounded-lg text-sm transition-all duration-300 transform hover:scale-105"
                                                 style="background: linear-gradient(135deg, rgba(42,122,157,1) 0%, rgba(49,139,179,1) 100%); box-shadow: 0 4px 6px rgba(42,122,157,0.3);"
                                                 onmouseover="this.style.background='linear-gradient(135deg, rgba(49,139,179,1) 0%, rgba(56,156,201,1) 100%)'"
                                                 onmouseout="this.style.background='linear-gradient(135deg, rgba(42,122,157,1) 0%, rgba(49,139,179,1) 100%)'"
                                                 title="Download {{ $material->questions->count() }} soal dalam format Excel">
-                                                <i class="fas fa-file-excel mr-1"></i>Download Soal ({{ $material->questions->count() }})
+                                                <i class="fas fa-file-excel mr-1"></i>Download Soal
+                                                ({{ $material->questions->count() }})
                                             </a>
                                         @else
-                                            <span class="flex-1 text-gray-500 text-center py-2 px-3 rounded-lg text-sm bg-gray-200"
-                                                  title="Belum ada soal untuk materi ini">
+                                            <span
+                                                class="flex-1 text-gray-500 text-center py-2 px-3 rounded-lg text-sm bg-gray-200"
+                                                title="Belum ada soal untuk materi ini">
                                                 <i class="fas fa-file-excel mr-1"></i>Belum Ada Soal
                                             </span>
                                         @endif
                                         <form method="POST" action="{{ route('materials.destroy', $material->id) }}"
-                                            onsubmit="event.preventDefault(); showDeleteConfirmation(this, 'Yakin ingin menghapus materi ini? Semua soal yang terkait juga akan dihapus.'); return false;" class="inline">
+                                            onsubmit="event.preventDefault(); showDeleteConfirmation(this, 'Yakin ingin menghapus materi ini? Semua soal yang terkait juga akan dihapus.'); return false;"
+                                            class="inline">
                                             @csrf
                                             @method('DELETE')
                                             <input type="hidden" name="from" value="subcategory">
@@ -219,7 +234,7 @@
                     </div>
 
                     <!-- Pagination -->
-                    @if($materials->hasPages())
+                    @if ($materials->hasPages())
                         <div class="mt-8 flex justify-center">
                             <div class="bg-white rounded-lg shadow-md p-2">
                                 {{ $materials->links() }}
@@ -236,7 +251,7 @@
                             Sub kategori ini belum memiliki materi. Tambahkan materi pertama untuk memulai pembelajaran.
                         </p>
                         <a href="{{ route('materials.create') }}?sub_category_id={{ $subCategory->id }}"
-                           class="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-300 shadow-md">
+                            class="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-300 shadow-md">
                             <i class="fas fa-plus mr-2"></i>Tambah Materi Pertama
                         </a>
                     </div>
@@ -261,13 +276,13 @@
         document.addEventListener('DOMContentLoaded', function() {
             const successToast = document.getElementById('subCategoryDetailSuccessToast');
             const errorToast = document.getElementById('subCategoryDetailErrorToast');
-            
+
             if (successToast) {
                 setTimeout(() => {
                     hideSubCategoryDetailToast('subCategoryDetailSuccessToast');
                 }, 5000);
             }
-            
+
             if (errorToast) {
                 setTimeout(() => {
                     hideSubCategoryDetailToast('subCategoryDetailErrorToast');
@@ -278,6 +293,9 @@
 
     <!-- Include Delete Confirmation Modal -->
     @include('components.delete-confirmation-modal')
+
+    {{-- Footer --}}
+    @include('components.footer')
 
     <script>
         // Fallback function for delete confirmation if component not loaded
@@ -295,6 +313,8 @@
             }, 100); // Small delay to ensure component has loaded
         });
     </script>
+
+
 </body>
 
 </html>
