@@ -307,8 +307,16 @@ class MaterialController extends Controller
      */
     public function edit($id)
     {
-        $material = Material::findOrFail($id);
-        $categories = Category::where('is_active', true)->orderBy('name')->get();
+        $material = Material::with('subCategory.category')->findOrFail($id);
+        
+        // Get categories with subcategories for the form (same as create method)
+        $categories = Category::where('is_active', true)
+                             ->with(['subCategories' => function($query) {
+                                 $query->where('is_active', true);
+                             }])
+                             ->orderBy('name')
+                             ->get();
+        
         return view('materials.edit', compact('material', 'categories'));
     }
 
@@ -323,11 +331,13 @@ class MaterialController extends Controller
                 'title' => 'required|string|max:255',
                 'description' => 'nullable|string',
                 'category' => 'required|string|max:100|not_in:-- Pilih Kategori --',
+                'sub_category_id' => 'nullable|integer|exists:sub_categories,id',
                 'pdf_file' => 'nullable|file|mimes:pdf|max:10240', // Max 10MB
             ], [
                 'title.required' => 'Judul materi harus diisi.',
                 'category.required' => 'Kategori/Topik harus dipilih.',
                 'category.not_in' => 'Silakan pilih kategori yang valid.',
+                'sub_category_id.exists' => 'Sub kategori yang dipilih tidak valid.',
                 'pdf_file.mimes' => 'File yang diupload harus berformat PDF.',
                 'pdf_file.max' => 'Ukuran file maksimal 10MB.',
             ]);
@@ -392,6 +402,7 @@ class MaterialController extends Controller
             'title' => $request->title,
             'description' => $request->description,
             'category' => $request->category,
+            'sub_category_id' => $request->sub_category_id,
         ]);
 
         $successMessage = $fileUpdated ? 
@@ -2031,6 +2042,122 @@ class MaterialController extends Controller
             
             return redirect()->route('materials.index')
                            ->with('error', 'Terjadi kesalahan saat memuat detail sub kategori: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Download bulk selected questions as Excel file
+     */
+    public function downloadBulkQuestionsExcel(Request $request)
+    {
+        try {
+            // Validate request
+            $request->validate([
+                'question_ids' => 'required|array|min:1',
+                'question_ids.*' => 'required|integer|exists:questions,id',
+                'sub_category_id' => 'nullable|integer|exists:sub_categories,id'
+            ]);
+
+            $questionIds = $request->input('question_ids');
+            $subCategoryId = $request->input('sub_category_id');
+            
+            // Get selected questions
+            $questions = Question::whereIn('id', $questionIds)
+                                ->orderBy('id')
+                                ->get();
+
+            if ($questions->isEmpty()) {
+                return redirect()->back()->with('error', 'Tidak ada soal yang ditemukan untuk didownload.');
+            }
+
+            // Create minimal Excel without any extra properties
+            $spreadsheet = new Spreadsheet();
+            $sheet = $spreadsheet->getActiveSheet();
+            
+            // Remove default properties
+            $spreadsheet->getProperties()->setCreator('');
+            $spreadsheet->getProperties()->setTitle('');
+            $spreadsheet->getProperties()->setDescription('');
+            $spreadsheet->getProperties()->setSubject('');
+            $spreadsheet->getProperties()->setKeywords('');
+            $spreadsheet->getProperties()->setCategory('');
+            
+            // Set headers with bold formatting (same format as existing download)
+            $sheet->getCell('A1')->setValueExplicit('Teks Soal', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->getCell('B1')->setValueExplicit('Tipe Soal', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->getCell('C1')->setValueExplicit('Jawaban', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->getCell('D1')->setValueExplicit('Opsi A', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->getCell('E1')->setValueExplicit('Opsi B', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->getCell('F1')->setValueExplicit('Opsi C', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->getCell('G1')->setValueExplicit('Opsi D', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->getCell('H1')->setValueExplicit('Opsi E', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->getCell('I1')->setValueExplicit('Tingkat kesulitan', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            
+            // Apply bold formatting to header row
+            $sheet->getStyle('A1:I1')->getFont()->setBold(true);
+            
+            // Add data rows
+            $row = 2;
+            foreach ($questions as $question) {
+                // Get raw data without any processing (same as existing format)
+                $questionText = $question->question ?? '';
+                $questionType = $question->tipe_soal ?? 'pilihan_ganda';
+                $answer = $question->answer ?? 'A';
+                $optionA = $question->option_a ?? '';
+                $optionB = $question->option_b ?? '';
+                $optionC = $question->option_c ?? '';
+                $optionD = $question->option_d ?? '';
+                $optionE = $question->option_e ?? '';
+                $difficulty = $question->difficulty ?? '';
+                
+                // Set as strings explicitly
+                $sheet->getCell('A' . $row)->setValueExplicit($questionText, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                $sheet->getCell('B' . $row)->setValueExplicit($questionType, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                $sheet->getCell('C' . $row)->setValueExplicit($answer, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                $sheet->getCell('D' . $row)->setValueExplicit($optionA, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                $sheet->getCell('E' . $row)->setValueExplicit($optionB, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                $sheet->getCell('F' . $row)->setValueExplicit($optionC, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                $sheet->getCell('G' . $row)->setValueExplicit($optionD, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                $sheet->getCell('H' . $row)->setValueExplicit($optionE, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                $sheet->getCell('I' . $row)->setValueExplicit($difficulty, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                
+                $row++;
+            }
+            
+            // Generate filename with sub category name and question count
+            $totalQuestions = count($questions);
+            $subCategoryName = '';
+            if ($subCategoryId) {
+                $subCategory = SubCategory::find($subCategoryId);
+                $subCategoryName = $subCategory ? Str::slug($subCategory->name) : 'pilihan';
+            } else {
+                $subCategoryName = 'pilihan';
+            }
+            
+            $filename = $subCategoryName . '_' . $totalQuestions . '_soal.xlsx';
+            
+            // Save with minimal writer settings (same as existing format)
+            $tempFile = tempnam(sys_get_temp_dir(), 'excel_minimal_');
+            
+            $writer = new Xlsx($spreadsheet);
+            // Remove any extra features
+            $writer->setPreCalculateFormulas(false);
+            $writer->save($tempFile);
+            
+            // Verify file
+            if (!file_exists($tempFile) || filesize($tempFile) === 0) {
+                throw new \Exception('Excel file was not created properly');
+            }
+            
+            // Return with minimal headers (same as existing format)
+            return response()->download($tempFile, $filename, [
+                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'Content-Disposition' => 'attachment; filename="' . $filename . '"'
+            ])->deleteFileAfterSend(true);
+
+        } catch (\Exception $e) {
+            Log::error('Excel export error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Tidak dapat membuat file Excel: ' . $e->getMessage());
         }
     }
 }

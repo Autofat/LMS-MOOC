@@ -86,32 +86,32 @@
                     style="border-color: rgba(28,88,113,0.1);">
                     <div class="text-center">
                         <div class="bg-blue-100 rounded-full p-4 inline-block mb-4">
-                            <i class="fas fa-upload text-2xl text-blue-600"></i>
+                            <i class="fas fa-layer-group text-2xl text-blue-600"></i>
                         </div>
-                        <h3 class="text-lg font-semibold mb-2">2. Upload Materi</h3>
-                        <p class="text-gray-600 text-sm">Upload file PDF atau dokumen materi pembelajaran Anda ke dalam
-                            sistem</p>
+                        <h3 class="text-lg font-semibold mb-2">2. Tambah Sub Kategori</h3>
+                        <p class="text-gray-600 text-sm">Buat sub kategori untuk mengelompokkan materi pembelajaran secara lebih spesifik</p>
                     </div>
                 </div>
                 <div class="help-card bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-6 border"
                     style="border-color: rgba(28,88,113,0.1);">
                     <div class="text-center">
                         <div class="bg-green-100 rounded-full p-4 inline-block mb-4">
-                            <i class="fas fa-magic text-2xl text-green-600"></i>
+                            <i class="fas fa-upload text-2xl text-green-600"></i>
                         </div>
-                        <h3 class="text-lg font-semibold mb-2">3. Generate Soal</h3>
-                        <p class="text-gray-600 text-sm">Pilih opsi "Generate Soal" dan Sistem AI akan secara otomatis
-                            membuat soal berdasarkan materi yang diupload</p>
+                        <h3 class="text-lg font-semibold mb-2">3. Upload Materi</h3>
+                        <p class="text-gray-600 text-sm">Upload file PDF atau dokumen materi pembelajaran Anda ke dalam
+                            sistem</p>
                     </div>
                 </div>
                 <div class="help-card bg-gradient-to-br from-purple-50 to-violet-50 rounded-xl p-6 border"
                     style="border-color: rgba(28,88,113,0.1);">
                     <div class="text-center">
                         <div class="bg-purple-100 rounded-full p-4 inline-block mb-4">
-                            <i class="fas fa-edit text-2xl text-purple-600"></i>
+                            <i class="fas fa-magic text-2xl text-purple-600"></i>
                         </div>
-                        <h3 class="text-lg font-semibold mb-2">4. Kelola Soal</h3>
-                        <p class="text-gray-600 text-sm">Edit, hapus, atau tambah soal baru sesuai dengan kebutuhan</p>
+                        <h3 class="text-lg font-semibold mb-2">4. Generate Soal</h3>
+                        <p class="text-gray-600 text-sm">Pilih opsi "Generate Soal" dan Sistem AI akan secara otomatis
+                            membuat soal berdasarkan materi yang diupload</p>
                     </div>
                 </div>
             </div>
@@ -137,6 +137,32 @@
                     <div class="flex items-start space-x-3">
                         <span class="bg-gray-100 text-gray-800 text-xs font-semibold px-2 py-1 rounded-full">3</span>
                         <p class="text-sm text-gray-600">Klik "Buat Kategori" untuk menyimpan kategori baru</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tambah Sub Kategori -->
+            <div class="bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg border p-6"
+                style="border-color: rgba(28,88,113,0.1);">
+                <h3 class="text-xl font-bold mb-4 flex items-center" style="color: rgba(28,88,113,1);">
+                    <i class="fas fa-layer-group mr-2"></i>Cara Tambahkan Sub Kategori
+                </h3>
+                <div class="space-y-3">
+                    <div class="flex items-start space-x-3">
+                        <span class="bg-gray-100 text-gray-800 text-xs font-semibold px-2 py-1 rounded-full">1</span>
+                        <p class="text-sm text-gray-600">Buka halaman kategori dan pilih kategori induk yang sudah ada</p>
+                    </div>
+                    <div class="flex items-start space-x-3">
+                        <span class="bg-gray-100 text-gray-800 text-xs font-semibold px-2 py-1 rounded-full">2</span>
+                        <p class="text-sm text-gray-600">Klik tombol "Tambah Sub Kategori" pada kategori yang dipilih</p>
+                    </div>
+                    <div class="flex items-start space-x-3">
+                        <span class="bg-gray-100 text-gray-800 text-xs font-semibold px-2 py-1 rounded-full">3</span>
+                        <p class="text-gray-600 text-sm">Isi nama sub kategori dan deskripsi sub kategori</p>
+                    </div>
+                    <div class="flex items-start space-x-3">
+                        <span class="bg-gray-100 text-gray-800 text-xs font-semibold px-2 py-1 rounded-full">4</span>
+                        <p class="text-gray-600 text-sm">Klik "Buat Sub Kategori" untuk menyimpan sub kategori baru</p>
                     </div>
                 </div>
             </div>

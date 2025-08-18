@@ -25,43 +25,19 @@
 
     <!-- Toast Messages -->
     @if (session('success'))
-        <div id="successToast"
-            class="fixed top-8 right-4 z-50 bg-green-500 text-white px-8 py-5 rounded-lg shadow-xl max-w-md"
-            style="display: block !important;">
-            <div class="flex items-center">
-                <i class="fas fa-check-circle text-2xl mr-4"></i>
-                <p class="text-base font-medium">{{ session('success') }}</p>
-                <button onclick="hideToast('successToast')" class="ml-4 text-white hover:text-gray-200">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-        </div>
-        <script>
-            console.log('Success toast rendered:', '{{ session('success') }}');
-        </script>
+        @include('components.toast', [
+            'id' => 'categoryDetailSuccessToast',
+            'type' => 'success',
+            'message' => session('success'),
+        ])
     @endif
 
     @if (session('error'))
-        <div id="errorToast"
-            class="fixed top-8 right-4 z-50 bg-red-500 text-white px-8 py-5 rounded-lg shadow-xl max-w-md"
-            style="display: block !important;">
-            <div class="flex items-center">
-                <i class="fas fa-exclamation-circle text-2xl mr-4"></i>
-                <p class="text-base font-medium">{{ session('error') }}</p>
-                <button onclick="hideToast('errorToast')" class="ml-4 text-white hover:text-gray-200">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-        </div>
-        <script>
-            console.log('Error toast rendered:', '{{ session('error') }}');
-        </script>
-    @endif
-
-    @if (!session('success') && !session('error'))
-        <script>
-            console.log('No session messages found');
-        </script>
+        @include('components.toast', [
+            'id' => 'categoryDetailErrorToast',
+            'type' => 'error',
+            'message' => session('error'),
+        ])
     @endif
 
     <!-- Hero Section -->
@@ -266,24 +242,8 @@
         document.addEventListener('DOMContentLoaded', function() {
             console.log('DOMContentLoaded fired');
 
-            // Auto-hide toasts after 7 seconds
-            setTimeout(() => {
-                console.log('Checking for toasts to hide...');
-                const successToast = document.getElementById('successToast');
-                const errorToast = document.getElementById('errorToast');
-
-                console.log('Success toast element:', successToast);
-                console.log('Error toast element:', errorToast);
-
-                if (successToast) {
-                    console.log('Hiding success toast');
-                    hideToast('successToast');
-                }
-                if (errorToast) {
-                    console.log('Hiding error toast');
-                    hideToast('errorToast');
-                }
-            }, 7000);
+            // The toast component will handle auto-hiding automatically
+            // No need for manual auto-hide logic since we're using the standard component
 
             // Handle add subcategory form
             const addForm = document.getElementById('addSubCategoryForm');
@@ -309,12 +269,73 @@
                         })
                         .then(response => response.json())
                         .then(data => {
-                            if (data.success && data.redirect_url) {
-                                window.location.href = data.redirect_url;
+                            submitButton.disabled = false;
+                            submitButton.innerHTML = originalText;
+
+                            if (data.success) {
+                                closeAddSubCategoryModal();
+
+                                // Hide any existing toasts
+                                const existingToasts = document.querySelectorAll('[id$="Toast"]');
+                                existingToasts.forEach(toast => {
+                                    if (toast) {
+                                        hideToast(toast.id);
+                                    }
+                                });
+
+                                // Show success toast
+                                const successToast = document.createElement('div');
+                                successToast.id = 'addSuccessToast';
+                                successToast.className = 'fixed top-8 right-4 z-50 bg-green-500 text-white px-8 py-5 rounded-lg shadow-xl max-w-md';
+                                successToast.style.display = 'block';
+                                successToast.innerHTML = `
+                                    <div class="flex items-center">
+                                        <i class="fas fa-check-circle text-2xl mr-4"></i>
+                                        <p class="text-base font-medium">${data.message || 'Sub kategori berhasil ditambahkan!'}</p>
+                                        <button onclick="hideToast('addSuccessToast')" class="ml-4 text-white hover:text-gray-200">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                `;
+
+                                document.body.appendChild(successToast);
+
+                                // Auto-hide toast after 4 seconds
+                                setTimeout(() => {
+                                    hideToast('addSuccessToast');
+                                }, 4000);
+
+                                // Reload page after showing toast to reflect new subcategory
+                                setTimeout(() => {
+                                    if (data.redirect_url) {
+                                        window.location.href = data.redirect_url;
+                                    } else {
+                                        location.reload();
+                                    }
+                                }, 2000);
+
                             } else {
-                                alert(data.message || 'Terjadi kesalahan');
-                                submitButton.disabled = false;
-                                submitButton.innerHTML = originalText;
+                                // Show error message
+                                const errorToast = document.createElement('div');
+                                errorToast.id = 'addErrorToast';
+                                errorToast.className = 'fixed top-8 right-4 z-50 bg-red-500 text-white px-8 py-5 rounded-lg shadow-xl max-w-md';
+                                errorToast.style.display = 'block';
+                                errorToast.innerHTML = `
+                                    <div class="flex items-center">
+                                        <i class="fas fa-exclamation-circle text-2xl mr-4"></i>
+                                        <p class="text-base font-medium">${data.message || 'Terjadi kesalahan'}</p>
+                                        <button onclick="hideToast('addErrorToast')" class="ml-4 text-white hover:text-gray-200">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                `;
+
+                                document.body.appendChild(errorToast);
+
+                                // Auto-hide toast after 5 seconds
+                                setTimeout(() => {
+                                    hideToast('addErrorToast');
+                                }, 5000);
                             }
                         })
                         .catch(error => {
@@ -370,12 +391,103 @@
                         })
                         .then(response => response.json())
                         .then(data => {
-                            if (data.success && data.redirect_url) {
-                                window.location.href = data.redirect_url;
+                            submitButton.disabled = false;
+                            submitButton.innerHTML = originalText;
+
+                            if (data.success) {
+                                closeEditSubCategoryModal();
+
+                                // Hide any existing toasts
+                                const existingToasts = document.querySelectorAll('[id$="Toast"]');
+                                existingToasts.forEach(toast => {
+                                    if (toast) {
+                                        hideToast(toast.id);
+                                    }
+                                });
+
+                                // Update subcategory data in place
+                                const subCategoryCard = document.querySelector(`button[data-subcategory-id="${id}"]`).closest('.bg-gradient-to-r');
+                                if (subCategoryCard) {
+                                    // Update subcategory name
+                                    const nameElement = subCategoryCard.querySelector('h3');
+                                    if (nameElement) {
+                                        nameElement.textContent = data.subCategory?.name || document.getElementById('editSubCategoryName').value;
+                                    }
+
+                                    // Update subcategory description
+                                    const descriptionElement = subCategoryCard.querySelector('.text-sm.text-gray-600.mb-3');
+                                    const newDescription = data.subCategory?.description || document.getElementById('editSubCategoryDescription').value;
+                                    
+                                    if (newDescription && newDescription.trim()) {
+                                        if (descriptionElement) {
+                                            descriptionElement.textContent = newDescription;
+                                        } else {
+                                            // Add description if it doesn't exist
+                                            const nameDiv = subCategoryCard.querySelector('.flex.items-center.justify-between.mb-3');
+                                            if (nameDiv) {
+                                                const descriptionP = document.createElement('p');
+                                                descriptionP.className = 'text-sm text-gray-600 mb-3 line-clamp-2';
+                                                descriptionP.textContent = newDescription;
+                                                nameDiv.parentNode.insertBefore(descriptionP, nameDiv.nextSibling);
+                                            }
+                                        }
+                                    } else if (descriptionElement) {
+                                        // Remove description if it's empty
+                                        descriptionElement.remove();
+                                    }
+
+                                    // Update edit button data attributes
+                                    const editButton = subCategoryCard.querySelector('.edit-subcategory-btn');
+                                    if (editButton) {
+                                        editButton.setAttribute('data-subcategory-name', data.subCategory?.name || document.getElementById('editSubCategoryName').value);
+                                        editButton.setAttribute('data-subcategory-description', data.subCategory?.description || document.getElementById('editSubCategoryDescription').value || '');
+                                    }
+                                }
+
+                                // Show success toast
+                                const successToast = document.createElement('div');
+                                successToast.id = 'editSuccessToast';
+                                successToast.className = 'fixed top-8 right-4 z-50 bg-green-500 text-white px-8 py-5 rounded-lg shadow-xl max-w-md';
+                                successToast.style.display = 'block';
+                                successToast.innerHTML = `
+                                    <div class="flex items-center">
+                                        <i class="fas fa-check-circle text-2xl mr-4"></i>
+                                        <p class="text-base font-medium">${data.message || 'Sub kategori berhasil diperbarui!'}</p>
+                                        <button onclick="hideToast('editSuccessToast')" class="ml-4 text-white hover:text-gray-200">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                `;
+
+                                document.body.appendChild(successToast);
+
+                                // Auto-hide toast after 4 seconds
+                                setTimeout(() => {
+                                    hideToast('editSuccessToast');
+                                }, 4000);
+
                             } else {
-                                alert(data.message || 'Terjadi kesalahan');
-                                submitButton.disabled = false;
-                                submitButton.innerHTML = originalText;
+                                // Show error message
+                                const errorToast = document.createElement('div');
+                                errorToast.id = 'editErrorToast';
+                                errorToast.className = 'fixed top-8 right-4 z-50 bg-red-500 text-white px-8 py-5 rounded-lg shadow-xl max-w-md';
+                                errorToast.style.display = 'block';
+                                errorToast.innerHTML = `
+                                    <div class="flex items-center">
+                                        <i class="fas fa-exclamation-circle text-2xl mr-4"></i>
+                                        <p class="text-base font-medium">${data.message || 'Terjadi kesalahan'}</p>
+                                        <button onclick="hideToast('editErrorToast')" class="ml-4 text-white hover:text-gray-200">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                `;
+
+                                document.body.appendChild(errorToast);
+
+                                // Auto-hide toast after 5 seconds
+                                setTimeout(() => {
+                                    hideToast('editErrorToast');
+                                }, 5000);
                             }
                         })
                         .catch(error => {

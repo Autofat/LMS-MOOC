@@ -57,6 +57,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/materials/{id}/download-questions-excel', [MaterialController::class, 'downloadQuestionsExcel'])->name('materials.download.questions.excel');
     Route::get('/materials/category/{category}/download-questions-excel', [MaterialController::class, 'downloadCategoryQuestionsExcel'])->name('materials.download.category.excel');
     Route::get('/materials/sub-category/{subCategory}/download-questions-excel', [MaterialController::class, 'downloadSubCategoryQuestionsExcel'])->name('materials.download.subcategory.excel');
+    Route::post('/materials/download-bulk-questions-excel', [MaterialController::class, 'downloadBulkQuestionsExcel'])->name('materials.download.bulk.questions.excel');
     Route::get('/materials/category/{category}/detail', [MaterialController::class, 'categoryDetail'])->name('materials.category.detail');
     Route::delete('/materials/category/{category}', [MaterialController::class, 'destroyCategory'])->name('materials.category.destroy');
     Route::delete('/categories/{id}', [MaterialController::class, 'destroyCategoryById'])->name('categories.destroy');
