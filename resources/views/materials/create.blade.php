@@ -494,7 +494,8 @@
                     setTimeout(() => {
                         updateProgress(4, 'Proses selesai! Mengalihkan halaman...', 100);
                         setTimeout(() => {
-                            window.location.href = `/materials/${data.material.id}`;
+                            const materialShowUrl = "{{ route('materials.show', ['id' => ':id']) }}".replace(':id', data.material.id);
+                            window.location.href = materialShowUrl;
                         }, 1500);
                     }, 500);
                 }, 500);

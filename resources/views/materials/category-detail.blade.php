@@ -286,7 +286,8 @@
                                 // Show success toast
                                 const successToast = document.createElement('div');
                                 successToast.id = 'addSuccessToast';
-                                successToast.className = 'fixed top-8 right-4 z-50 bg-green-500 text-white px-8 py-5 rounded-lg shadow-xl max-w-md';
+                                successToast.className =
+                                    'fixed top-8 right-4 z-50 bg-green-500 text-white px-8 py-5 rounded-lg shadow-xl max-w-md';
                                 successToast.style.display = 'block';
                                 successToast.innerHTML = `
                                     <div class="flex items-center">
@@ -318,7 +319,8 @@
                                 // Show error message
                                 const errorToast = document.createElement('div');
                                 errorToast.id = 'addErrorToast';
-                                errorToast.className = 'fixed top-8 right-4 z-50 bg-red-500 text-white px-8 py-5 rounded-lg shadow-xl max-w-md';
+                                errorToast.className =
+                                    'fixed top-8 right-4 z-50 bg-red-500 text-white px-8 py-5 rounded-lg shadow-xl max-w-md';
                                 errorToast.style.display = 'block';
                                 errorToast.innerHTML = `
                                     <div class="flex items-center">
@@ -406,29 +408,37 @@
                                 });
 
                                 // Update subcategory data in place
-                                const subCategoryCard = document.querySelector(`button[data-subcategory-id="${id}"]`).closest('.bg-gradient-to-r');
+                                const subCategoryCard = document.querySelector(
+                                    `button[data-subcategory-id="${id}"]`).closest(
+                                    '.bg-gradient-to-r');
                                 if (subCategoryCard) {
                                     // Update subcategory name
                                     const nameElement = subCategoryCard.querySelector('h3');
                                     if (nameElement) {
-                                        nameElement.textContent = data.subCategory?.name || document.getElementById('editSubCategoryName').value;
+                                        nameElement.textContent = data.subCategory?.name || document
+                                            .getElementById('editSubCategoryName').value;
                                     }
 
                                     // Update subcategory description
-                                    const descriptionElement = subCategoryCard.querySelector('.text-sm.text-gray-600.mb-3');
-                                    const newDescription = data.subCategory?.description || document.getElementById('editSubCategoryDescription').value;
-                                    
+                                    const descriptionElement = subCategoryCard.querySelector(
+                                        '.text-sm.text-gray-600.mb-3');
+                                    const newDescription = data.subCategory?.description || document
+                                        .getElementById('editSubCategoryDescription').value;
+
                                     if (newDescription && newDescription.trim()) {
                                         if (descriptionElement) {
                                             descriptionElement.textContent = newDescription;
                                         } else {
                                             // Add description if it doesn't exist
-                                            const nameDiv = subCategoryCard.querySelector('.flex.items-center.justify-between.mb-3');
+                                            const nameDiv = subCategoryCard.querySelector(
+                                                '.flex.items-center.justify-between.mb-3');
                                             if (nameDiv) {
                                                 const descriptionP = document.createElement('p');
-                                                descriptionP.className = 'text-sm text-gray-600 mb-3 line-clamp-2';
+                                                descriptionP.className =
+                                                    'text-sm text-gray-600 mb-3 line-clamp-2';
                                                 descriptionP.textContent = newDescription;
-                                                nameDiv.parentNode.insertBefore(descriptionP, nameDiv.nextSibling);
+                                                nameDiv.parentNode.insertBefore(descriptionP, nameDiv
+                                                    .nextSibling);
                                             }
                                         }
                                     } else if (descriptionElement) {
@@ -437,17 +447,23 @@
                                     }
 
                                     // Update edit button data attributes
-                                    const editButton = subCategoryCard.querySelector('.edit-subcategory-btn');
+                                    const editButton = subCategoryCard.querySelector(
+                                        '.edit-subcategory-btn');
                                     if (editButton) {
-                                        editButton.setAttribute('data-subcategory-name', data.subCategory?.name || document.getElementById('editSubCategoryName').value);
-                                        editButton.setAttribute('data-subcategory-description', data.subCategory?.description || document.getElementById('editSubCategoryDescription').value || '');
+                                        editButton.setAttribute('data-subcategory-name', data
+                                            .subCategory?.name || document.getElementById(
+                                                'editSubCategoryName').value);
+                                        editButton.setAttribute('data-subcategory-description', data
+                                            .subCategory?.description || document.getElementById(
+                                                'editSubCategoryDescription').value || '');
                                     }
                                 }
 
                                 // Show success toast
                                 const successToast = document.createElement('div');
                                 successToast.id = 'editSuccessToast';
-                                successToast.className = 'fixed top-8 right-4 z-50 bg-green-500 text-white px-8 py-5 rounded-lg shadow-xl max-w-md';
+                                successToast.className =
+                                    'fixed top-8 right-4 z-50 bg-green-500 text-white px-8 py-5 rounded-lg shadow-xl max-w-md';
                                 successToast.style.display = 'block';
                                 successToast.innerHTML = `
                                     <div class="flex items-center">
@@ -470,7 +486,8 @@
                                 // Show error message
                                 const errorToast = document.createElement('div');
                                 errorToast.id = 'editErrorToast';
-                                errorToast.className = 'fixed top-8 right-4 z-50 bg-red-500 text-white px-8 py-5 rounded-lg shadow-xl max-w-md';
+                                errorToast.className =
+                                    'fixed top-8 right-4 z-50 bg-red-500 text-white px-8 py-5 rounded-lg shadow-xl max-w-md';
                                 errorToast.style.display = 'block';
                                 errorToast.innerHTML = `
                                     <div class="flex items-center">

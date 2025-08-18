@@ -487,7 +487,8 @@
                 // console.log('Request Data:', requestData);
 
                 // Trigger the AI workflow using async method
-                const response = await fetch(`/materials/${materialId}/generate-questions-async`, {
+                const generateUrl = "{{ route('materials.generate-questions-async', ['id' => ':id']) }}".replace(':id', materialId);
+                const response = await fetch(generateUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

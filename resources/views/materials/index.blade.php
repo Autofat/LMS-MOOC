@@ -589,14 +589,16 @@
                                 // Update detail link
                                 const detailLink = categoryCard.querySelector('a[href*="category"]');
                                 if (detailLink) {
-                                    detailLink.setAttribute('href', `/materials/category/${encodeURIComponent(data.category.name)}/detail`);
+                                    const categoryDetailUrl = "{{ route('materials.category.detail', ['category' => ':category']) }}".replace(':category', encodeURIComponent(data.category.name));
+                                    detailLink.setAttribute('href', categoryDetailUrl);
                                     detailLink.setAttribute('title', `Lihat detail soal dari kategori ${data.category.name}`);
                                 }
                                 
                                 // Update download link
                                 const downloadLink = categoryCard.querySelector('a[href*="download-questions-excel"]');
                                 if (downloadLink) {
-                                    downloadLink.setAttribute('href', `/materials/category/${encodeURIComponent(data.category.name)}/download-questions-excel`);
+                                    const downloadUrl = "{{ route('materials.download.category.excel', ['category' => ':category']) }}".replace(':category', encodeURIComponent(data.category.name));
+                                    downloadLink.setAttribute('href', downloadUrl);
                                     downloadLink.setAttribute('title', `Download semua soal dari kategori ${data.category.name}`);
                                 }
                             }

@@ -38,7 +38,7 @@ class AuthController extends Controller
             
             // All users (admin and regular) go to materials page
             // The difference is admin can access user management, regular users cannot
-            return redirect()->intended('/materials')->with('success', 'Login berhasil! Selamat datang, ' . $user->name . '.');
+            return redirect()->intended(route('materials.index'))->with('success', 'Login berhasil! Selamat datang, ' . $user->name . '.');
         }
 
         return back()->with('error', 'Email atau password tidak valid.')
