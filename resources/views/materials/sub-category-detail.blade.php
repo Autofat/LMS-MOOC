@@ -448,7 +448,7 @@
             const toggleText = document.getElementById(`toggle-text-${materialId}`);
             
             if (!materialCheckbox || !questionCheckboxes.length) {
-                console.log('toggleMaterialQuestions: elements not found', {materialId, materialCheckbox, questionCheckboxes: questionCheckboxes.length});
+                // console.log('toggleMaterialQuestions: elements not found', {materialId, materialCheckbox, questionCheckboxes: questionCheckboxes.length});
                 return;
             }
             
@@ -462,12 +462,12 @@
             if (isCheckboxEvent) {
                 // If material checkbox was clicked, use its current state
                 newState = currentlyChecked;
-                console.log('Material checkbox clicked:', {materialId, newState});
+                // console.log('Material checkbox clicked:', {materialId, newState});
             } else {
                 // If button was clicked, toggle based on current state of questions
                 newState = !allQuestionsChecked;
                 materialCheckbox.checked = newState;
-                console.log('Material button clicked:', {materialId, newState, allQuestionsChecked});
+                // console.log('Material button clicked:', {materialId, newState, allQuestionsChecked});
             }
             
             // Update all question checkboxes
@@ -492,10 +492,10 @@
             const count = selectedQuestions.length;
             
             // Debug log
-            console.log('updateSelectionCount called:', {
-                selectedQuestions: selectedQuestions.length,
-                count: count
-            });
+            // console.log('updateSelectionCount called:', {
+            //     selectedQuestions: selectedQuestions.length,
+            //     count: count
+            // });
             
             // Update counter display
             if (countSpan) {
@@ -647,7 +647,7 @@
             const questionCheckboxes = document.querySelectorAll('.question-checkbox');
             questionCheckboxes.forEach(checkbox => {
                 checkbox.addEventListener('change', function() {
-                    console.log('Checkbox changed:', this.dataset.questionId, this.checked);
+                    // console.log('Checkbox changed:', this.dataset.questionId, this.checked);
                     updateSelectionCount();
                 });
             });
@@ -656,7 +656,7 @@
             materialHeaderCheckboxes.forEach(checkbox => {
                 checkbox.addEventListener('change', function() {
                     const materialId = this.dataset.materialId;
-                    console.log('Material header checkbox changed:', materialId, this.checked);
+                    // console.log('Material header checkbox changed:', materialId, this.checked);
                     toggleMaterialQuestions(materialId);
                 });
             });

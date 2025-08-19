@@ -102,7 +102,7 @@ php artisan serve
 
 Setelah installation dan seeding:
 
-- **URL**: `http://localhost:8000/login`
+- **URL**: `{YOUR_DOMAIN}/login`
 - **Email**: `superadmin@elearning.kemenlh.go.id`
 - **Password**: `kemenlh.go.id`
 

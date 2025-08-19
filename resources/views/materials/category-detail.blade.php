@@ -240,7 +240,7 @@
 
         // Single DOMContentLoaded handler
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('DOMContentLoaded fired');
+            // console.log('DOMContentLoaded fired');
 
             // The toast component will handle auto-hiding automatically
             // No need for manual auto-hide logic since we're using the standard component

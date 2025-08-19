@@ -566,10 +566,10 @@
             }
             
             // Debug: Log data
-            console.log('Categories Data:', categoriesData);
-            console.log('Selected SubCategory ID:', selectedSubCategoryId);
-            console.log('Selected Category Name:', selectedCategoryName);
-            console.log('Is SubCategory Required:', isSubCategoryRequired);
+            // console.log('Categories Data:', categoriesData);
+            // console.log('Selected SubCategory ID:', selectedSubCategoryId);
+            // console.log('Selected Category Name:', selectedCategoryName);
+            // console.log('Is SubCategory Required:', isSubCategoryRequired);
             
             function updateSubCategories() {
                 const selectedCategoryName = categorySelect.value;
@@ -643,7 +643,7 @@
             
             // Handle special case when coming with selectedSubCategoryId
             if (selectedSubCategoryId) {
-                console.log('Handling selectedSubCategoryId:', selectedSubCategoryId);
+                // console.log('Handling selectedSubCategoryId:', selectedSubCategoryId);
                 
                 // Find which category contains this subcategory
                 const parentCategory = categoriesData.find(cat => 
@@ -651,7 +651,7 @@
                 );
                 
                 if (parentCategory) {
-                    console.log('Found parent category:', parentCategory.name);
+                    // console.log('Found parent category:', parentCategory.name);
                     // Set category first, then update subcategories
                     categorySelect.value = parentCategory.name;
                     updateSubCategories();
@@ -659,7 +659,7 @@
                     // Ensure subcategory is selected after DOM update
                     setTimeout(() => {
                         subCategorySelect.value = selectedSubCategoryId;
-                        console.log('Selected subcategory:', selectedSubCategoryId);
+                        // console.log('Selected subcategory:', selectedSubCategoryId);
                     }, 50);
                 }
             }

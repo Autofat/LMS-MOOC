@@ -263,13 +263,13 @@
             // Determine if subcategory is required (when coming from subcategory page)
             const isSubCategoryRequired = fromSubcategory && subcategoryId;
             
-            // Debug: Log data
-            console.log('Categories Data:', categoriesData);
-            console.log('Material SubCategory ID:', materialSubCategoryId);
-            console.log('Material Category:', materialCategory);
-            console.log('From Subcategory:', fromSubcategory);
-            console.log('Subcategory ID from URL:', subcategoryId);
-            console.log('Is SubCategory Required:', isSubCategoryRequired);
+            // // Debug: Log data
+            // console.log('Categories Data:', categoriesData);
+            // console.log('Material SubCategory ID:', materialSubCategoryId);
+            // console.log('Material Category:', materialCategory);
+            // console.log('From Subcategory:', fromSubcategory);
+            // console.log('Subcategory ID from URL:', subcategoryId);
+            // console.log('Is SubCategory Required:', isSubCategoryRequired);
             
             function updateSubCategories() {
                 const selectedCategoryName = categorySelect.value;
@@ -341,7 +341,7 @@
             
             // Handle special case when coming with subcategoryId from URL
             if (subcategoryId) {
-                console.log('Handling subcategoryId from URL:', subcategoryId);
+                // console.log('Handling subcategoryId from URL:', subcategoryId);
                 
                 // Find which category contains this subcategory
                 const parentCategory = categoriesData.find(cat => 
@@ -349,7 +349,7 @@
                 );
                 
                 if (parentCategory) {
-                    console.log('Found parent category from URL:', parentCategory.name);
+                    // console.log('Found parent category from URL:', parentCategory.name);
                     // Set category first, then update subcategories
                     categorySelect.value = parentCategory.name;
                     updateSubCategories();
@@ -357,7 +357,7 @@
                     // Ensure subcategory is selected after DOM update
                     setTimeout(() => {
                         subCategorySelect.value = subcategoryId;
-                        console.log('Selected subcategory from URL:', subcategoryId);
+                        // console.log('Selected subcategory from URL:', subcategoryId);
                     }, 50);
                 }
             } else {

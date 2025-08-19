@@ -531,7 +531,8 @@
                             closeEditCategoryModal();
 
                             // Hide any existing toasts first to prevent duplicates
-                            const existingToasts = document.querySelectorAll('[id$="Toast"], [id$="SuccessToast"]');
+                            const existingToasts = document.querySelectorAll(
+                                '[id$="Toast"], [id$="SuccessToast"]');
                             existingToasts.forEach(toast => {
                                 if (typeof window.hideToast === 'function') {
                                     hideToast(toast.id);
@@ -539,74 +540,90 @@
                             });
 
                             // Update the category card in place instead of reloading
-                            const categoryCard = document.querySelector(`button[data-category-id="${categoryId}"]`).closest('.bg-gradient-to-r');
+                            const categoryCard = document.querySelector(
+                                `button[data-category-id="${categoryId}"]`).closest(
+                                '.bg-gradient-to-r');
                             if (categoryCard) {
                                 // Update category name
                                 const nameElement = categoryCard.querySelector('h3');
                                 if (nameElement) {
                                     nameElement.textContent = data.category.name;
                                 }
-                                
+
                                 // Update category description
-                                const descriptionElement = categoryCard.querySelector('.text-sm.text-gray-600.mb-3');
+                                const descriptionElement = categoryCard.querySelector(
+                                    '.text-sm.text-gray-600.mb-3');
                                 if (data.category.description) {
                                     if (descriptionElement) {
                                         descriptionElement.textContent = data.category.description;
                                     } else if (!descriptionElement && data.category.description) {
                                         // Add description if it doesn't exist
-                                        const nameDiv = categoryCard.querySelector('.flex.items-center.justify-between.mb-3');
+                                        const nameDiv = categoryCard.querySelector(
+                                            '.flex.items-center.justify-between.mb-3');
                                         if (nameDiv) {
                                             const descriptionP = document.createElement('p');
-                                            descriptionP.className = 'text-sm text-gray-600 mb-3 line-clamp-2';
+                                            descriptionP.className =
+                                                'text-sm text-gray-600 mb-3 line-clamp-2';
                                             descriptionP.textContent = data.category.description;
-                                            nameDiv.parentNode.insertBefore(descriptionP, nameDiv.nextSibling);
+                                            nameDiv.parentNode.insertBefore(descriptionP, nameDiv
+                                                .nextSibling);
                                         }
                                     }
                                 } else if (descriptionElement) {
                                     // Remove description if it's empty
                                     descriptionElement.remove();
                                 }
-                                
+
                                 // Update edit button data attributes
                                 const editButton = categoryCard.querySelector('.edit-category-btn');
                                 if (editButton) {
                                     editButton.setAttribute('data-category-name', data.category.name);
-                                    editButton.setAttribute('data-category-description', data.category.description || '');
-                                    editButton.setAttribute('title', `Edit kategori ${data.category.name}`);
+                                    editButton.setAttribute('data-category-description', data.category
+                                        .description || '');
+                                    editButton.setAttribute('title',
+                                        `Edit kategori ${data.category.name}`);
                                 }
-                                
+
                                 // Update delete form action and confirmation text
                                 const deleteForm = categoryCard.querySelector('form');
                                 if (deleteForm) {
                                     const deleteButton = deleteForm.querySelector('button');
                                     if (deleteButton) {
-                                        deleteForm.setAttribute('onsubmit', 
+                                        deleteForm.setAttribute('onsubmit',
                                             `event.preventDefault(); showDeleteConfirmation(this, 'Yakin ingin menghapus kategori ${data.category.name}? Semua materi dan soal dalam kategori ini akan dihapus.'); return false;`
                                         );
                                     }
                                 }
-                                
+
                                 // Update detail link
                                 const detailLink = categoryCard.querySelector('a[href*="category"]');
                                 if (detailLink) {
-                                    const categoryDetailUrl = "{{ route('materials.category.detail', ['category' => ':category']) }}".replace(':category', encodeURIComponent(data.category.name));
+                                    const categoryDetailUrl =
+                                        "{{ route('materials.category.detail', ['category' => ':category']) }}"
+                                        .replace(':category', encodeURIComponent(data.category.name));
                                     detailLink.setAttribute('href', categoryDetailUrl);
-                                    detailLink.setAttribute('title', `Lihat detail soal dari kategori ${data.category.name}`);
+                                    detailLink.setAttribute('title',
+                                        `Lihat detail soal dari kategori ${data.category.name}`);
                                 }
-                                
+
                                 // Update download link
-                                const downloadLink = categoryCard.querySelector('a[href*="download-questions-excel"]');
+                                const downloadLink = categoryCard.querySelector(
+                                    'a[href*="download-questions-excel"]');
                                 if (downloadLink) {
-                                    const downloadUrl = "{{ route('materials.download.category.excel', ['category' => ':category']) }}".replace(':category', encodeURIComponent(data.category.name));
+                                    const downloadUrl =
+                                        "{{ route('materials.download.category.excel', ['category' => ':category']) }}"
+                                        .replace(':category', encodeURIComponent(data.category.name));
                                     downloadLink.setAttribute('href', downloadUrl);
-                                    downloadLink.setAttribute('title', `Download semua soal dari kategori ${data.category.name}`);
+                                    downloadLink.setAttribute('title',
+                                        `Download semua soal dari kategori ${data.category.name}`);
                                 }
                             }
 
                             // Show success toast with proper timing
                             const successToast = document.createElement('div');
                             successToast.id = 'categoryUpdateSuccessToast';
-                            successToast.className = 'fixed top-8 right-4 z-50 bg-green-500 text-white px-8 py-5 rounded-lg shadow-xl max-w-md transform translate-x-full opacity-0 transition-all duration-300';
+                            successToast.className =
+                                'fixed top-8 right-4 z-50 bg-green-500 text-white px-8 py-5 rounded-lg shadow-xl max-w-md transform translate-x-full opacity-0 transition-all duration-300';
                             successToast.innerHTML = `
                                 <div class="flex items-center">
                                     <i class="fas fa-check-circle text-2xl mr-4"></i>
@@ -624,7 +641,7 @@
                                 successToast.classList.remove('translate-x-full', 'opacity-0');
                                 successToast.classList.add('translate-x-0', 'opacity-100');
                             }, 100);
-                            
+
                             // Auto hide after 4 seconds
                             setTimeout(() => {
                                 if (typeof window.hideToast === 'function') {

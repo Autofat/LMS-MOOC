@@ -852,7 +852,7 @@ class MaterialController extends Controller
                 'material_category' => $material->category,
                 'file_name' => $material->file_name,
                 'file_size' => $material->file_size,
-                'api_download_url' => 'http://' . env('DOCKER_HOST_ADDRESS', 'host.docker.internal') . ':8000/api/public/materials/' . $material->id . '/download',
+                'api_download_url' => url('/api/public/materials/' . $material->id . '/download'),
                 'generation_settings' => [
                     'question_count' => (int) $request->question_count,
                     'difficulty' => $request->difficulty,
@@ -863,7 +863,7 @@ class MaterialController extends Controller
                 ],
                 'trigger_source' => 'laravel_generate_button',
                 'timestamp' => now()->toISOString(),
-                'callback_url' => 'http://' . env('DOCKER_HOST_ADDRESS', 'host.docker.internal') . ':8000/materials/' . $material->id
+                'callback_url' => route('materials.show', $material->id)
             ];
             
             // Add file content if file exists and not too large
@@ -1026,11 +1026,11 @@ class MaterialController extends Controller
                 'file_size' => $material->file_size,
                 'file_url' => asset('storage/' . $material->file_path),
                 'download_url' => route('materials.download', $material->id),
-                'api_download_url' => 'http://' . env('DOCKER_HOST_ADDRESS', 'host.docker.internal') . ':8000/api/public/materials/' . $material->id . '/download',
-                'api_file_content_url' => 'http://' . env('DOCKER_HOST_ADDRESS', 'host.docker.internal') . ':8000/api/public/materials/' . $material->id . '/file-content',
-                'api_file_stream_url' => 'http://' . env('DOCKER_HOST_ADDRESS', 'host.docker.internal') . ':8000/api/public/materials/' . $material->id . '/stream',
-                'questions_api_url' => 'http://' . env('DOCKER_HOST_ADDRESS', 'host.docker.internal') . ':8000/api/questions/array',
-                'questions_webhook_url' => 'http://' . env('DOCKER_HOST_ADDRESS', 'host.docker.internal') . ':8000/api/public/questions/auto-save',
+                'api_download_url' => url('/api/public/materials/' . $material->id . '/download'),
+                'api_file_content_url' => url('/api/public/materials/' . $material->id . '/file-content'),
+                'api_file_stream_url' => url('/api/public/materials/' . $material->id . '/stream'),
+                'questions_api_url' => url('/api/questions/array'),
+                'questions_webhook_url' => url('/api/public/questions/auto-save'),
                 'generation_settings' => [
                     'question_count' => (int) $request->question_count,
                     'difficulty' => $request->difficulty,
@@ -1041,10 +1041,10 @@ class MaterialController extends Controller
                 ],
                 'trigger_source' => 'laravel_generate_button_async',
                 'timestamp' => now()->toISOString(),
-                'callback_url' => 'http://' . env('DOCKER_HOST_ADDRESS', 'host.docker.internal') . ':8000/materials/' . $material->id
+                'callback_url' => route('materials.show', $material->id)
             ];
             
-            $n8nGenerateUrl = env('N8N_GENERATE_QUESTIONS_URL', 'http://localhost:5678/webhook/generate-questions');
+            $n8nGenerateUrl = env('N8N_GENERATE_QUESTIONS_URL');
             
             Log::info('Triggering n8n async generation', [
                 'material_id' => $material->id,
