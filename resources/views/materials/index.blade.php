@@ -511,7 +511,7 @@
                 submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Mengupdate...';
 
                 // Send PUT request to update category
-                fetch(`/categories/${categoryId}`, {
+                fetch(`{{ url('categories') }}/${categoryId}`, {
                         method: 'PUT',
                         headers: {
                             'Content-Type': 'application/json',

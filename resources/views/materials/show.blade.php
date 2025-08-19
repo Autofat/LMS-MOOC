@@ -558,7 +558,7 @@
                 try {
                     // Check single unified endpoint for all status updates (completion, error, progress)
                     const statusResponse = await fetch(
-                        `/api/n8n/completion/${currentMaterialId}`, {
+                        `{{ url('/api/n8n/completion') }}/${currentMaterialId}`, {
                             method: 'GET',
                             headers: {
                                 'Content-Type': 'application/json',
@@ -631,7 +631,7 @@
 
         // Function to manually clear completion cache (for debugging)
         function clearCompletionCache(materialId) {
-            fetch(`/api/questions/cache/${materialId}`, {
+            fetch(`{{ url('/api/questions/cache') }}/${materialId}`, {
                     method: 'DELETE',
                     headers: {
                         'Content-Type': 'application/json',

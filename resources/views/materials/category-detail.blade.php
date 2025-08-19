@@ -384,7 +384,7 @@
                     submitButton.disabled = true;
                     submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Memperbarui...';
 
-                    fetch(`/sub-categories/${id}`, {
+                    fetch(`{{ url('sub-categories') }}/${id}`, {
                             method: 'POST',
                             body: formData,
                             headers: {
