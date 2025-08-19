@@ -75,6 +75,9 @@ Route::middleware(['auth'])->group(function () {
     // Generate Questions with n8n
     Route::post('/materials/{id}/generate-questions', [MaterialController::class, 'generateQuestions'])->name('materials.generate-questions');
     Route::post('/materials/{id}/generate-questions-async', [MaterialController::class, 'generateQuestionsAsync'])->name('materials.generate-questions-async');
+    Route::get('/materials/{id}/generate-questions-async', function($id) {
+        return redirect()->route('materials.show', $id)->with('error', 'Invalid request method. Please use the Generate Questions button.');
+    });
     Route::post('/materials/{id}/clear-generation-state', [MaterialController::class, 'clearGenerationState'])->name('materials.clear-generation-state');
 
     // Form Manual Input

@@ -26,8 +26,9 @@
     @include('components.navbar')
 
     <!-- Toast Messages -->
-    @if(session('success'))
-        <div id="createSuccessToast" class="fixed top-8 right-4 z-50 bg-green-500 text-white px-8 py-5 rounded-lg shadow-xl max-w-md">
+    @if (session('success'))
+        <div id="createSuccessToast"
+            class="fixed top-8 right-4 z-50 bg-green-500 text-white px-8 py-5 rounded-lg shadow-xl max-w-md">
             <div class="flex items-center">
                 <i class="fas fa-check-circle text-2xl mr-4"></i>
                 <p class="text-base font-medium">{{ session('success') }}</p>
@@ -38,8 +39,9 @@
         </div>
     @endif
 
-    @if(session('error'))
-        <div id="createErrorToast" class="fixed top-8 right-4 z-50 bg-red-500 text-white px-8 py-5 rounded-lg shadow-xl max-w-md">
+    @if (session('error'))
+        <div id="createErrorToast"
+            class="fixed top-8 right-4 z-50 bg-red-500 text-white px-8 py-5 rounded-lg shadow-xl max-w-md">
             <div class="flex items-center">
                 <i class="fas fa-exclamation-circle text-2xl mr-4"></i>
                 <div class="ml-4 flex-1">
@@ -52,14 +54,15 @@
         </div>
     @endif
 
-    @if($errors->any())
-        <div id="createValidationToast" class="fixed top-8 right-4 z-50 bg-red-500 text-white px-8 py-5 rounded-lg shadow-xl max-w-md">
+    @if ($errors->any())
+        <div id="createValidationToast"
+            class="fixed top-8 right-4 z-50 bg-red-500 text-white px-8 py-5 rounded-lg shadow-xl max-w-md">
             <div class="flex items-center">
                 <i class="fas fa-exclamation-triangle text-2xl mr-4"></i>
                 <div class="ml-4 flex-1">
                     <p class="text-base font-medium">Error Validasi:</p>
                     <ul class="text-sm mt-1">
-                        @foreach($errors->all() as $error)
+                        @foreach ($errors->all() as $error)
                             <li>• {{ $error }}</li>
                         @endforeach
                     </ul>
@@ -141,13 +144,17 @@
                             style="border-color: rgba(28,88,113,0.2); background: linear-gradient(135deg, rgba(245,158,11,0.05) 0%, rgba(251,191,36,0.05) 100%);">
                             <option value="">-- Pilih Kategori --</option>
                             @php
-                                $existingCategories = isset($categories) ? $categories : \App\Models\Category::where('is_active', true)->with('subCategories')->orderBy('name')->get();
+                                $existingCategories = isset($categories)
+                                    ? $categories
+                                    : \App\Models\Category::where('is_active', true)
+                                        ->with('subCategories')
+                                        ->orderBy('name')
+                                        ->get();
                             @endphp
-                            @foreach($existingCategories as $cat)
-                                <option value="{{ $cat->name }}" 
-                                        {{ old('category', request('category', $selectedCategoryName ?? '')) == $cat->name ? 'selected' : '' }}
-                                        title="{{ $cat->description }}"
-                                        data-category-id="{{ $cat->id }}">
+                            @foreach ($existingCategories as $cat)
+                                <option value="{{ $cat->name }}"
+                                    {{ old('category', request('category', $selectedCategoryName ?? '')) == $cat->name ? 'selected' : '' }}
+                                    title="{{ $cat->description }}" data-category-id="{{ $cat->id }}">
                                     {{ $cat->name }}{{ $cat->description ? ' - ' . $cat->description : '' }}
                                 </option>
                             @endforeach
@@ -157,18 +164,19 @@
                                 <i class="fas fa-info-circle mr-1"></i>
                                 Pilih kategori yang sesuai dengan materi Anda
                             </p>
-                            <a href="{{ route('materials.index') }}" 
-                               class="text-xs text-emerald-600 hover:text-emerald-700 font-medium transition-colors">
+                            <a href="{{ route('materials.index') }}"
+                                class="text-xs text-emerald-600 hover:text-emerald-700 font-medium transition-colors">
                                 <i class="fas fa-plus mr-1"></i>Tambah Kategori Baru
                             </a>
                         </div>
                     </div>
 
                     <!-- Sub Category -->
-                                        <!-- Sub Category -->
-                                        <!-- Sub Category -->
+                    <!-- Sub Category -->
+                    <!-- Sub Category -->
                     <div id="subCategoryContainer" style="display: none;">
-                        <label for="sub_category_id" class="block text-sm font-semibold mb-3 flex items-center space-x-2"
+                        <label for="sub_category_id"
+                            class="block text-sm font-semibold mb-3 flex items-center space-x-2"
                             style="color: rgba(28,88,113,0.9);">
                             <i class="fas fa-layer-group text-indigo-500"></i>
                             <span>Sub Kategori <span id="subCategoryRequired" style="display: none;">*</span></span>
@@ -180,7 +188,8 @@
                         </select>
                         <p class="text-xs mt-1" style="color: rgba(107, 114, 128, 1);">
                             <i class="fas fa-info-circle mr-1"></i>
-                            <span id="subCategoryHelpText">Sub Kategori membantu mengelompokkan materi serupa untuk download massal soal</span>
+                            <span id="subCategoryHelpText">Sub Kategori membantu mengelompokkan materi serupa untuk
+                                download massal soal</span>
                         </p>
                     </div>
 
@@ -217,7 +226,8 @@
                                     PDF hingga 10MB • Format yang didukung: .pdf
                                 </p>
 
-                                <p id="file-name" class="text-sm font-medium" style="color: rgba(28,88,113,0.8);"></p>
+                                <p id="file-name" class="text-sm font-medium" style="color: rgba(28,88,113,0.8);">
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -225,7 +235,7 @@
                     <!-- Submit Buttons -->
                     <div class="flex justify-between items-center pt-8 border-t"
                         style="border-color: rgba(28,88,113,0.1);">
-                        @if(request('sub_category_id'))
+                        @if (request('sub_category_id'))
                             <a href="{{ route('materials.sub-categories.detail', ['subCategory' => request('sub_category_id')]) }}"
                                 class="inline-flex items-center px-6 py-3 rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
                                 style="background: linear-gradient(135deg, rgba(107,114,128,0.8) 0%, rgba(75,85,99,0.9) 100%); color: white;">
@@ -320,10 +330,12 @@
             </div>
 
             <div class="flex justify-center space-x-3">
-                <button onclick="closeErrorModal()" class="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">
+                <button onclick="closeErrorModal()"
+                    class="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">
                     <i class="fas fa-times mr-2"></i>Tutup
                 </button>
-                <button onclick="retryUpload()" class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+                <button onclick="retryUpload()"
+                    class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
                     <i class="fas fa-redo mr-2"></i>Coba Lagi
                 </button>
             </div>
@@ -364,14 +376,14 @@
         function showErrorModal(error) {
             // Hide loading modal
             document.getElementById('loadingModal').classList.add('hidden');
-            
+
             // Get modal elements
             const errorModal = document.getElementById('errorModal');
             const errorMessage = document.getElementById('errorMessage');
             const errorDetails = document.getElementById('errorDetails');
             const errorDetailsText = document.getElementById('errorDetailsText');
             const solutionsList = document.getElementById('solutionsList');
-            
+
             // Default values
             let mainMessage = 'Terjadi kesalahan saat mengupload materi.';
             let showDetails = false;
@@ -415,10 +427,10 @@
                     showDetails = true;
                 }
             }
-            
+
             // Set error message
             errorMessage.textContent = mainMessage;
-            
+
             // Show/hide error details
             if (showDetails && error.message) {
                 errorDetailsText.textContent = error.message;
@@ -426,7 +438,7 @@
             } else {
                 errorDetails.classList.add('hidden');
             }
-            
+
             // Update solutions list
             solutionsList.innerHTML = '';
             solutions.forEach(solution => {
@@ -435,7 +447,7 @@
                 li.className = 'text-blue-700 text-sm mb-1';
                 solutionsList.appendChild(li);
             });
-            
+
             // Show modal
             errorModal.classList.remove('hidden');
         }
@@ -457,7 +469,9 @@
             // Check if file is selected
             const fileInput = document.getElementById('pdf_file');
             if (!fileInput.files || !fileInput.files[0]) {
-                showErrorModal({ message: 'No file was uploaded. Please select a PDF file.' });
+                showErrorModal({
+                    message: 'No file was uploaded. Please select a PDF file.'
+                });
                 return;
             }
 
@@ -467,42 +481,46 @@
 
             // Upload the material
             fetch(this.action, {
-                method: 'POST',
-                body: new FormData(this),
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                    'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
-            .then(async response => {
-                const data = await response.json();
-                
-                if (!response.ok) {
-                    // Handle validation errors specifically
-                    if (response.status === 422 && data.errors) {
-                        const firstError = Object.values(data.errors)[0][0];
-                        throw new Error(firstError);
+                    method: 'POST',
+                    body: new FormData(this),
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
+                            'content'),
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
                     }
-                    throw new Error(data.message || `Upload failed: ${response.status}`);
-                }
+                })
+                .then(async response => {
+                    const data = await response.json();
 
-                // Success - show progress
-                updateProgress(2, 'File berhasil diupload!', 50);
-                setTimeout(() => {
-                    updateProgress(3, 'Memproses materi...', 75);
+                    if (!response.ok) {
+                        // Handle validation errors specifically
+                        if (response.status === 422 && data.errors) {
+                            const firstError = Object.values(data.errors)[0][0];
+                            throw new Error(firstError);
+                        }
+                        throw new Error(data.message || `Upload failed: ${response.status}`);
+                    }
+
+                    // Success - show progress
+                    updateProgress(2, 'File berhasil diupload!', 50);
                     setTimeout(() => {
-                        updateProgress(4, 'Proses selesai! Mengalihkan halaman...', 100);
+                        updateProgress(3, 'Memproses materi...', 75);
                         setTimeout(() => {
-                            const materialShowUrl = "{{ route('materials.show', ['id' => ':id']) }}".replace(':id', data.material.id);
-                            window.location.href = materialShowUrl;
-                        }, 1500);
+                            updateProgress(4, 'Proses selesai! Mengalihkan halaman...',
+                            100);
+                            setTimeout(() => {
+                                const materialShowUrl =
+                                    "{{ route('materials.show', ['id' => ':id']) }}"
+                                    .replace(':id', data.material.id);
+                                window.location.href = materialShowUrl;
+                            }, 1500);
+                        }, 500);
                     }, 500);
-                }, 500);
-            })
-            .catch(error => {
-                showErrorModal(error);
-            });
+                })
+                .catch(error => {
+                    showErrorModal(error);
+                });
         });
 
         // Toast functionality for materials create page
@@ -515,25 +533,25 @@
                 }, 300);
             }
         }
-        
+
         // Auto hide toasts after 7 seconds (longer for error messages)
         document.addEventListener('DOMContentLoaded', function() {
             const createSuccessToast = document.getElementById('createSuccessToast');
             const createErrorToast = document.getElementById('createErrorToast');
             const createValidationToast = document.getElementById('createValidationToast');
-            
+
             if (createSuccessToast) {
                 setTimeout(() => {
                     hideCreateToast('createSuccessToast');
                 }, 5000);
             }
-            
+
             if (createErrorToast) {
                 setTimeout(() => {
                     hideCreateToast('createErrorToast');
                 }, 7000); // Longer for error messages
             }
-            
+
             if (createValidationToast) {
                 setTimeout(() => {
                     hideCreateToast('createValidationToast');
@@ -552,76 +570,80 @@
             const selectedSubCategoryId = @json($selectedSubCategoryId ?? null);
             const selectedCategoryName = @json($selectedCategoryName ?? null);
             const isSubCategoryRequired = urlParams.get('sub_category_id') !== null;
-            
+
             // Get DOM elements
             const categorySelect = document.getElementById('category');
             const subCategoryContainer = document.getElementById('subCategoryContainer');
             const subCategorySelect = document.getElementById('sub_category_id');
             const subCategoryRequired = document.getElementById('subCategoryRequired');
             const subCategoryHelpText = document.getElementById('subCategoryHelpText');
-            
+
             // Pre-select category if coming from subcategory page
             if (selectedCategoryName) {
                 categorySelect.value = selectedCategoryName;
             }
-            
+
             // Debug: Log data
             // console.log('Categories Data:', categoriesData);
             // console.log('Selected SubCategory ID:', selectedSubCategoryId);
             // console.log('Selected Category Name:', selectedCategoryName);
             // console.log('Is SubCategory Required:', isSubCategoryRequired);
-            
+
             function updateSubCategories() {
                 const selectedCategoryName = categorySelect.value;
-                
+
                 // Clear existing options first
-                const placeholder = isSubCategoryRequired ? '-- Pilih Sub Kategori *--' : '-- Pilih Sub Kategori (Opsional) --';
+                const placeholder = isSubCategoryRequired ? '-- Pilih Sub Kategori *--' :
+                    '-- Pilih Sub Kategori (Opsional) --';
                 subCategorySelect.innerHTML = `<option value="">${placeholder}</option>`;
-                
+
                 // Hide container by default
                 subCategoryContainer.style.display = 'none';
                 subCategorySelect.required = false;
-                
+
                 // Don't show subcategories for empty selection
                 if (!selectedCategoryName) {
                     return;
                 }
-                
+
                 // Find the selected category
                 const category = categoriesData.find(cat => cat.name === selectedCategoryName);
-                
+
                 if (category && category.sub_categories && category.sub_categories.length > 0) {
                     // Filter only active subcategories for this specific category
                     const activeSubCategories = category.sub_categories.filter(subCat => subCat.is_active);
-                    
+
                     if (activeSubCategories.length > 0) {
                         // Show subcategory container
                         subCategoryContainer.style.display = 'block';
-                        
+
                         // Update required status and styling
                         if (isSubCategoryRequired) {
                             subCategoryRequired.style.display = 'inline';
                             subCategorySelect.required = true;
-                            subCategoryHelpText.textContent = 'Sub Kategori membantu mengelompokkan materi serupa untuk download massal soal';
+                            subCategoryHelpText.textContent =
+                                'Sub Kategori membantu mengelompokkan materi serupa untuk download massal soal';
                             subCategoryHelpText.parentElement.style.color = 'rgba(28,88,113,0.6)';
                         } else {
                             subCategoryRequired.style.display = 'none';
                             subCategorySelect.required = false;
-                            subCategoryHelpText.textContent = 'Sub Kategori membantu mengelompokkan materi serupa untuk download massal soal';
+                            subCategoryHelpText.textContent =
+                                'Sub Kategori membantu mengelompokkan materi serupa untuk download massal soal';
                             subCategoryHelpText.parentElement.style.color = 'rgba(107, 114, 128, 1)';
                         }
-                        
+
                         // Add subcategory options ONLY for the selected category
                         activeSubCategories.forEach(subCat => {
                             const option = document.createElement('option');
                             option.value = subCat.id;
-                            option.textContent = subCat.name + (subCat.description ? ' - ' + subCat.description : '');
-                            
+                            option.textContent = subCat.name + (subCat.description ? ' - ' + subCat
+                                .description : '');
+
                             // Auto-select if this matches the URL parameter
                             if (selectedSubCategoryId && selectedSubCategoryId == subCat.id) {
                                 option.selected = true;
                             }
-                            
+
                             subCategorySelect.appendChild(option);
                         });
                     }
@@ -630,32 +652,33 @@
                     subCategoryContainer.style.display = 'block';
                     subCategoryRequired.style.display = 'inline';
                     subCategorySelect.required = true;
-                    subCategoryHelpText.textContent = 'Sub Kategori membantu mengelompokkan materi serupa untuk download massal soal';
+                    subCategoryHelpText.textContent =
+                        'Sub Kategori membantu mengelompokkan materi serupa untuk download massal soal';
                     subCategoryHelpText.parentElement.style.color = 'rgba(28,88,113,0.6)';
                 }
             }
-            
+
             // Add event listener for category change
             categorySelect.addEventListener('change', updateSubCategories);
-            
+
             // Initialize subcategories on page load
             updateSubCategories();
-            
+
             // Handle special case when coming with selectedSubCategoryId
             if (selectedSubCategoryId) {
                 // console.log('Handling selectedSubCategoryId:', selectedSubCategoryId);
-                
+
                 // Find which category contains this subcategory
-                const parentCategory = categoriesData.find(cat => 
+                const parentCategory = categoriesData.find(cat =>
                     cat.sub_categories && cat.sub_categories.some(subCat => subCat.id == selectedSubCategoryId)
                 );
-                
+
                 if (parentCategory) {
                     // console.log('Found parent category:', parentCategory.name);
                     // Set category first, then update subcategories
                     categorySelect.value = parentCategory.name;
                     updateSubCategories();
-                    
+
                     // Ensure subcategory is selected after DOM update
                     setTimeout(() => {
                         subCategorySelect.value = selectedSubCategoryId;
