@@ -251,6 +251,9 @@ DB_PASSWORD=your_password
 
 # File Upload
 UPLOAD_MAX_SIZE=10240  # 10MB in KB
+
+# N8N Connection
+N8N_GENERATE_QUESTIONS_URL=//your-domain-to-n8n-triggerd-webhook
 ```
 
 ## 🐛 Troubleshooting
