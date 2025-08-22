@@ -104,7 +104,7 @@ Setelah installation dan seeding:
 
 - **URL**: `{YOUR_DOMAIN}/login`
 - **Email**: `superadmin@elearning.kemenlh.go.id`
-- **Password**: `k*******d`
+- **Password**: `ASK DEV`
 
 ⚠️ **PENTING**: Ganti password default setelah login pertama!
 
